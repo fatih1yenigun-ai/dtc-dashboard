@@ -11,10 +11,7 @@ import {
   X,
   CheckSquare,
   Square,
-  ChevronUp,
-  ChevronDown,
-  LayoutGrid,
-  Table,
+  Eye,
 } from "lucide-react";
 import {
   loadFolders,
@@ -34,18 +31,21 @@ const FLAG: Record<string, string> = {
   CN: "\u{1F1E8}\u{1F1F3}", IL: "\u{1F1EE}\u{1F1F1}",
 };
 
-const COLUMN_COLORS = [
-  "#667eea", "#764ba2", "#f093fb", "#4facfe",
-  "#00f2fe", "#43e97b", "#fa709a", "#fee140",
-];
-
 function formatNumber(n: number): string {
   return n.toLocaleString("tr-TR");
 }
 
-function formatCompact(n: number): string {
-  if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(1)}M`;
-  if (n >= 1_000) return `$${(n / 1_000).toFixed(0)}K`;
+function formatTraffic(n: number | null): string {
+  if (!n) return "-";
+  if (n >= 1000000) return `${(n / 1000000).toFixed(1)}M`;
+  if (n >= 1000) return `${(n / 1000).toFixed(0)}K`;
+  return String(n);
+}
+
+function formatRevenue(n: number | null): string {
+  if (n == null) return "-";
+  if (n >= 1000000) return `$${(n / 1000000).toFixed(1)}M`;
+  if (n >= 1000) return `$${Math.round(n / 1000)}K`;
   return `$${n}`;
 }
 
@@ -71,14 +71,9 @@ function getBrandAov(brand: SavedBrand): number | null {
   return typeof aov === "number" ? aov : null;
 }
 
-function getBrandAovDisplay(brand: SavedBrand): string {
-  const aov = getBrandAov(brand);
-  return aov != null ? `$${aov}` : "-";
-}
-
 function getBrandInsight(brand: SavedBrand): string {
   const d = brand.brand_data;
-  return (d?.["Öne Çıkan Özellik"] as string) || (d?.insight as string) || "";
+  return (d?.["\u00d6ne \u00c7\u0131kan \u00d6zellik"] as string) || (d?.insight as string) || "";
 }
 
 function getBrandMetaAds(brand: SavedBrand): string {
@@ -87,7 +82,7 @@ function getBrandMetaAds(brand: SavedBrand): string {
 }
 
 function getBrandTraffic(brand: SavedBrand): number | null {
-  return (brand.brand_data?.["Aylık Trafik"] as number) ?? null;
+  return (brand.brand_data?.["Ayl\u0131k Trafik"] as number) ?? null;
 }
 
 function getBrandTQS(brand: SavedBrand): number | null {
@@ -95,41 +90,32 @@ function getBrandTQS(brand: SavedBrand): number | null {
 }
 
 function getBrandRevenue(brand: SavedBrand): number | null {
-  return (brand.brand_data?.["Tahmini Aylık Gelir ($)"] as number) ?? null;
+  return (brand.brand_data?.["Ciro ($)"] as number)
+    ?? (brand.brand_data?.["Tahmini Ayl\u0131k Gelir ($)"] as number)
+    ?? null;
 }
 
 function getBrandCountry(brand: SavedBrand): string {
-  return (brand.brand_data?.["Ülke"] as string) || "";
+  return (brand.brand_data?.["\u00dclke"] as string) || "";
 }
 
 function getBrandGrowth(brand: SavedBrand): string {
-  return (brand.brand_data?.["Büyüme Yöntemi"] as string) || "";
+  return (brand.brand_data?.["B\u00fcy\u00fcme Y\u00f6ntemi"] as string) || "";
 }
 
 function getBrandFounded(brand: SavedBrand): number | null {
-  return (brand.brand_data?.["Kuruluş Yılı"] as number) ?? null;
+  return (brand.brand_data?.["Kurulu\u015f Y\u0131l\u0131"] as number) ?? null;
 }
 
 function getBrandConversion(brand: SavedBrand): number | null {
-  return (brand.brand_data?.["Dönüşüm %"] as number) ?? null;
+  return (brand.brand_data?.["D\u00f6n\u00fc\u015f\u00fcm %"] as number) ?? null;
 }
 
-function getBrandMarketingAngles(brand: SavedBrand): string[] {
-  const raw = (brand.brand_data?.["Pazarlama Açıları"] as string) || "";
-  if (!raw.trim()) return [];
-  return raw.split(",").map((a) => a.trim()).filter(Boolean);
+function getBrandMarketingAngles(brand: SavedBrand): string {
+  return (brand.brand_data?.["Pazarlama A\u00e7\u0131lar\u0131"] as string) || "";
 }
 
-type SortKey = "revenue" | "traffic" | "tqs" | "aov" | "founded" | "name" | "conversion";
-type ViewMode = "kanban" | "table";
-
-// Kanban column type
-interface KanbanColumn {
-  angle: string;
-  brands: SavedBrand[];
-  totalRevenue: number;
-  color: string;
-}
+type SortKey = "revenue" | "traffic" | "tqs" | "aov" | "founded";
 
 export default function SavedPage() {
   const [folders, setFolders] = useState<string[]>([]);
@@ -141,7 +127,7 @@ export default function SavedPage() {
   const [loading, setLoading] = useState(true);
   const [sortKey, setSortKey] = useState<SortKey>("revenue");
   const [sortAsc, setSortAsc] = useState(false);
-  const [viewMode, setViewMode] = useState<ViewMode>("kanban");
+  const [detailBrand, setDetailBrand] = useState<SavedBrand | null>(null);
 
   const fetchFolders = useCallback(async () => {
     try {
@@ -181,17 +167,13 @@ export default function SavedPage() {
     setSelectedBrands(new Set());
   }, [fetchBrands]);
 
-  // Sorted brands for table view
+  // Sorted brands
   const sortedBrands = useMemo(() => {
     const sorted = [...brands];
     sorted.sort((a, b) => {
-      let va: number | string = 0;
-      let vb: number | string = 0;
+      let va: number = 0;
+      let vb: number = 0;
       switch (sortKey) {
-        case "name":
-          va = getBrandName(a).toLowerCase();
-          vb = getBrandName(b).toLowerCase();
-          break;
         case "revenue":
           va = getBrandRevenue(a) ?? 0;
           vb = getBrandRevenue(b) ?? 0;
@@ -212,74 +194,11 @@ export default function SavedPage() {
           va = getBrandFounded(a) ?? 0;
           vb = getBrandFounded(b) ?? 0;
           break;
-        case "conversion":
-          va = getBrandConversion(a) ?? 0;
-          vb = getBrandConversion(b) ?? 0;
-          break;
       }
-      if (typeof va === "string" && typeof vb === "string") {
-        return sortAsc ? va.localeCompare(vb) : vb.localeCompare(va);
-      }
-      return sortAsc ? (va as number) - (vb as number) : (vb as number) - (va as number);
+      return sortAsc ? va - vb : vb - va;
     });
     return sorted;
   }, [brands, sortKey, sortAsc]);
-
-  // Kanban columns grouped by marketing angle
-  const kanbanColumns = useMemo((): KanbanColumn[] => {
-    const angleMap = new Map<string, SavedBrand[]>();
-
-    brands.forEach((brand) => {
-      const angles = getBrandMarketingAngles(brand);
-      if (angles.length === 0) {
-        const existing = angleMap.get("Diğer") || [];
-        existing.push(brand);
-        angleMap.set("Diğer", existing);
-      } else {
-        angles.forEach((angle) => {
-          const existing = angleMap.get(angle) || [];
-          existing.push(brand);
-          angleMap.set(angle, existing);
-        });
-      }
-    });
-
-    const columns: KanbanColumn[] = [];
-    let colorIndex = 0;
-    angleMap.forEach((columnBrands, angle) => {
-      const totalRevenue = columnBrands.reduce((sum, b) => sum + (getBrandRevenue(b) ?? 0), 0);
-      columns.push({
-        angle,
-        brands: columnBrands,
-        totalRevenue,
-        color: COLUMN_COLORS[colorIndex % COLUMN_COLORS.length],
-      });
-      colorIndex++;
-    });
-
-    // Sort columns by total revenue descending
-    columns.sort((a, b) => b.totalRevenue - a.totalRevenue);
-
-    return columns;
-  }, [brands]);
-
-  function handleSort(key: SortKey) {
-    if (sortKey === key) {
-      setSortAsc(!sortAsc);
-    } else {
-      setSortKey(key);
-      setSortAsc(false);
-    }
-  }
-
-  function SortIcon({ col }: { col: SortKey }) {
-    if (sortKey !== col) return <ChevronDown size={12} className="opacity-30 ml-1 inline" />;
-    return sortAsc ? (
-      <ChevronUp size={12} className="ml-1 inline text-[#667eea]" />
-    ) : (
-      <ChevronDown size={12} className="ml-1 inline text-[#667eea]" />
-    );
-  }
 
   async function handleCreateFolder() {
     const name = newFolderName.trim();
@@ -300,7 +219,7 @@ export default function SavedPage() {
     if (activeFolder === null) return;
     if (
       !confirm(
-        "Bu klasörü ve içindeki tüm markaları silmek istediğinize emin misiniz?"
+        "Bu klasoru ve icindeki tum markalari silmek istediginize emin misiniz?"
       )
     )
       return;
@@ -356,7 +275,7 @@ export default function SavedPage() {
     const escape = (v: string) => `"${v.replace(/"/g, '""')}"`;
     const header = [
       "Marka", "Web Sitesi", "Ulke", "Kategori", "AOV ($)",
-      "Aylik Trafik", "TQS", "Donusum %", "Tahmini Aylik Gelir ($)",
+      "Aylik Trafik", "TQS", "Donusum %", "Ciro ($)",
       "Buyume Yontemi", "Pazarlama Acilari",
       "One Cikan Ozellik", "Marka Hikayesi", "Kurulus Yili",
       "Nis", "Meta Ads",
@@ -374,11 +293,11 @@ export default function SavedPage() {
         getBrandConversion(b) ?? "",
         getBrandRevenue(b) ?? "",
         escape(getBrandGrowth(b)),
-        escape((d["Pazarlama Açıları"] as string) || ""),
+        escape((d["Pazarlama A\u00e7\u0131lar\u0131"] as string) || ""),
         escape(getBrandInsight(b)),
         escape((d["Marka Hikayesi"] as string) || ""),
         getBrandFounded(b) ?? "",
-        escape((d["Niş"] as string) || (d?.Nis as string) || ""),
+        escape((d["Ni\u015f"] as string) || (d?.Nis as string) || ""),
         escape(getBrandMetaAds(b)),
       ].join(",");
     });
@@ -392,118 +311,13 @@ export default function SavedPage() {
     URL.revokeObjectURL(url);
   }
 
-  // ---- Kanban Card Component ----
-  function BrandCard({ brand }: { brand: SavedBrand }) {
-    const website = getBrandWebsite(brand);
-    const country = getBrandCountry(brand);
-    const category = getBrandCategory(brand);
-    const aov = getBrandAov(brand);
-    const revenue = getBrandRevenue(brand);
-    const tqs = getBrandTQS(brand);
-    const conversion = getBrandConversion(brand);
-    const growth = getBrandGrowth(brand);
-    const isSelected = selectedBrands.has(brand.id);
-
-    return (
-      <div
-        className={`bg-white rounded-lg p-3 shadow-sm border mb-2 hover:shadow-md transition-shadow ${
-          isSelected ? "border-[#667eea] ring-1 ring-[#667eea]/30" : "border-gray-100"
-        }`}
-      >
-        <div className="flex items-start justify-between mb-1.5">
-          <div className="flex items-center gap-2 min-w-0">
-            <button
-              onClick={() => toggleBrand(brand.id)}
-              className="text-gray-400 hover:text-gray-600 flex-shrink-0"
-            >
-              {isSelected ? (
-                <CheckSquare size={14} className="text-[#667eea]" />
-              ) : (
-                <Square size={14} />
-              )}
-            </button>
-            {website ? (
-              <a
-                href={website.startsWith("http") ? website : `https://${website}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="font-bold text-sm text-gray-900 hover:text-[#667eea] truncate"
-                title={getBrandName(brand)}
-              >
-                {getBrandName(brand)}
-              </a>
-            ) : (
-              <span className="font-bold text-sm text-gray-900 truncate">
-                {getBrandName(brand)}
-              </span>
-            )}
-          </div>
-          {country && (
-            <span className="text-xs flex-shrink-0 ml-1">
-              {FLAG[country.toUpperCase()] || country.toUpperCase()}
-            </span>
-          )}
-        </div>
-
-        {category && (
-          <span className="inline-block text-[10px] bg-[#667eea]/10 text-[#667eea] px-1.5 py-0.5 rounded-full mb-2">
-            {category}
-          </span>
-        )}
-
-        <div className="flex items-center gap-3 text-[11px] text-gray-600 mb-1.5">
-          {aov != null && (
-            <span>
-              <span className="text-gray-400">AOV:</span>{" "}
-              <span className="font-semibold text-gray-800">${aov}</span>
-            </span>
-          )}
-          {revenue != null && (
-            <span>
-              <span className="text-gray-400">Ciro:</span>{" "}
-              <span className="font-semibold text-emerald-600">{formatCompact(revenue)}</span>
-            </span>
-          )}
-        </div>
-
-        <div className="flex items-center gap-3 text-[11px] text-gray-600 mb-1.5">
-          {tqs != null && (
-            <span>
-              <span className="text-gray-400">TQS:</span>{" "}
-              <span className="font-semibold text-amber-700">{tqs}</span>
-            </span>
-          )}
-          {conversion != null && (
-            <span>
-              <span className="text-gray-400">Conv:</span>{" "}
-              <span className="font-semibold text-gray-800">{conversion}%</span>
-            </span>
-          )}
-        </div>
-
-        {growth && (
-          <div className="flex flex-wrap gap-1 mt-1">
-            {growth.split(",").filter(Boolean).slice(0, 3).map((g, gi) => (
-              <span
-                key={gi}
-                className="inline-block bg-emerald-50 text-emerald-700 px-1.5 py-0.5 rounded text-[9px] font-medium whitespace-nowrap"
-              >
-                {g.trim()}
-              </span>
-            ))}
-          </div>
-        )}
-      </div>
-    );
-  }
-
   return (
     <div>
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-gray-900">Kaydedilenler</h1>
         <p className="text-gray-500 mt-1">
-          Kayıtlı markalarınızı klasörler halinde yönetin
+          Kayitli markalarinizi klasorler halinde yonetin
         </p>
       </div>
 
@@ -526,7 +340,7 @@ export default function SavedPage() {
           ))}
           {folders.length === 0 && (
             <span className="text-sm text-gray-400">
-              Henüz klasör yok. Aşağıdan oluşturun.
+              Henuz klasor yok. Asagidan olusturun.
             </span>
           )}
         </div>
@@ -537,7 +351,7 @@ export default function SavedPage() {
             value={newFolderName}
             onChange={(e) => setNewFolderName(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleCreateFolder()}
-            placeholder="Yeni klasör adı..."
+            placeholder="Yeni klasor adi..."
             className="flex-1 py-2 px-3 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#667eea]/30"
           />
           <button
@@ -545,7 +359,7 @@ export default function SavedPage() {
             className="flex items-center gap-1 px-4 py-2 bg-[#667eea] text-white rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
           >
             <Plus size={14} />
-            Oluştur
+            Olustur
           </button>
           {activeFolder && (
             <button
@@ -553,71 +367,82 @@ export default function SavedPage() {
               className="flex items-center gap-1 px-4 py-2 bg-red-50 text-red-600 rounded-lg text-sm font-medium hover:bg-red-100 transition-colors"
             >
               <Trash2 size={14} />
-              Klasörü Sil
+              Klasoru Sil
             </button>
           )}
         </div>
       </div>
 
-      {/* View toggle + Actions bar */}
+      {/* Actions bar */}
       {brands.length > 0 && (
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
-            <span className="text-sm text-gray-500">
-              {selectedBrands.size > 0
-                ? `${selectedBrands.size} / ${brands.length} seçili`
-                : `${brands.length} marka`}
+            <span className="text-sm font-medium text-gray-700">
+              {brands.length} marka
             </span>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={handleRemoveBrands}
-                disabled={selectedBrands.size === 0}
-                className="flex items-center gap-1 px-3 py-1.5 bg-red-50 text-red-600 rounded-lg text-xs font-medium hover:bg-red-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-              >
-                <Trash2 size={12} />
-                Seçilenleri Sil
-              </button>
-              <button
-                onClick={() => setShowMoveModal(true)}
-                disabled={selectedBrands.size === 0}
-                className="flex items-center gap-1 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-xs font-medium hover:bg-blue-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-              >
-                <ArrowRight size={12} />
-                Taşı
-              </button>
-              <button
-                onClick={exportCSV}
-                className="flex items-center gap-1 px-3 py-1.5 bg-gray-100 text-gray-600 rounded-lg text-xs font-medium hover:bg-gray-200 transition-colors"
-              >
-                <Download size={12} />
-                CSV İndir
-              </button>
-            </div>
+            {selectedBrands.size > 0 && (
+              <span className="text-sm text-[#667eea] font-medium">
+                ({selectedBrands.size} secili)
+              </span>
+            )}
           </div>
-
-          {/* View mode toggle */}
-          <div className="flex items-center bg-gray-100 rounded-lg p-0.5">
-            <button
-              onClick={() => setViewMode("kanban")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
-                viewMode === "kanban"
-                  ? "bg-white text-[#667eea] shadow-sm"
-                  : "text-gray-500 hover:text-gray-700"
-              }`}
+          <div className="flex items-center gap-2">
+            {/* Sort dropdown */}
+            <select
+              value={`${sortKey}-${sortAsc ? "asc" : "desc"}`}
+              onChange={(e) => {
+                const [key, dir] = e.target.value.split("-");
+                setSortKey(key as SortKey);
+                setSortAsc(dir === "asc");
+              }}
+              className="py-1.5 px-3 border border-gray-200 rounded-lg text-xs text-gray-600 focus:outline-none focus:ring-2 focus:ring-[#667eea]/30"
             >
-              <LayoutGrid size={13} />
-              Kanban
+              <option value="revenue-desc">Ciro (Yuksek)</option>
+              <option value="revenue-asc">Ciro (Dusuk)</option>
+              <option value="traffic-desc">Trafik (Yuksek)</option>
+              <option value="traffic-asc">Trafik (Dusuk)</option>
+              <option value="aov-desc">AOV (Yuksek)</option>
+              <option value="aov-asc">AOV (Dusuk)</option>
+              <option value="tqs-desc">TQS (Yuksek)</option>
+              <option value="tqs-asc">TQS (Dusuk)</option>
+              <option value="founded-desc">Kurulus (Yeni)</option>
+              <option value="founded-asc">Kurulus (Eski)</option>
+            </select>
+
+            <button
+              onClick={toggleAll}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 text-gray-600 rounded-lg text-xs font-medium hover:bg-gray-200 transition-colors"
+            >
+              {selectedBrands.size === brands.length && brands.length > 0 ? (
+                <CheckSquare size={13} className="text-[#667eea]" />
+              ) : (
+                <Square size={13} />
+              )}
+              Tumunu Sec
+            </button>
+
+            <button
+              onClick={handleRemoveBrands}
+              disabled={selectedBrands.size === 0}
+              className="flex items-center gap-1 px-3 py-1.5 bg-red-50 text-red-600 rounded-lg text-xs font-medium hover:bg-red-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            >
+              <Trash2 size={12} />
+              Sil
             </button>
             <button
-              onClick={() => setViewMode("table")}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
-                viewMode === "table"
-                  ? "bg-white text-[#667eea] shadow-sm"
-                  : "text-gray-500 hover:text-gray-700"
-              }`}
+              onClick={() => setShowMoveModal(true)}
+              disabled={selectedBrands.size === 0}
+              className="flex items-center gap-1 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-xs font-medium hover:bg-blue-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
             >
-              <Table size={13} />
-              Tablo
+              <ArrowRight size={12} />
+              Tasi
+            </button>
+            <button
+              onClick={exportCSV}
+              className="flex items-center gap-1 px-3 py-1.5 bg-gray-100 text-gray-600 rounded-lg text-xs font-medium hover:bg-gray-200 transition-colors"
+            >
+              <Download size={12} />
+              CSV Indir
             </button>
           </div>
         </div>
@@ -625,274 +450,293 @@ export default function SavedPage() {
 
       {/* Content */}
       {loading ? (
-        <div className="text-center py-10 text-gray-400">Yükleniyor...</div>
+        <div className="text-center py-10 text-gray-400">Yukleniyor...</div>
       ) : brands.length === 0 ? (
         <div className="text-center py-16 text-gray-400">
           <FolderOpen size={48} className="mx-auto mb-3 opacity-50" />
-          <p className="text-base">Bu klasörde henüz marka yok</p>
+          <p className="text-base">Bu klasorde henuz marka yok</p>
         </div>
-      ) : viewMode === "kanban" ? (
-        /* ========== KANBAN VIEW ========== */
-        <div className="flex overflow-x-auto gap-4 pb-4">
-          {kanbanColumns.map((col) => {
-            // Count unique brands
-            const uniqueIds = new Set(col.brands.map((b) => b.id));
+      ) : (
+        /* Card Grid */
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {sortedBrands.map((brand) => {
+            const name = getBrandName(brand);
+            const website = getBrandWebsite(brand);
+            const country = getBrandCountry(brand);
+            const category = getBrandCategory(brand);
+            const aov = getBrandAov(brand);
+            const revenue = getBrandRevenue(brand);
+            const traffic = getBrandTraffic(brand);
+            const tqs = getBrandTQS(brand);
+            const conversion = getBrandConversion(brand);
+            const growth = getBrandGrowth(brand);
+            const founded = getBrandFounded(brand);
+            const insight = getBrandInsight(brand);
+            const metaAds = getBrandMetaAds(brand);
+            const angles = getBrandMarketingAngles(brand);
+            const isSelected = selectedBrands.has(brand.id);
+            const websiteClean = website.replace(/^https?:\/\//, "");
+
             return (
               <div
-                key={col.angle}
-                className="min-w-[280px] max-w-[300px] flex-shrink-0 flex flex-col"
+                key={brand.id}
+                className={`bg-white rounded-xl shadow-sm border p-5 hover:shadow-md transition-shadow ${
+                  isSelected
+                    ? "ring-2 ring-[#667eea] bg-[#667eea]/5 border-[#667eea]/30"
+                    : "border-gray-200"
+                }`}
               >
-                {/* Column header */}
-                <div
-                  className="rounded-t-xl px-3 py-2.5 flex items-center justify-between"
-                  style={{ backgroundColor: col.color + "18" }}
-                >
+                {/* Top: checkbox + name + flag */}
+                <div className="flex items-start justify-between mb-1">
                   <div className="flex items-center gap-2 min-w-0">
-                    <div
-                      className="w-2.5 h-2.5 rounded-full flex-shrink-0"
-                      style={{ backgroundColor: col.color }}
-                    />
-                    <span
-                      className="text-sm font-semibold truncate"
-                      style={{ color: col.color }}
-                      title={col.angle}
+                    <button
+                      onClick={() => toggleBrand(brand.id)}
+                      className="flex-shrink-0 text-gray-400 hover:text-gray-600"
                     >
-                      {col.angle}
+                      {isSelected ? (
+                        <CheckSquare size={18} className="text-[#667eea]" />
+                      ) : (
+                        <Square size={18} />
+                      )}
+                    </button>
+                    <span className="text-lg font-bold text-gray-900 truncate">
+                      {name}
                     </span>
                   </div>
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    <span className="text-[10px] font-medium text-gray-500 bg-white/80 px-1.5 py-0.5 rounded-full">
-                      {uniqueIds.size}
+                  {country && (
+                    <span className="text-base flex-shrink-0 ml-2">
+                      {FLAG[country.toUpperCase()] || country.toUpperCase()}
                     </span>
-                    {col.totalRevenue > 0 && (
-                      <span className="text-[10px] font-medium text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded-full">
-                        {formatCompact(col.totalRevenue)}
+                  )}
+                </div>
+
+                {/* Website link */}
+                {websiteClean && (
+                  <a
+                    href={website.startsWith("http") ? website : `https://${website}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-blue-500 hover:underline inline-flex items-center gap-1 mb-3"
+                  >
+                    {websiteClean} <ExternalLink size={11} />
+                  </a>
+                )}
+
+                {/* Metrics grid */}
+                <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 mb-3">
+                  <div>
+                    <span className="text-sm text-gray-500">Ciro: </span>
+                    <span className="text-base font-semibold text-[#27AE60]">
+                      {formatRevenue(revenue)}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-sm text-gray-500">AOV: </span>
+                    <span className="text-base font-semibold text-[#764ba2]">
+                      {aov != null ? `$${aov}` : "-"}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-sm text-gray-500">Trafik: </span>
+                    <span className="text-base font-semibold text-[#2980B9]">
+                      {formatTraffic(traffic)}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-sm text-gray-500">TQS: </span>
+                    {tqs != null ? (
+                      <span className="inline-block bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded text-xs font-semibold">
+                        {tqs}
                       </span>
+                    ) : (
+                      <span className="text-sm text-gray-300">-</span>
                     )}
+                  </div>
+                  <div>
+                    <span className="text-sm text-gray-500">Donusum: </span>
+                    <span className="text-base font-semibold text-gray-700">
+                      {conversion != null ? `%${conversion}` : "-"}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-sm text-gray-500">Kurulus: </span>
+                    <span className="text-base font-semibold text-gray-700">
+                      {founded || "-"}
+                    </span>
                   </div>
                 </div>
 
-                {/* Column body */}
-                <div className="bg-[#f1f5f9] rounded-b-xl p-2 flex-1 min-h-[200px] max-h-[70vh] overflow-y-auto">
-                  {col.brands.map((brand) => (
-                    <BrandCard key={`${col.angle}-${brand.id}`} brand={brand} />
-                  ))}
+                {/* Category tag */}
+                {category && (
+                  <div className="mb-2">
+                    <span className="text-sm text-gray-500">Kategori: </span>
+                    <span className="inline-block bg-[#667eea]/10 text-[#667eea] px-2 py-0.5 rounded-full text-xs font-medium">
+                      {category}
+                    </span>
+                  </div>
+                )}
+
+                {/* Growth tags */}
+                {growth && (
+                  <div className="mb-2">
+                    <span className="text-sm text-gray-500">Buyume: </span>
+                    <span className="inline">
+                      {growth.split(",").filter(Boolean).slice(0, 3).map((g, gi) => (
+                        <span
+                          key={gi}
+                          className="inline-block bg-emerald-50 text-emerald-700 px-1.5 py-0.5 rounded text-[11px] font-medium mr-1 mb-0.5"
+                        >
+                          {g.trim()}
+                        </span>
+                      ))}
+                    </span>
+                  </div>
+                )}
+
+                {/* Marketing angle */}
+                {angles && (
+                  <div className="mb-2">
+                    <span className="text-sm text-gray-500">Ana Aci: </span>
+                    <span className="text-sm font-medium text-purple-700">
+                      {angles.split(",")[0]?.trim() || "-"}
+                    </span>
+                  </div>
+                )}
+
+                {/* Insight */}
+                {insight && (
+                  <p className="text-sm text-gray-500 italic line-clamp-2 mb-3">
+                    &ldquo;{insight}&rdquo;
+                  </p>
+                )}
+
+                {/* Action buttons */}
+                <div className="flex items-center gap-2 pt-2 border-t border-gray-100">
+                  {metaAds && (
+                    <a
+                      href={metaAds.startsWith("http") ? metaAds : `https://${metaAds}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-xs font-medium hover:bg-blue-100 transition-colors"
+                    >
+                      Meta Ads <ExternalLink size={10} />
+                    </a>
+                  )}
+                  <button
+                    onClick={() => setDetailBrand(brand)}
+                    className="inline-flex items-center gap-1 px-3 py-1.5 bg-[#667eea]/10 text-[#667eea] rounded-lg text-xs font-medium hover:bg-[#667eea]/20 transition-colors"
+                  >
+                    <Eye size={12} />
+                    Detayli Gor
+                  </button>
                 </div>
               </div>
             );
           })}
-
-          {kanbanColumns.length === 0 && (
-            <div className="w-full text-center py-12 text-gray-400">
-              <p className="text-sm">Pazarlama açısı verisi bulunamadı</p>
-            </div>
-          )}
         </div>
-      ) : (
-        /* ========== TABLE VIEW ========== */
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm min-w-[1400px]">
-              <thead>
-                <tr className="bg-gray-50 border-b border-gray-200">
-                  <th className="py-3 px-4 text-left font-medium text-gray-500 w-10">
-                    <button onClick={toggleAll} className="text-gray-400 hover:text-gray-600">
-                      {selectedBrands.size === brands.length && brands.length > 0 ? (
-                        <CheckSquare size={16} />
-                      ) : (
-                        <Square size={16} />
-                      )}
-                    </button>
-                  </th>
-                  <th
-                    className="py-3 px-4 text-left font-medium text-gray-500 cursor-pointer select-none whitespace-nowrap"
-                    onClick={() => handleSort("name")}
-                  >
-                    Marka <SortIcon col="name" />
-                  </th>
-                  <th className="py-3 px-4 text-left font-medium text-gray-500 whitespace-nowrap">
-                    Web Sitesi
-                  </th>
-                  <th className="py-3 px-4 text-left font-medium text-gray-500 whitespace-nowrap">
-                    Ulke
-                  </th>
-                  <th className="py-3 px-4 text-left font-medium text-gray-500 whitespace-nowrap">
-                    Kategori
-                  </th>
-                  <th
-                    className="py-3 px-4 text-right font-medium text-gray-500 cursor-pointer select-none whitespace-nowrap"
-                    onClick={() => handleSort("aov")}
-                  >
-                    AOV <SortIcon col="aov" />
-                  </th>
-                  <th
-                    className="py-3 px-4 text-right font-medium text-gray-500 cursor-pointer select-none whitespace-nowrap"
-                    onClick={() => handleSort("traffic")}
-                  >
-                    Aylik Trafik <SortIcon col="traffic" />
-                  </th>
-                  <th
-                    className="py-3 px-4 text-center font-medium text-gray-500 cursor-pointer select-none whitespace-nowrap"
-                    onClick={() => handleSort("tqs")}
-                  >
-                    TQS <SortIcon col="tqs" />
-                  </th>
-                  <th
-                    className="py-3 px-4 text-right font-medium text-gray-500 cursor-pointer select-none whitespace-nowrap"
-                    onClick={() => handleSort("conversion")}
-                  >
-                    Donusum % <SortIcon col="conversion" />
-                  </th>
-                  <th
-                    className="py-3 px-4 text-right font-medium text-gray-500 cursor-pointer select-none whitespace-nowrap"
-                    onClick={() => handleSort("revenue")}
-                  >
-                    Tahmini Gelir <SortIcon col="revenue" />
-                  </th>
-                  <th className="py-3 px-4 text-left font-medium text-gray-500 whitespace-nowrap">
-                    Buyume Yontemi
-                  </th>
-                  <th
-                    className="py-3 px-4 text-center font-medium text-gray-500 cursor-pointer select-none whitespace-nowrap"
-                    onClick={() => handleSort("founded")}
-                  >
-                    Kurulus <SortIcon col="founded" />
-                  </th>
-                  <th className="py-3 px-4 text-left font-medium text-gray-500 whitespace-nowrap">
-                    One Cikan Ozellik
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {sortedBrands.map((brand, idx) => {
-                  const website = getBrandWebsite(brand);
-                  const country = getBrandCountry(brand);
-                  const category = getBrandCategory(brand);
-                  const traffic = getBrandTraffic(brand);
-                  const tqs = getBrandTQS(brand);
-                  const conversion = getBrandConversion(brand);
-                  const revenue = getBrandRevenue(brand);
-                  const growth = getBrandGrowth(brand);
-                  const founded = getBrandFounded(brand);
-                  const insight = getBrandInsight(brand);
+      )}
 
-                  return (
-                    <tr
-                      key={brand.id}
-                      className={`border-b border-gray-100 transition-colors ${
-                        selectedBrands.has(brand.id)
-                          ? "bg-[#667eea]/5"
-                          : idx % 2 === 0
-                          ? "bg-white"
-                          : "bg-gray-50/50"
-                      } hover:bg-[#667eea]/10`}
-                    >
-                      <td className="py-3 px-4">
-                        <button
-                          onClick={() => toggleBrand(brand.id)}
-                          className="text-gray-400 hover:text-gray-600"
-                        >
-                          {selectedBrands.has(brand.id) ? (
-                            <CheckSquare size={16} className="text-[#667eea]" />
-                          ) : (
-                            <Square size={16} />
-                          )}
-                        </button>
-                      </td>
-                      <td className="py-3 px-4 font-bold text-gray-900 whitespace-nowrap">
-                        {getBrandName(brand)}
-                      </td>
-                      <td className="py-3 px-4 whitespace-nowrap">
-                        {website ? (
-                          <a
-                            href={
-                              website.startsWith("http")
-                                ? website
-                                : `https://${website}`
-                            }
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-[#2980B9] hover:underline flex items-center gap-1"
-                          >
-                            {website.replace(/^https?:\/\//, "")}
-                            <ExternalLink size={12} />
-                          </a>
-                        ) : (
-                          <span className="text-gray-300">-</span>
-                        )}
-                      </td>
-                      <td className="py-3 px-4 whitespace-nowrap text-center">
-                        {country ? (
-                          <span className="text-sm">
-                            {FLAG[country.toUpperCase()] || ""} {country.toUpperCase()}
-                          </span>
-                        ) : (
-                          <span className="text-gray-300">-</span>
-                        )}
-                      </td>
-                      <td className="py-3 px-4">
-                        {category ? (
-                          <span className="text-xs bg-[#667eea]/10 text-[#667eea] px-2 py-0.5 rounded-full">
-                            {category}
-                          </span>
-                        ) : (
-                          <span className="text-gray-300">-</span>
-                        )}
-                      </td>
-                      <td className="py-3 px-4 text-right font-medium text-gray-900 whitespace-nowrap">
-                        {getBrandAovDisplay(brand)}
-                      </td>
-                      <td className="py-3 px-4 text-right font-medium text-[#2980B9] whitespace-nowrap">
-                        {traffic != null ? formatNumber(traffic) : <span className="text-gray-300">-</span>}
-                      </td>
-                      <td className="py-3 px-4 text-center">
-                        {tqs != null ? (
-                          <span className="inline-block bg-amber-100 text-amber-800 px-2 py-0.5 rounded text-xs font-semibold">
-                            {tqs}
-                          </span>
-                        ) : (
-                          <span className="text-gray-300">-</span>
-                        )}
-                      </td>
-                      <td className="py-3 px-4 text-right font-medium text-gray-700 whitespace-nowrap">
-                        {conversion != null ? `%${conversion}` : <span className="text-gray-300">-</span>}
-                      </td>
-                      <td className="py-3 px-4 text-right font-bold text-[#27AE60] whitespace-nowrap">
-                        {revenue != null ? `$${formatNumber(revenue)}` : <span className="text-gray-300">-</span>}
-                      </td>
-                      <td className="py-3 px-4">
-                        {growth ? (
-                          <div className="flex flex-wrap gap-1">
-                            {growth.split(",").filter(Boolean).map((g, gi) => (
-                              <span
-                                key={gi}
-                                className="inline-block bg-emerald-50 text-emerald-700 px-1.5 py-0.5 rounded text-[10px] font-medium whitespace-nowrap"
-                              >
-                                {g.trim()}
-                              </span>
-                            ))}
-                          </div>
-                        ) : (
-                          <span className="text-gray-300">-</span>
-                        )}
-                      </td>
-                      <td className="py-3 px-4 text-center text-gray-600 whitespace-nowrap">
-                        {founded || <span className="text-gray-300">-</span>}
-                      </td>
-                      <td className="py-3 px-4 text-gray-600 max-w-xs">
-                        {insight ? (
-                          <span title={insight} className="truncate block max-w-[200px]">
-                            {insight.length > 60 ? insight.slice(0, 60) + "..." : insight}
-                          </span>
-                        ) : (
-                          <span className="text-gray-300">-</span>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+      {/* Detail Modal */}
+      {detailBrand && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setDetailBrand(null)}>
+          <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[85vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            {/* Header */}
+            <div className="sticky top-0 bg-[#0D1B2A] text-white px-6 py-4 rounded-t-2xl flex items-center justify-between">
+              <div>
+                <h2 className="text-lg font-bold">{getBrandName(detailBrand)}</h2>
+                {getBrandWebsite(detailBrand) && (
+                  <a
+                    href={getBrandWebsite(detailBrand).startsWith("http") ? getBrandWebsite(detailBrand) : `https://${getBrandWebsite(detailBrand)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[#4facfe] text-sm hover:underline inline-flex items-center gap-1"
+                  >
+                    {getBrandWebsite(detailBrand).replace(/^https?:\/\//, "")} <ExternalLink size={12} />
+                  </a>
+                )}
+              </div>
+              <button onClick={() => setDetailBrand(null)} className="text-gray-400 hover:text-white transition-colors">
+                <X size={22} />
+              </button>
+            </div>
+
+            {/* Content grid */}
+            <div className="p-6 grid grid-cols-2 gap-4">
+              <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4">
+                <p className="text-xs text-emerald-600 font-medium mb-1">Tahmini Ciro</p>
+                <p className="text-2xl font-bold text-[#27AE60]">{formatRevenue(getBrandRevenue(detailBrand))}</p>
+              </div>
+              <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                <p className="text-xs text-blue-600 font-medium mb-1">Aylik Trafik</p>
+                <p className="text-2xl font-bold text-[#2980B9]">{formatTraffic(getBrandTraffic(detailBrand))}</p>
+              </div>
+              <div className="bg-purple-50 border border-purple-200 rounded-xl p-4">
+                <p className="text-xs text-purple-600 font-medium mb-1">AOV</p>
+                <p className="text-2xl font-bold text-purple-700">{getBrandAov(detailBrand) != null ? `$${getBrandAov(detailBrand)}` : "-"}</p>
+              </div>
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+                <p className="text-xs text-amber-600 font-medium mb-1">TQS / Donusum</p>
+                <p className="text-2xl font-bold text-amber-700">
+                  {getBrandTQS(detailBrand) ?? "-"}{" "}
+                  <span className="text-base font-medium text-gray-500">
+                    / {getBrandConversion(detailBrand) != null ? `%${getBrandConversion(detailBrand)}` : "-"}
+                  </span>
+                </p>
+              </div>
+              <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
+                <p className="text-xs text-gray-500 font-medium mb-1">Ulke & Kurulus</p>
+                <p className="text-lg font-bold text-gray-800">
+                  {FLAG[getBrandCountry(detailBrand).toUpperCase()] || ""} {getBrandCountry(detailBrand).toUpperCase() || "-"}{" "}
+                  <span className="text-gray-400 font-normal">|</span> {getBrandFounded(detailBrand) || "-"}
+                </p>
+              </div>
+              <div className="bg-[#667eea]/5 border border-[#667eea]/20 rounded-xl p-4">
+                <p className="text-xs text-[#667eea] font-medium mb-1">Kategori</p>
+                <p className="text-lg font-bold text-gray-800">{getBrandCategory(detailBrand) || "-"}</p>
+              </div>
+            </div>
+
+            <div className="px-6 pb-6 space-y-4">
+              {getBrandInsight(detailBrand) && (
+                <div className="bg-gray-50 rounded-xl p-4">
+                  <p className="text-xs text-gray-500 font-semibold mb-2 uppercase tracking-wide">One Cikan Ozellik</p>
+                  <p className="text-sm text-gray-700 leading-relaxed">{getBrandInsight(detailBrand)}</p>
+                </div>
+              )}
+              {getBrandGrowth(detailBrand) && (
+                <div className="bg-gray-50 rounded-xl p-4">
+                  <p className="text-xs text-gray-500 font-semibold mb-2 uppercase tracking-wide">Buyume Yontemi</p>
+                  <div className="flex flex-wrap gap-2">
+                    {getBrandGrowth(detailBrand).split(",").filter(Boolean).map((g, i) => (
+                      <span key={i} className="inline-block bg-emerald-100 text-emerald-700 px-2.5 py-1 rounded-lg text-xs font-medium">{g.trim()}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {getBrandMarketingAngles(detailBrand) && (
+                <div className="bg-gray-50 rounded-xl p-4">
+                  <p className="text-xs text-gray-500 font-semibold mb-2 uppercase tracking-wide">Pazarlama Acilari</p>
+                  <div className="flex flex-wrap gap-2">
+                    {getBrandMarketingAngles(detailBrand).split(",").filter(Boolean).map((a, i) => (
+                      <span key={i} className="inline-block bg-purple-100 text-purple-700 px-2.5 py-1 rounded-lg text-xs font-medium">{a.trim()}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {getBrandMetaAds(detailBrand) && (
+                <div className="bg-gray-50 rounded-xl p-4">
+                  <p className="text-xs text-gray-500 font-semibold mb-2 uppercase tracking-wide">Meta Ads</p>
+                  <a
+                    href={getBrandMetaAds(detailBrand).startsWith("http") ? getBrandMetaAds(detailBrand) : `https://${getBrandMetaAds(detailBrand)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-sm text-blue-600 hover:underline"
+                  >
+                    Meta Reklam Kutuphanesi <ExternalLink size={12} />
+                  </a>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
@@ -903,7 +747,7 @@ export default function SavedPage() {
           <div className="bg-white rounded-xl p-6 w-full max-w-sm shadow-xl">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold text-gray-900">
-                Klasöre Taşı
+                Klasore Tasi
               </h2>
               <button
                 onClick={() => setShowMoveModal(false)}
@@ -913,7 +757,7 @@ export default function SavedPage() {
               </button>
             </div>
             <p className="text-sm text-gray-500 mb-3">
-              {selectedBrands.size} marka taşınacak
+              {selectedBrands.size} marka tasinacak
             </p>
             <div className="space-y-2">
               {folders
@@ -930,7 +774,7 @@ export default function SavedPage() {
                 ))}
               {folders.filter((f) => f !== activeFolder).length === 0 && (
                 <p className="text-sm text-gray-400 text-center py-4">
-                  Taşınacak başka klasör yok
+                  Tasinacak baska klasor yok
                 </p>
               )}
             </div>

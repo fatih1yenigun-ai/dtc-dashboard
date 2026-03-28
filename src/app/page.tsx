@@ -15,7 +15,7 @@ import {
   X,
 } from "lucide-react";
 import { loadFolders, createFolder, saveBrandsBulk, type BrandData } from "@/lib/supabase";
-import { tqsToConversion, estimateRevenue } from "@/lib/tqs";
+import { useResearch } from "@/context/ResearchContext";
 
 interface BrandResult {
   brand_name: string;
@@ -31,11 +31,9 @@ interface BrandResult {
   founded: number;
   country: string;
   meta_ads_url: string;
-  // Niche summary (only on first brand)
   niche_summary?: string;
   niche_pros?: string;
   niche_cons?: string;
-  // Calculated:
   tqs?: number;
   conversion?: number;
   estimated_revenue?: number;
@@ -83,10 +81,12 @@ const CHART_STYLE_TAG = `
 `;
 
 export default function HomePage() {
-  const [keyword, setKeyword] = useState("");
+  // Context state (persistent across navigation)
+  const { keyword, results, loading, nicheSummary, error, startResearch, setKeyword: setGlobalKeyword } = useResearch();
+
+  // Local state
+  const [localKeyword, setLocalKeyword] = useState("");
   const [count, setCount] = useState(50);
-  const [loading, setLoading] = useState(false);
-  const [results, setResults] = useState<BrandResult[]>([]);
   const [selected, setSelected] = useState<Set<number>>(new Set());
   const [folders, setFolders] = useState<string[]>([]);
   const [selectedFolder, setSelectedFolder] = useState<string>("");
@@ -97,24 +97,34 @@ export default function HomePage() {
   const [sortAsc, setSortAsc] = useState(false);
   const [detailBrand, setDetailBrand] = useState<BrandResult | null>(null);
 
-  // Restore from sessionStorage on mount
+  // Restore localKeyword from context or sessionStorage on mount
   useEffect(() => {
-    try {
-      const saved = sessionStorage.getItem("lastResearch");
-      if (saved) {
-        const data = JSON.parse(saved);
-        if (data.results) setResults(data.results);
-        if (data.keyword) setKeyword(data.keyword);
+    if (keyword) {
+      setLocalKeyword(keyword);
+    } else if (results.length === 0 && typeof window !== "undefined") {
+      try {
+        const saved = sessionStorage.getItem("lastResearch");
+        if (saved) {
+          const data = JSON.parse(saved);
+          setLocalKeyword(data.keyword || "");
+        }
+      } catch {
+        // ignore
       }
-    } catch {
-      // ignore parse errors
     }
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Niche summary from first brand
-  const nicheSummary = results.length > 0 ? results[0].niche_summary : undefined;
-  const nichePros = results.length > 0 ? results[0].niche_pros : undefined;
-  const nicheCons = results.length > 0 ? results[0].niche_cons : undefined;
+  // Sync localKeyword when context keyword changes (e.g. restored from session)
+  useEffect(() => {
+    if (keyword && keyword !== localKeyword) {
+      setLocalKeyword(keyword);
+    }
+  }, [keyword]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Niche summary from context
+  const nicheSummaryText = nicheSummary?.summary;
+  const nichePros = nicheSummary?.pros;
+  const nicheCons = nicheSummary?.cons;
 
   // Sorted results
   const sortedResults = useMemo(() => {
@@ -237,39 +247,10 @@ export default function HomePage() {
     );
   }
 
-  async function handleSearch() {
-    if (!keyword.trim()) return;
-    setLoading(true);
-    setResults([]);
+  function handleSearch() {
+    if (!localKeyword.trim()) return;
     setSelected(new Set());
-    try {
-      const res = await fetch("/api/research", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ keyword, count }),
-      });
-      const data = await res.json();
-      if (data.brands) {
-        const enriched: BrandResult[] = data.brands.map((b: BrandResult) => {
-          const tqs = 5.5;
-          const conversion = tqsToConversion(tqs, b.niche);
-          const rev = estimateRevenue(b.estimated_traffic, b.aov, conversion);
-          return {
-            ...b,
-            tqs,
-            conversion,
-            estimated_revenue: rev,
-          };
-        });
-        setResults(enriched);
-        // Persist to sessionStorage
-        sessionStorage.setItem("lastResearch", JSON.stringify({ keyword, results: enriched }));
-      }
-    } catch (err) {
-      console.error("Research error:", err);
-    } finally {
-      setLoading(false);
-    }
+    startResearch(localKeyword, count);
   }
 
   function toggleSelect(idx: number) {
@@ -381,13 +362,12 @@ export default function HomePage() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `dtc-research-${keyword}.csv`;
+    a.download = `dtc-research-${localKeyword}.csv`;
     a.click();
   }
 
   // Build SVG donut chart data
   const donutSegments = useMemo(() => {
-    const total = categoryDist.reduce((s, c) => s + c.pct, 0) || 100;
     let cumulative = 0;
     return categoryDist.map((cat, i) => {
       const pct = cat.pct || 0;
@@ -398,7 +378,6 @@ export default function HomePage() {
         color: DONUT_COLORS[i % DONUT_COLORS.length],
         dashArray: `${(pct / 100) * 283} ${283 - (pct / 100) * 283}`,
         dashOffset: -((offset / 100) * 283),
-        total,
       };
     });
   }, [categoryDist]);
@@ -429,8 +408,8 @@ export default function HomePage() {
               />
               <input
                 type="text"
-                value={keyword}
-                onChange={(e) => setKeyword(e.target.value)}
+                value={localKeyword}
+                onChange={(e) => setLocalKeyword(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleSearch()}
                 placeholder="ornegin: protein bar, cilt bakimi..."
                 className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#667eea]/30 focus:border-[#667eea]"
@@ -457,7 +436,7 @@ export default function HomePage() {
           <div className="flex items-end">
             <button
               onClick={handleSearch}
-              disabled={loading || !keyword.trim()}
+              disabled={loading || !localKeyword.trim()}
               className="gradient-accent text-white px-6 py-2.5 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center gap-2"
             >
               {loading ? (
@@ -470,6 +449,13 @@ export default function HomePage() {
           </div>
         </div>
       </div>
+
+      {/* Error */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-6 text-red-700 text-sm">
+          {error}
+        </div>
+      )}
 
       {/* Loading */}
       {loading && (
@@ -864,32 +850,32 @@ export default function HomePage() {
           </div>
 
           {/* Nis Ozeti Section */}
-          {nicheSummary && (
+          {nicheSummaryText && (
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mt-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-3">Nis Ozeti</h3>
-              <p className="text-sm text-gray-700 mb-4 leading-relaxed">{nicheSummary}</p>
+              <p className="text-sm text-gray-700 mb-4 leading-relaxed">{nicheSummaryText}</p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {nichePros && (
+                {nichePros && nichePros.length > 0 && (
                   <div>
                     <h4 className="text-sm font-semibold text-[#27AE60] mb-2">Avantajlar</h4>
                     <ul className="space-y-1">
-                      {nichePros.split(",").map((pro, i) => (
+                      {nichePros.map((pro, i) => (
                         <li key={i} className="flex items-start gap-2 text-sm text-gray-700">
                           <span className="text-[#27AE60] mt-0.5 flex-shrink-0">&#x2022;</span>
-                          {pro.trim()}
+                          {pro}
                         </li>
                       ))}
                     </ul>
                   </div>
                 )}
-                {nicheCons && (
+                {nicheCons && nicheCons.length > 0 && (
                   <div>
                     <h4 className="text-sm font-semibold text-[#E74C3C] mb-2">Dezavantajlar</h4>
                     <ul className="space-y-1">
-                      {nicheCons.split(",").map((con, i) => (
+                      {nicheCons.map((con, i) => (
                         <li key={i} className="flex items-start gap-2 text-sm text-gray-700">
                           <span className="text-[#E74C3C] mt-0.5 flex-shrink-0">&#x2022;</span>
-                          {con.trim()}
+                          {con}
                         </li>
                       ))}
                     </ul>
