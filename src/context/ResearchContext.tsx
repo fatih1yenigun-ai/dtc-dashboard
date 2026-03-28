@@ -126,6 +126,16 @@ export function ResearchProvider({ children }: { children: ReactNode }) {
             const traffic = typeof b.estimated_traffic === "number" ? b.estimated_traffic : 0;
             const revenue = estimateRevenue(traffic, aov, conversion);
             return { ...b, aov, estimated_traffic: traffic, tqs, conversion, estimated_revenue: revenue };
+          })
+          .filter((b: BrandResult) => {
+            // Client-side revenue filter
+            const rev = b.estimated_revenue || 0;
+            const range = filters?.revenueRange;
+            if (!range || range === "all") return true;
+            if (range === "below-50k") return rev < 50000;
+            if (range === "50k-300k") return rev >= 50000 && rev <= 300000;
+            if (range === "300k+") return rev >= 300000;
+            return true;
           });
 
         // Extract niche summary from first batch
