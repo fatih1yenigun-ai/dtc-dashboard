@@ -5,9 +5,55 @@ const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
 
+// Niche multipliers for conversion rate
+const NICHE_LIST = `
+Niş kategorileri ve dönüşüm çarpanları:
+- gida_icecek (Yiyecek & İçecek): 2.0x
+- kahve_cay (Kahve & Çay): 2.0x
+- atistirmalik (Atıştırmalık & Snack): 2.0x
+- takviye_supplement (Takviye & Supplement): 1.8x
+- protein_fitness_gida (Protein & Fitness Gıda): 1.8x
+- cilt_bakim (Cilt Bakımı): 1.5x
+- sac_bakim (Saç Bakımı): 1.5x
+- makyaj (Makyaj & Kozmetik): 1.5x
+- parfum_koku (Parfüm & Koku): 1.5x
+- vucut_bakim (Vücut Bakımı): 1.5x
+- erkek_bakim (Erkek Bakım): 1.5x
+- dis_agiz_bakim (Diş & Ağız Bakımı): 1.5x
+- bebek_anne (Bebek & Anne): 1.4x
+- evcil_hayvan (Evcil Hayvan): 1.4x
+- saglik_wellness (Sağlık & Wellness): 1.3x
+- kadin_sagligi (Kadın Sağlığı): 1.3x
+- cinsel_saglik (Cinsel Sağlık): 1.3x
+- moda_kadin (Kadın Moda): 1.0x
+- moda_erkek (Erkek Moda): 1.0x
+- ic_giyim (İç Giyim & Çorap): 1.0x
+- ayakkabi (Ayakkabı & Terlik): 1.0x
+- aksesuar_taki (Aksesuar & Takı): 1.0x
+- gozluk (Gözlük & Güneş Gözlüğü): 1.0x
+- spor_giyim (Spor Giyim & Athleisure): 1.0x
+- ev_tekstil (Ev Tekstili & Yatak): 1.0x
+- battaniye_yorgan (Battaniye & Yorgan): 1.0x
+- havlu_bornoz (Havlu & Bornoz): 1.0x
+- organizasyon (Ev Organizasyon): 1.0x
+- hali_kilim (Halı & Kilim): 1.0x
+- mum_koku (Mum & Ev Kokusu): 1.1x
+- mutfak (Mutfak & Pişirme): 0.9x
+- temizlik (Temizlik & Ev Bakımı): 0.9x
+- outdoor (Outdoor & Kamp): 0.8x
+- seyahat (Seyahat & Bavul): 0.8x
+- teknoloji_aksesuar (Teknoloji Aksesuarı): 0.7x
+- elektronik (Elektronik & Gadget): 0.7x
+- uyku_teknoloji (Uyku Teknolojisi): 0.7x
+- luks_moda (Lüks Moda): 0.5x
+- luks_aksesuar (Lüks Aksesuar): 0.5x
+- luks_ev (Lüks Ev & Dekor): 0.5x
+- genel (Genel / Diğer): 1.0x
+`;
+
 export async function POST(request: NextRequest) {
   try {
-    const { keyword, count = 10, niche = "fashion" } = await request.json();
+    const { keyword, count = 10 } = await request.json();
 
     if (!keyword) {
       return NextResponse.json(
@@ -16,37 +62,39 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const prompt = `You are a DTC (Direct-to-Consumer) brand research expert. Find ${count} real DTC brands related to "${keyword}" in the ${niche} niche.
+    const prompt = `Sen bir DTC (Direct-to-Consumer) marka araştırma uzmanısın. "${keyword}" ile ilgili ${count} gerçek DTC markası bul.
 
-For each brand, provide:
-1. brand_name: The brand name
-2. website: The brand's website URL (just domain, no https://)
-3. category: Product category in Turkish
-4. aov: Estimated Average Order Value (e.g. "$45", "€60")
-5. insight: A brief marketing insight about the brand in Turkish (1-2 sentences)
-6. meta_ads_url: Facebook Ad Library URL (format: https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=ALL&q=BRAND_NAME)
+Her marka için şunları ver:
+1. brand_name: Marka adı
+2. website: Web sitesi (sadece domain, https:// olmadan)
+3. category: Ürün kategorisi (Türkçe)
+4. niche: Aşağıdaki niş listesinden en uygun olanı seç (sadece kodu yaz):
+${NICHE_LIST}
+5. aov: Tahmini Ortalama Sipariş Değeri (USD sayı olarak, örn: 45)
+6. estimated_traffic: Tahmini aylık trafik (sayı olarak, örn: 150000). Marka büyüklüğüne göre tahmin et.
+7. insight: Markanın pazarlama açısı, ne ile farklılaştığı (Türkçe, 1-2 cümle)
+8. history: Kuruluş hikayesi, nasıl büyüdüğü (Türkçe, 1 cümle)
+9. founded: Kuruluş yılı (sayı, örn: 2019)
+10. meta_ads_url: Facebook Reklam Kütüphanesi URL'si (format: https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=ALL&q=MARKA_ADI)
 
-Return ONLY a valid JSON array. No markdown, no code blocks, no explanation. Just the raw JSON array.
+SADECE geçerli JSON array döndür. Markdown yok, açıklama yok. Ham JSON array.
 
-Example format:
-[{"brand_name":"Example Brand","website":"example.com","category":"Cilt Bakimi","aov":"$55","insight":"Organik iceriklerle one cikan DTC markasi.","meta_ads_url":"https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=ALL&q=Example%20Brand"}]`;
+Örnek:
+[{"brand_name":"Bearaby","website":"bearaby.com","category":"Ağırlıklı Battaniye","niche":"ev_tekstil","aov":249,"estimated_traffic":210000,"insight":"Dolgu malzemesiz örgü ağırlıklı battaniye ile kategoride devrim yarattı","history":"2018'de Kickstarter ile kuruldu, Inc. 5000'de 82. sıra","founded":2019,"meta_ads_url":"https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=ALL&q=Bearaby"}]`;
 
     const message = await anthropic.messages.create({
       model: "claude-sonnet-4-20250514",
-      max_tokens: 4096,
+      max_tokens: 8000,
       messages: [{ role: "user", content: prompt }],
     });
 
     const text =
       message.content[0].type === "text" ? message.content[0].text : "";
 
-    // Parse JSON from response
     let brands;
     try {
-      // Try direct parse first
       brands = JSON.parse(text);
     } catch {
-      // Try to extract JSON array from the text
       const match = text.match(/\[[\s\S]*\]/);
       if (match) {
         brands = JSON.parse(match[0]);
@@ -59,7 +107,7 @@ Example format:
   } catch (error) {
     console.error("Research API error:", error);
     return NextResponse.json(
-      { error: "Arastirma sirasinda hata olustu" },
+      { error: "Araştırma sırasında hata oluştu" },
       { status: 500 }
     );
   }

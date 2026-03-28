@@ -11,20 +11,37 @@ import {
   Square,
 } from "lucide-react";
 import { loadFolders, createFolder, saveBrandsBulk, type BrandData } from "@/lib/supabase";
+import { tqsToConversion, estimateRevenue } from "@/lib/tqs";
 
 interface BrandResult {
   brand_name: string;
   website: string;
   category: string;
-  aov: string;
+  niche: string;
+  aov: number;
+  estimated_traffic: number;
   insight: string;
+  history: string;
+  founded: number;
   meta_ads_url: string;
+  // Calculated fields (added client-side):
+  tqs?: number;
+  conversion?: number;
+  estimated_revenue?: number;
+}
+
+function formatNumber(n: number): string {
+  return n.toLocaleString("tr-TR");
+}
+
+function truncate(str: string, max: number): string {
+  if (!str) return "";
+  return str.length > max ? str.slice(0, max) + "..." : str;
 }
 
 export default function HomePage() {
   const [keyword, setKeyword] = useState("");
   const [count, setCount] = useState(10);
-  const [niche, setNiche] = useState("fashion");
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<BrandResult[]>([]);
   const [selected, setSelected] = useState<Set<number>>(new Set());
@@ -33,17 +50,6 @@ export default function HomePage() {
   const [newFolderName, setNewFolderName] = useState("");
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [saveMsg, setSaveMsg] = useState("");
-
-  const niches = [
-    { value: "fashion", label: "Moda" },
-    { value: "beauty", label: "Guzellik & Bakim" },
-    { value: "food_bev", label: "Yiyecek & Icecek" },
-    { value: "electronics", label: "Elektronik" },
-    { value: "luxury", label: "Luks" },
-    { value: "home", label: "Ev & Yasam" },
-    { value: "health", label: "Saglik" },
-    { value: "pet", label: "Evcil Hayvan" },
-  ];
 
   async function handleSearch() {
     if (!keyword.trim()) return;
@@ -54,11 +60,22 @@ export default function HomePage() {
       const res = await fetch("/api/research", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ keyword, count, niche }),
+        body: JSON.stringify({ keyword, count }),
       });
       const data = await res.json();
       if (data.brands) {
-        setResults(data.brands);
+        const enriched: BrandResult[] = data.brands.map((b: BrandResult) => {
+          const tqs = 5.5;
+          const conversion = tqsToConversion(tqs, b.niche);
+          const rev = estimateRevenue(b.estimated_traffic, b.aov, conversion);
+          return {
+            ...b,
+            tqs,
+            conversion,
+            estimated_revenue: rev,
+          };
+        });
+        setResults(enriched);
       }
     } catch (err) {
       console.error("Research error:", err);
@@ -99,7 +116,7 @@ export default function HomePage() {
     const name = newFolderName.trim();
     const ok = await createFolder(name);
     if (ok) {
-      setFolders((prev) => prev.includes(name) ? prev : [...prev, name]);
+      setFolders((prev) => (prev.includes(name) ? prev : [...prev, name]));
       setSelectedFolder(name);
       setNewFolderName("");
     }
@@ -109,16 +126,22 @@ export default function HomePage() {
     const folder = newFolderName.trim() || selectedFolder;
     if (!folder || selected.size === 0) return;
 
-    // Convert BrandResult to BrandData format
     const brandsToSave: BrandData[] = Array.from(selected).map((i) => {
-      const r = results[i];
+      const b = results[i];
       return {
-        Marka: r.brand_name,
-        "Web Sitesi": r.website,
-        Kategori: r.category,
-        "AOV ($)": parseFloat(r.aov) || 0,
-        "Öne Çıkan Özellik": r.insight,
-        "Meta Ads": r.meta_ads_url,
+        Marka: b.brand_name,
+        "Web Sitesi": `https://${b.website}`,
+        Kategori: b.category,
+        "AOV ($)": b.aov,
+        "Aylik Trafik": b.estimated_traffic,
+        TQS: b.tqs,
+        "Donusum %": b.conversion,
+        "Tahmini Aylik Gelir ($)": b.estimated_revenue,
+        "One Cikan Ozellik": b.insight,
+        "Marka Hikayesi": b.history,
+        "Kurulus Yili": b.founded,
+        "Meta Ads": b.meta_ads_url,
+        Nis: b.niche,
       };
     });
 
@@ -136,11 +159,39 @@ export default function HomePage() {
   }
 
   function exportCSV() {
+    const headers = [
+      "Marka",
+      "Website",
+      "Kategori",
+      "Nis",
+      "AOV ($)",
+      "Aylik Trafik",
+      "TQS",
+      "Donusum %",
+      "Tahmini Aylik Gelir ($)",
+      "One Cikan Ozellik",
+      "Marka Hikayesi",
+      "Kurulus Yili",
+      "Meta Ads",
+    ];
     const rows = results.map((b) =>
-      [b.brand_name, b.website, b.category, b.aov, b.insight, b.meta_ads_url].join(",")
+      [
+        b.brand_name,
+        b.website,
+        b.category,
+        b.niche,
+        b.aov,
+        b.estimated_traffic,
+        b.tqs ?? 5.5,
+        b.conversion ?? 0,
+        b.estimated_revenue ?? 0,
+        `"${(b.insight || "").replace(/"/g, '""')}"`,
+        `"${(b.history || "").replace(/"/g, '""')}"`,
+        b.founded,
+        b.meta_ads_url,
+      ].join(",")
     );
-    const csv =
-      "Marka,Website,Kategori,AOV,Insight,Meta Ads\n" + rows.join("\n");
+    const csv = headers.join(",") + "\n" + rows.join("\n");
     const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -195,23 +246,6 @@ export default function HomePage() {
               <option value={20}>20</option>
               <option value={30}>30</option>
               <option value={50}>50</option>
-            </select>
-          </div>
-
-          <div className="w-48">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Nis
-            </label>
-            <select
-              value={niche}
-              onChange={(e) => setNiche(e.target.value)}
-              className="w-full py-2.5 px-3 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#667eea]/30"
-            >
-              {niches.map((n) => (
-                <option key={n.value} value={n.value}>
-                  {n.label}
-                </option>
-              ))}
             </select>
           </div>
 
@@ -283,68 +317,105 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Results Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-            {results.map((brand, idx) => (
-              <div
-                key={idx}
-                onClick={() => toggleSelect(idx)}
-                className={`bg-white rounded-xl border p-5 cursor-pointer card-hover ${
-                  selected.has(idx)
-                    ? "border-[#667eea] ring-2 ring-[#667eea]/20"
-                    : "border-gray-200"
-                }`}
-              >
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <h3 className="font-semibold text-gray-900">
-                      {brand.brand_name}
-                    </h3>
-                    <a
-                      href={
-                        brand.website.startsWith("http")
-                          ? brand.website
-                          : `https://${brand.website}`
-                      }
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={(e) => e.stopPropagation()}
-                      className="text-sm text-[#2980B9] hover:underline flex items-center gap-1"
+          {/* Results Table */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm min-w-[1100px]">
+                <thead>
+                  <tr className="bg-[#0D1B2A] text-white">
+                    <th className="sticky left-0 z-10 bg-[#0D1B2A] px-3 py-3 text-left w-10">
+                      <button onClick={toggleAll}>
+                        {selected.size === results.length ? (
+                          <CheckSquare size={16} className="text-[#667eea]" />
+                        ) : (
+                          <Square size={16} className="text-gray-400" />
+                        )}
+                      </button>
+                    </th>
+                    <th className="sticky left-10 z-10 bg-[#0D1B2A] px-3 py-3 text-left font-semibold">
+                      Marka
+                    </th>
+                    <th className="px-3 py-3 text-left font-semibold">Web Sitesi</th>
+                    <th className="px-3 py-3 text-left font-semibold">Kategori</th>
+                    <th className="px-3 py-3 text-right font-semibold">AOV</th>
+                    <th className="px-3 py-3 text-right font-semibold">Aylik Trafik</th>
+                    <th className="px-3 py-3 text-center font-semibold">TQS</th>
+                    <th className="px-3 py-3 text-right font-semibold">Donusum %</th>
+                    <th className="px-3 py-3 text-right font-semibold">Tahmini Aylik Gelir</th>
+                    <th className="px-3 py-3 text-left font-semibold">One Cikan Ozellik</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {results.map((brand, idx) => (
+                    <tr
+                      key={idx}
+                      onClick={() => toggleSelect(idx)}
+                      className={`cursor-pointer border-t border-gray-100 transition-colors ${
+                        selected.has(idx)
+                          ? "bg-[#667eea]/5"
+                          : idx % 2 === 0
+                          ? "bg-white"
+                          : "bg-gray-50"
+                      } hover:bg-[#667eea]/10`}
                     >
-                      {brand.website} <ExternalLink size={12} />
-                    </a>
-                  </div>
-                  {selected.has(idx) ? (
-                    <CheckSquare size={20} className="text-[#667eea]" />
-                  ) : (
-                    <Square size={20} className="text-gray-300" />
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs bg-[#667eea]/10 text-[#667eea] px-2 py-0.5 rounded-full font-medium">
-                      {brand.category}
-                    </span>
-                    <span className="text-xs bg-[#27AE60]/10 text-[#27AE60] px-2 py-0.5 rounded-full font-medium">
-                      AOV: {brand.aov}
-                    </span>
-                  </div>
-                  <p className="text-sm text-gray-600 line-clamp-2">
-                    {brand.insight}
-                  </p>
-                  <a
-                    href={brand.meta_ads_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={(e) => e.stopPropagation()}
-                    className="inline-flex items-center gap-1 text-xs text-blue-600 hover:underline"
-                  >
-                    Meta Ads <ExternalLink size={10} />
-                  </a>
-                </div>
-              </div>
-            ))}
+                      <td className="sticky left-0 z-10 px-3 py-3" style={{ backgroundColor: "inherit" }}>
+                        {selected.has(idx) ? (
+                          <CheckSquare size={16} className="text-[#667eea]" />
+                        ) : (
+                          <Square size={16} className="text-gray-300" />
+                        )}
+                      </td>
+                      <td className="sticky left-10 z-10 px-3 py-3 font-bold text-gray-900 whitespace-nowrap" style={{ backgroundColor: "inherit" }}>
+                        {brand.brand_name}
+                      </td>
+                      <td className="px-3 py-3 whitespace-nowrap">
+                        <a
+                          href={
+                            brand.website.startsWith("http")
+                              ? brand.website
+                              : `https://${brand.website}`
+                          }
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          className="text-[#2980B9] hover:underline inline-flex items-center gap-1"
+                        >
+                          {brand.website}
+                          <ExternalLink size={12} />
+                        </a>
+                      </td>
+                      <td className="px-3 py-3">
+                        <span className="inline-block bg-[#667eea]/10 text-[#667eea] px-2 py-0.5 rounded-full text-xs font-medium whitespace-nowrap">
+                          {brand.category}
+                        </span>
+                      </td>
+                      <td className="px-3 py-3 text-right font-medium text-gray-900 whitespace-nowrap">
+                        ${brand.aov}
+                      </td>
+                      <td className="px-3 py-3 text-right font-medium text-[#2980B9] whitespace-nowrap">
+                        {formatNumber(brand.estimated_traffic)}
+                      </td>
+                      <td className="px-3 py-3 text-center">
+                        <span className="inline-block bg-amber-100 text-amber-800 px-2 py-0.5 rounded text-xs font-semibold">
+                          {brand.tqs}
+                        </span>
+                      </td>
+                      <td className="px-3 py-3 text-right font-medium text-gray-700 whitespace-nowrap">
+                        %{brand.conversion}
+                      </td>
+                      <td className="px-3 py-3 text-right font-bold text-[#27AE60] whitespace-nowrap">
+                        ${formatNumber(brand.estimated_revenue ?? 0)}
+                      </td>
+                      <td className="px-3 py-3 text-gray-600 max-w-[250px]">
+                        <span title={brand.insight}>
+                          {truncate(brand.insight, 60)}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       )}
@@ -354,19 +425,28 @@ export default function HomePage() {
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-xl p-6 w-full max-w-md">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-semibold">Klasöre Kaydet</h2>
-              <button onClick={() => setShowSaveModal(false)} className="text-gray-400 hover:text-gray-600 text-xl font-bold">✕</button>
+              <h2 className="text-lg font-semibold">Klasore Kaydet</h2>
+              <button
+                onClick={() => setShowSaveModal(false)}
+                className="text-gray-400 hover:text-gray-600 text-xl font-bold"
+              >
+                ✕
+              </button>
             </div>
 
             {saveMsg ? (
-              <p className={`text-center font-medium py-4 ${saveMsg.includes("Hata") ? "text-red-500" : "text-[#27AE60]"}`}>
+              <p
+                className={`text-center font-medium py-4 ${
+                  saveMsg.includes("Hata") ? "text-red-500" : "text-[#27AE60]"
+                }`}
+              >
                 {saveMsg}
               </p>
             ) : (
               <>
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Klasör Seç
+                    Klasor Sec
                   </label>
                   <select
                     value={selectedFolder}
