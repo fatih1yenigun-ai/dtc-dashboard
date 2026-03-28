@@ -158,6 +158,11 @@ export async function POST(request: NextRequest) {
       data = await searchVideos(token, keyword, page, pageSize);
     }
 
+    // Debug: log if no results
+    if (!data?.result?.data && !data?.data) {
+      console.error("PiPiAds unexpected response:", JSON.stringify(data).substring(0, 500));
+    }
+
     // Log activity
     if (userId) {
       await logActivity(userId, "tts_pipiads_search", keyword, {

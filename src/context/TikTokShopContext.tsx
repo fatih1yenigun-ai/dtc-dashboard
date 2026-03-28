@@ -185,14 +185,16 @@ export function TikTokShopProvider({ children }: { children: ReactNode }) {
         let total = 1;
 
         if (mode === "product") {
-          const list = data.data?.list || data.list || [];
+          // Product response: { result: { data: [...], total: N } }
+          const list = data.result?.data || data.data?.list || data.list || [];
           products = list.map(mapProductResult);
-          const totalCount = data.data?.total || data.total || list.length;
+          const totalCount = data.result?.total || data.data?.total || data.total || list.length;
           total = Math.max(1, Math.ceil(totalCount / pageSize));
         } else {
-          const list = data.data?.list || data.list || [];
+          // Video response: { result: { data: [...], total: N } }
+          const list = data.result?.data || data.data?.list || data.list || [];
           products = list.map(mapVideoResult);
-          const totalCount = data.data?.total || data.total || list.length;
+          const totalCount = data.result?.total || data.data?.total || data.total || list.length;
           total = Math.max(1, Math.ceil(totalCount / pageSize));
         }
 
