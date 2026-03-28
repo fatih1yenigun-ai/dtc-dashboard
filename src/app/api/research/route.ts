@@ -24,23 +24,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Keyword is required" }, { status: 400 });
     }
 
-    const batchCount = Math.min(count, 10);
+    const batchCount = Math.min(count, 15);
 
-    let prompt = `"${keyword}" nişinde ${batchCount} DTC markası bul. JSON array döndür.
+    let prompt = `"${keyword}" ile ilgili tam olarak ${batchCount} DTC e-ticaret markası listele. Bilinen, gerçek markalar olsun. Büyük ve küçük markalar karışık olabilir.
 
-Her marka: {"brand_name":"X","website":"x.com","category":"Türkçe kategori","niche":"kod","aov":50,"estimated_traffic":100000,"insight":"Türkçe 1 cümle","marketing_angles":"açı1, açı2","growth_method":"yöntem1, yöntem2","history":"Türkçe 1 cümle","founded":2020,"country":"US","meta_ads_url":"https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=ALL&q=X"}
+JSON array formatı:
+{"brand_name":"X","website":"x.com","category":"Türkçe","niche":"kod","aov":50,"estimated_traffic":100000,"insight":"Türkçe 1 cümle, pazarlama açısı ve fark","marketing_angles":"açı1, açı2","growth_method":"yöntem1, yöntem2","history":"Türkçe 1 cümle","founded":2020,"country":"US","meta_ads_url":"https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=ALL&q=X"}
 
 Niş kodları: gida_icecek, kahve_cay, atistirmalik, takviye_supplement, cilt_bakim, sac_bakim, makyaj, parfum_koku, vucut_bakim, erkek_bakim, bebek_anne, evcil_hayvan, saglik_wellness, kadin_sagligi, moda_kadin, moda_erkek, ic_giyim, ayakkabi, aksesuar_taki, spor_giyim, ev_tekstil, battaniye_yorgan, organizasyon, hali_kilim, mum_koku, mutfak, temizlik, outdoor, seyahat, teknoloji_aksesuar, elektronik, luks_moda, genel
 
 İLK markaya ekle: "niche_summary":"3 cümle pazar özeti","niche_pros":"avantaj1, avantaj2, avantaj3","niche_cons":"dezavantaj1, dezavantaj2, dezavantaj3"
 
-ÖNEMLİ KURALLAR:
-1. Sadece GERÇEK, var olan markalar ve gerçek web siteleri yaz. Uydurma marka veya website YAZMA.
-2. Eğer yeterince gerçek marka bulamıyorsan, daha az marka döndür. 3 gerçek marka, 10 uydurma markadan iyidir.
-3. Website'lerin gerçek ve aktif olduğundan emin ol. Şüphe duyduğun domain'leri YAZMA.
-4. .com.tr gibi yerelleştirilmiş domain'ler UYDURMA — sadece gerçekten var olanları yaz.
-
-SADECE JSON array. Markdown yok.`;
+Tam olarak ${batchCount} marka döndür. SADECE JSON array. Markdown yok.`;
 
     let filterInstructions = "";
 

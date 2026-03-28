@@ -33,9 +33,9 @@ export async function createUser(username: string, password: string, role = "use
 
 export async function loginUser(username: string, password: string) {
   const { data, error } = await supabase.from("users").select("*").eq("username", username).single();
-  if (error || !data) throw new Error("Kullanici bulunamadi");
+  if (error || !data) throw new Error("Kullanıcı bulunamadı");
   const valid = await verifyPassword(password, data.password_hash);
-  if (!valid) throw new Error("Yanlis sifre");
+  if (!valid) throw new Error("Yanlış şifre");
   return data;
 }
 

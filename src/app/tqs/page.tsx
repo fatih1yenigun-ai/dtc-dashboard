@@ -63,9 +63,9 @@ export default function TQSPage() {
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">TQS Hesaplayici</h1>
+        <h1 className="text-2xl font-bold text-gray-900">TQS Hesaplayıcı</h1>
         <p className="text-gray-500 mt-1">
-          Trafik kalite puanini hesapla ve gelir tahminle
+          Trafik kalite puanını hesapla ve gelir tahminle
         </p>
       </div>
 
@@ -78,7 +78,7 @@ export default function TQSPage() {
             {/* Traffic */}
             <div className="mb-5">
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Aylik Trafik
+                Aylık Trafik
               </label>
               <input
                 type="number"
@@ -134,7 +134,7 @@ export default function TQSPage() {
             {/* Session Duration */}
             <div className="mb-5">
               <div className="flex justify-between text-sm mb-1">
-                <span className="font-medium text-gray-700">Oturum Suresi</span>
+                <span className="font-medium text-gray-700">Oturum Süresi</span>
                 <span className="text-[#667eea] font-semibold">
                   {formatMinSec(sessionSeconds)}
                 </span>
@@ -170,7 +170,7 @@ export default function TQSPage() {
             {/* Niche */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Nis
+                Niş
               </label>
               <select
                 value={niche}
@@ -259,14 +259,14 @@ export default function TQSPage() {
           {/* Revenue Estimates */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
-              <p className="text-xs text-gray-500 mb-1">Donusum Orani</p>
+              <p className="text-xs text-gray-500 mb-1">Dönüşüm Oranı</p>
               <p className="text-2xl font-bold text-[#667eea]">{convRate}%</p>
               <p className="text-xs text-gray-400 mt-1">
-                {NICHE_LABELS[niche]} nisi
+                {NICHE_LABELS[niche]} nişi
               </p>
             </div>
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
-              <p className="text-xs text-gray-500 mb-1">Aylik Gelir Tahmini</p>
+              <p className="text-xs text-gray-500 mb-1">Aylık Gelir Tahmini</p>
               <p className="text-2xl font-bold text-[#27AE60]">
                 {formatMoney(monthlyRev)}
               </p>
@@ -275,18 +275,18 @@ export default function TQSPage() {
               </p>
             </div>
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
-              <p className="text-xs text-gray-500 mb-1">Yillik Gelir Tahmini</p>
+              <p className="text-xs text-gray-500 mb-1">Yıllık Gelir Tahmini</p>
               <p className="text-2xl font-bold text-[#27AE60]">
                 {formatMoney(yearlyRev)}
               </p>
-              <p className="text-xs text-gray-400 mt-1">Aylik x 12</p>
+              <p className="text-xs text-gray-400 mt-1">Aylık x 12</p>
             </div>
           </div>
 
           {/* Niche Conversion Table */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <h2 className="font-semibold text-gray-900 mb-4">
-              {NICHE_LABELS[niche]} - Donusum Tablosu
+              {NICHE_LABELS[niche]} - Dönüşüm Tablosu
             </h2>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
@@ -312,7 +312,7 @@ export default function TQSPage() {
                 <tbody>
                   <tr>
                     <td className="py-2 px-3 text-gray-700 font-medium">
-                      Donusum %
+                      Dönüşüm %
                     </td>
                     {Array.from({ length: 10 }, (_, i) => i + 1).map((t) => (
                       <td

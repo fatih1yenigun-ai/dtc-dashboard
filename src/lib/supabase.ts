@@ -13,11 +13,11 @@ export interface BrandData {
   website?: string;
   Kategori?: string;
   category?: string;
-  "Alt Nis"?: string;
+  "Alt Niş"?: string;
   sub_niche?: string;
   "AOV ($)"?: number;
   est_aov?: number;
-  "One Cikan Ozellik"?: string;
+  "Öne Çıkan Özellik"?: string;
   insight?: string;
   "Marka Hikayesi"?: string;
   history?: string;

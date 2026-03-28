@@ -274,7 +274,7 @@ export default function AdminPage() {
   if (!user || user.role !== "admin") {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <p className="text-gray-400">Erisim reddedildi</p>
+        <p className="text-gray-400">Erişim reddedildi</p>
       </div>
     );
   }
@@ -282,7 +282,7 @@ export default function AdminPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <p className="text-gray-400">Yukleniyor...</p>
+        <p className="text-gray-400">Yükleniyor...</p>
       </div>
     );
   }
@@ -302,7 +302,7 @@ export default function AdminPage() {
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-gray-900">Admin Paneli</h1>
-        <p className="text-gray-500 mt-1">Kullanici yonetimi ve aktivite izleme</p>
+        <p className="text-gray-500 mt-1">Kullanıcı yönetimi ve aktivite izleme</p>
       </div>
 
       {/* Stats cards */}
@@ -314,7 +314,7 @@ export default function AdminPage() {
             </div>
             <div>
               <p className="text-2xl font-bold text-gray-900">{stats.totalUsers}</p>
-              <p className="text-xs text-gray-500">Toplam Kullanici</p>
+              <p className="text-xs text-gray-500">Toplam Kullanıcı</p>
             </div>
           </div>
         </div>
@@ -325,7 +325,7 @@ export default function AdminPage() {
             </div>
             <div>
               <p className="text-2xl font-bold text-gray-900">{stats.searchesToday}</p>
-              <p className="text-xs text-gray-500">Bugunki Arama</p>
+              <p className="text-xs text-gray-500">Bugünkü Arama</p>
             </div>
           </div>
         </div>
@@ -336,7 +336,7 @@ export default function AdminPage() {
             </div>
             <div>
               <p className="text-2xl font-bold text-gray-900">{stats.chatsToday}</p>
-              <p className="text-xs text-gray-500">Bugunki Chat</p>
+              <p className="text-xs text-gray-500">Bugünkü Chat</p>
             </div>
           </div>
         </div>
@@ -367,7 +367,7 @@ export default function AdminPage() {
       {/* Users table */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 mb-8">
         <div className="px-6 py-4 border-b border-gray-100">
-          <h2 className="text-lg font-semibold text-gray-900">Kullanicilar</h2>
+          <h2 className="text-lg font-semibold text-gray-900">Kullanıcılar</h2>
         </div>
         <div className="divide-y divide-gray-100">
           {users.map((u) => {
@@ -419,7 +419,7 @@ export default function AdminPage() {
                   <div className="px-6 pb-4 bg-gray-50">
                     <div className="grid grid-cols-3 gap-4 py-3">
                       <div>
-                        <p className="text-xs text-gray-500 mb-1">Klasorler</p>
+                        <p className="text-xs text-gray-500 mb-1">Klasörler</p>
                         <div className="flex flex-wrap gap-1">
                           {detail.folders.length > 0 ? detail.folders.map((f) => (
                             <span key={f} className="inline-block bg-white border border-gray-200 px-2 py-0.5 rounded text-xs text-gray-600">{f}</span>
@@ -442,7 +442,7 @@ export default function AdminPage() {
           })}
           {users.length === 0 && (
             <div className="px-6 py-8 text-center text-gray-400 text-sm">
-              Henuz kullanici yok
+              Henüz kullanıcı yok
             </div>
           )}
         </div>
@@ -457,7 +457,7 @@ export default function AdminPage() {
           >
             {modalLoading ? (
               <div className="flex items-center justify-center h-full">
-                <p className="text-gray-400">Yukleniyor...</p>
+                <p className="text-gray-400">Yükleniyor...</p>
               </div>
             ) : userModal ? (
               <>
@@ -465,7 +465,7 @@ export default function AdminPage() {
                 <div className="sticky top-0 bg-[#0D1B2A] border-b border-gray-700 px-6 py-4 flex items-center justify-between z-10">
                   <div>
                     <h2 className="text-lg font-bold text-white">{userModal.user.username}</h2>
-                    <p className="text-xs text-gray-400">{userModal.user.role} | Kayit: {formatDate(userModal.user.created_at)}</p>
+                    <p className="text-xs text-gray-400">{userModal.user.role} | Kayıt: {formatDate(userModal.user.created_at)}</p>
                   </div>
                   <button onClick={() => setUserModal(null)} className="text-gray-400 hover:text-white transition-colors">
                     <X size={22} />
@@ -486,7 +486,7 @@ export default function AdminPage() {
 
                 {/* Daily Breakdown */}
                 <div className="px-6 py-3">
-                  <h3 className="text-sm font-semibold text-gray-300 mb-3">Gunluk Detay</h3>
+                  <h3 className="text-sm font-semibold text-gray-300 mb-3">Günlük Detay</h3>
                   <div className="bg-[#1a2942] rounded-xl overflow-hidden">
                     <table className="w-full text-xs">
                       <thead>
@@ -520,7 +520,7 @@ export default function AdminPage() {
 
                 {/* Folders */}
                 <div className="px-6 py-3">
-                  <h3 className="text-sm font-semibold text-gray-300 mb-3">Klasorler</h3>
+                  <h3 className="text-sm font-semibold text-gray-300 mb-3">Klasörler</h3>
                   <div className="flex flex-wrap gap-2">
                     {userModal.folders.length > 0 ? userModal.folders.map((f) => (
                       <span key={f.name} className="inline-flex items-center gap-1.5 bg-[#1a2942] px-3 py-1.5 rounded-lg text-xs text-gray-300">
@@ -528,7 +528,7 @@ export default function AdminPage() {
                         <span className="bg-[#667eea]/20 text-[#667eea] px-1.5 py-0.5 rounded text-[10px] font-bold">{f.brandCount}</span>
                       </span>
                     )) : (
-                      <span className="text-xs text-gray-500">Klasor yok</span>
+                      <span className="text-xs text-gray-500">Klasör yok</span>
                     )}
                   </div>
                 </div>
@@ -553,7 +553,7 @@ export default function AdminPage() {
       {/* Activity log */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200">
         <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-gray-900">Aktivite Kayitlari</h2>
+          <h2 className="text-lg font-semibold text-gray-900">Aktivite Kayıtları</h2>
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-1.5 bg-gray-50 rounded-lg px-3 py-1.5">
               <Filter size={14} className="text-gray-400" />
@@ -561,7 +561,7 @@ export default function AdminPage() {
                 type="text"
                 value={filterUser}
                 onChange={(e) => setFilterUser(e.target.value)}
-                placeholder="Kullanici ara..."
+                placeholder="Kullanıcı ara..."
                 className="bg-transparent text-xs text-gray-600 outline-none w-24"
               />
             </div>
@@ -570,7 +570,7 @@ export default function AdminPage() {
               onChange={(e) => setFilterAction(e.target.value)}
               className="bg-gray-50 rounded-lg px-3 py-1.5 text-xs text-gray-600 outline-none border-none"
             >
-              <option value="">Tum aksiyonlar</option>
+              <option value="">Tüm aksiyonlar</option>
               <option value="search">Arama</option>
               <option value="chat">Chat</option>
             </select>
@@ -580,7 +580,7 @@ export default function AdminPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-gray-50 text-left">
-                <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Kullanici</th>
+                <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Kullanıcı</th>
                 <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Aksiyon</th>
                 <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Anahtar Kelime</th>
                 <th className="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Token</th>
@@ -612,7 +612,7 @@ export default function AdminPage() {
               {filteredActivities.length === 0 && (
                 <tr>
                   <td colSpan={5} className="px-6 py-8 text-center text-gray-400">
-                    Aktivite kaydi bulunamadi
+                    Aktivite kaydı bulunamadı
                   </td>
                 </tr>
               )}

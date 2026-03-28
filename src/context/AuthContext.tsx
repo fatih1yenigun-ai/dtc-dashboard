@@ -60,7 +60,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       body: JSON.stringify({ username, password }),
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Giris basarisiz");
+    if (!res.ok) throw new Error(data.error || "Giriş başarısız");
     localStorage.setItem("dtc_token", data.token);
     setToken(data.token);
     setUser(data.user);
@@ -73,7 +73,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       body: JSON.stringify({ username, password }),
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Kayit basarisiz");
+    if (!res.ok) throw new Error(data.error || "Kayıt başarısız");
     localStorage.setItem("dtc_token", data.token);
     setToken(data.token);
     setUser(data.user);

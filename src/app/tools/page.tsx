@@ -26,12 +26,12 @@ const NICHE_AOV: Record<string, { low: number; mid: number; high: number }> = {
 
 const AOV_NICHE_LABELS: Record<string, string> = {
   fashion: "Moda",
-  beauty: "Guzellik & Bakim",
-  food_bev: "Yiyecek & Icecek",
+  beauty: "Güzellik & Bakım",
+  food_bev: "Yiyecek & İçecek",
   electronics: "Elektronik",
-  luxury: "Luks",
-  home: "Ev & Yasam",
-  health: "Saglik",
+  luxury: "Lüks",
+  home: "Ev & Yaşam",
+  health: "Sağlık",
   pet: "Evcil Hayvan",
 };
 
@@ -80,9 +80,9 @@ export default function ToolsPage() {
 
   const positioning = useMemo(() => {
     if (estimatedAOV >= aovNicheData.high) return { label: "Premium", color: "#27AE60" };
-    if (estimatedAOV >= aovNicheData.mid) return { label: "Orta-Ust", color: "#667eea" };
+    if (estimatedAOV >= aovNicheData.mid) return { label: "Orta-Üst", color: "#667eea" };
     if (estimatedAOV >= aovNicheData.low) return { label: "Orta", color: "#F39C12" };
-    return { label: "Dusuk", color: "#E74C3C" };
+    return { label: "Düşük", color: "#E74C3C" };
   }, [estimatedAOV, aovNicheData]);
 
   function formatMoney(n: number): string {
@@ -98,8 +98,8 @@ export default function ToolsPage() {
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Teknik Toollar</h1>
-        <p className="text-gray-500 mt-1">TQS ve AOV hesaplayicilari</p>
+        <h1 className="text-2xl font-bold text-gray-900">Teknik Araçlar</h1>
+        <p className="text-gray-500 mt-1">TQS ve AOV hesaplayıcıları</p>
       </div>
 
       {/* Tabs */}
@@ -113,7 +113,7 @@ export default function ToolsPage() {
           }`}
         >
           <Calculator size={16} />
-          TQS Hesaplayici
+          TQS Hesaplayıcı
         </button>
         <button
           onClick={() => setActiveTab("aov")}
@@ -137,7 +137,7 @@ export default function ToolsPage() {
               <h2 className="font-semibold text-gray-900 mb-4">Metrikler</h2>
 
               <div className="mb-5">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Aylik Trafik</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Aylık Trafik</label>
                 <input
                   type="number"
                   value={traffic}
@@ -166,7 +166,7 @@ export default function ToolsPage() {
 
               <div className="mb-5">
                 <div className="flex justify-between text-sm mb-1">
-                  <span className="font-medium text-gray-700">Oturum Suresi</span>
+                  <span className="font-medium text-gray-700">Oturum Süresi</span>
                   <span className="text-[#667eea] font-semibold">{formatMinSec(sessionSeconds)}</span>
                 </div>
                 <input type="range" min={10} max={900} step={10} value={sessionSeconds} onChange={(e) => setSessionSeconds(Number(e.target.value))} className="w-full accent-[#667eea]" />
@@ -184,7 +184,7 @@ export default function ToolsPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Nis</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Niş</label>
                 <select
                   value={tqsNiche}
                   onChange={(e) => setTqsNiche(e.target.value)}
@@ -225,24 +225,24 @@ export default function ToolsPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
-                <p className="text-xs text-gray-500 mb-1">Donusum Orani</p>
+                <p className="text-xs text-gray-500 mb-1">Dönüşüm Oranı</p>
                 <p className="text-2xl font-bold text-[#667eea]">{convRate}%</p>
-                <p className="text-xs text-gray-400 mt-1">{NICHE_LABELS[tqsNiche]} nisi</p>
+                <p className="text-xs text-gray-400 mt-1">{NICHE_LABELS[tqsNiche]} nişi</p>
               </div>
               <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
-                <p className="text-xs text-gray-500 mb-1">Aylik Gelir Tahmini</p>
+                <p className="text-xs text-gray-500 mb-1">Aylık Gelir Tahmini</p>
                 <p className="text-2xl font-bold text-[#27AE60]">{formatMoney(monthlyRev)}</p>
                 <p className="text-xs text-gray-400 mt-1">{traffic.toLocaleString()} ziyaret x {convRate}% x ${tqsAov}</p>
               </div>
               <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
-                <p className="text-xs text-gray-500 mb-1">Yillik Gelir Tahmini</p>
+                <p className="text-xs text-gray-500 mb-1">Yıllık Gelir Tahmini</p>
                 <p className="text-2xl font-bold text-[#27AE60]">{formatMoney(yearlyRev)}</p>
-                <p className="text-xs text-gray-400 mt-1">Aylik x 12</p>
+                <p className="text-xs text-gray-400 mt-1">Aylık x 12</p>
               </div>
             </div>
 
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <h2 className="font-semibold text-gray-900 mb-4">{NICHE_LABELS[tqsNiche]} - Donusum Tablosu</h2>
+              <h2 className="font-semibold text-gray-900 mb-4">{NICHE_LABELS[tqsNiche]} - Dönüşüm Tablosu</h2>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
@@ -255,7 +255,7 @@ export default function ToolsPage() {
                   </thead>
                   <tbody>
                     <tr>
-                      <td className="py-2 px-3 text-gray-700 font-medium">Donusum %</td>
+                      <td className="py-2 px-3 text-gray-700 font-medium">Dönüşüm %</td>
                       {Array.from({ length: 10 }, (_, i) => i + 1).map((t) => (
                         <td key={t} className={`py-2 px-3 text-center ${Math.round(tqs) === t ? "bg-[#667eea]/10 text-[#667eea] font-bold rounded" : "text-gray-600"}`}>{nicheTable[t]}%</td>
                       ))}
@@ -277,7 +277,7 @@ export default function ToolsPage() {
               <h2 className="font-semibold text-gray-900 mb-4">Parametreler</h2>
 
               <div className="mb-5">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Nis</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Niş</label>
                 <select
                   value={aovNiche}
                   onChange={(e) => setAovNiche(e.target.value)}
@@ -290,7 +290,7 @@ export default function ToolsPage() {
               </div>
 
               <div className="mb-5">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Urun Fiyati ($)</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Ürün Fiyatı ($)</label>
                 <input
                   type="number"
                   value={productPrice}
@@ -310,7 +310,7 @@ export default function ToolsPage() {
 
               <div className="mb-2">
                 <div className="flex justify-between text-sm mb-1">
-                  <span className="font-medium text-gray-700">Upsell / Cross-sell Orani</span>
+                  <span className="font-medium text-gray-700">Upsell / Cross-sell Oranı</span>
                   <span className="text-[#667eea] font-semibold">{upsellRate}%</span>
                 </div>
                 <input type="range" min={0} max={50} value={upsellRate} onChange={(e) => setUpsellRate(Number(e.target.value))} className="w-full accent-[#667eea]" />
@@ -336,11 +336,11 @@ export default function ToolsPage() {
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
               <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
                 <Target size={16} className="text-[#667eea]" />
-                {AOV_NICHE_LABELS[aovNiche]} Nis Karsilastirmasi
+                {AOV_NICHE_LABELS[aovNiche]} Niş Karşılaştırması
               </h3>
               <div className="space-y-3">
                 {[
-                  { label: "Dusuk Segment", value: aovNicheData.low },
+                  { label: "Düşük Segment", value: aovNicheData.low },
                   { label: "Orta Segment", value: aovNicheData.mid },
                   { label: "Premium Segment", value: aovNicheData.high },
                 ].map((seg) => {
@@ -374,13 +374,13 @@ export default function ToolsPage() {
             </div>
 
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <h3 className="font-semibold text-gray-900 mb-4">Tum Nis AOV Araliklari</h3>
+              <h3 className="font-semibold text-gray-900 mb-4">Tüm Niş AOV Aralıkları</h3>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm table-striped">
                   <thead>
                     <tr className="border-b border-gray-200">
-                      <th className="py-2 px-3 text-left text-gray-500 font-medium">Nis</th>
-                      <th className="py-2 px-3 text-right text-gray-500 font-medium">Dusuk</th>
+                      <th className="py-2 px-3 text-left text-gray-500 font-medium">Niş</th>
+                      <th className="py-2 px-3 text-right text-gray-500 font-medium">Düşük</th>
                       <th className="py-2 px-3 text-right text-gray-500 font-medium">Orta</th>
                       <th className="py-2 px-3 text-right text-gray-500 font-medium">Premium</th>
                     </tr>

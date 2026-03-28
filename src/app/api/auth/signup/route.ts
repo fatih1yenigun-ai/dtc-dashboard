@@ -7,10 +7,10 @@ export async function POST(request: NextRequest) {
     const { username, password } = await request.json();
 
     if (!username || username.length < 3) {
-      return NextResponse.json({ error: "Kullanici adi en az 3 karakter olmali" }, { status: 400 });
+      return NextResponse.json({ error: "Kullanıcı adı en az 3 karakter olmalı" }, { status: 400 });
     }
     if (!password || password.length < 6) {
-      return NextResponse.json({ error: "Sifre en az 6 karakter olmali" }, { status: 400 });
+      return NextResponse.json({ error: "Şifre en az 6 karakter olmalı" }, { status: 400 });
     }
 
     // Check if this is the first user (make admin)
@@ -28,10 +28,10 @@ export async function POST(request: NextRequest) {
       user: { userId: user.id, username: user.username, role: user.role },
     });
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : "Kayit sirasinda hata olustu";
+    const message = error instanceof Error ? error.message : "Kayıt sırasında hata oluştu";
     // Handle duplicate username
     if (typeof message === "string" && message.includes("duplicate")) {
-      return NextResponse.json({ error: "Bu kullanici adi zaten kullaniliyor" }, { status: 400 });
+      return NextResponse.json({ error: "Bu kullanıcı adı zaten kullanılıyor" }, { status: 400 });
     }
     return NextResponse.json({ error: message }, { status: 500 });
   }

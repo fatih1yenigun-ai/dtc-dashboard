@@ -16,12 +16,12 @@ const NICHE_AOV: Record<string, { low: number; mid: number; high: number }> = {
 
 const NICHE_LABELS: Record<string, string> = {
   fashion: "Moda",
-  beauty: "Guzellik & Bakim",
-  food_bev: "Yiyecek & Icecek",
+  beauty: "Güzellik & Bakım",
+  food_bev: "Yiyecek & İçecek",
   electronics: "Elektronik",
-  luxury: "Luks",
-  home: "Ev & Yasam",
-  health: "Saglik",
+  luxury: "Lüks",
+  home: "Ev & Yaşam",
+  health: "Sağlık",
   pet: "Evcil Hayvan",
 };
 
@@ -41,9 +41,9 @@ export default function AOVPage() {
 
   const positioning = useMemo(() => {
     if (estimatedAOV >= nicheData.high) return { label: "Premium", color: "#27AE60" };
-    if (estimatedAOV >= nicheData.mid) return { label: "Orta-Ust", color: "#667eea" };
+    if (estimatedAOV >= nicheData.mid) return { label: "Orta-Üst", color: "#667eea" };
     if (estimatedAOV >= nicheData.low) return { label: "Orta", color: "#F39C12" };
-    return { label: "Dusuk", color: "#E74C3C" };
+    return { label: "Düşük", color: "#E74C3C" };
   }, [estimatedAOV, nicheData]);
 
   function formatMoney(n: number): string {
@@ -55,7 +55,7 @@ export default function AOVPage() {
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-gray-900">AOV Tahminleyici</h1>
         <p className="text-gray-500 mt-1">
-          Ortalama siparis degerini tahmin et ve konumlandir
+          Ortalama sipariş değerini tahmin et ve konumlandır
         </p>
       </div>
 
@@ -67,7 +67,7 @@ export default function AOVPage() {
 
             <div className="mb-5">
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Nis
+                Niş
               </label>
               <select
                 value={niche}
@@ -84,7 +84,7 @@ export default function AOVPage() {
 
             <div className="mb-5">
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Urun Fiyati ($)
+                Ürün Fiyatı ($)
               </label>
               <input
                 type="number"
@@ -121,7 +121,7 @@ export default function AOVPage() {
             <div className="mb-2">
               <div className="flex justify-between text-sm mb-1">
                 <span className="font-medium text-gray-700">
-                  Upsell / Cross-sell Orani
+                  Upsell / Cross-sell Oranı
                 </span>
                 <span className="text-[#667eea] font-semibold">
                   {upsellRate}%
@@ -174,12 +174,12 @@ export default function AOVPage() {
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
               <Target size={16} className="text-[#667eea]" />
-              {NICHE_LABELS[niche]} Nis Karsilastirmasi
+              {NICHE_LABELS[niche]} Niş Karşılaştırması
             </h3>
 
             <div className="space-y-3">
               {[
-                { label: "Dusuk Segment", value: nicheData.low },
+                { label: "Düşük Segment", value: nicheData.low },
                 { label: "Orta Segment", value: nicheData.mid },
                 { label: "Premium Segment", value: nicheData.high },
               ].map((seg) => {
@@ -241,17 +241,17 @@ export default function AOVPage() {
           {/* All Niches Table */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <h3 className="font-semibold text-gray-900 mb-4">
-              Tum Nis AOV Araliklari
+              Tüm Niş AOV Aralıkları
             </h3>
             <div className="overflow-x-auto">
               <table className="w-full text-sm table-striped">
                 <thead>
                   <tr className="border-b border-gray-200">
                     <th className="py-2 px-3 text-left text-gray-500 font-medium">
-                      Nis
+                      Niş
                     </th>
                     <th className="py-2 px-3 text-right text-gray-500 font-medium">
-                      Dusuk
+                      Düşük
                     </th>
                     <th className="py-2 px-3 text-right text-gray-500 font-medium">
                       Orta

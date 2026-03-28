@@ -221,7 +221,7 @@ export default function SavedPage() {
     if (activeFolder === null) return;
     if (
       !confirm(
-        "Bu klasoru ve icindeki tum markalari silmek istediginize emin misiniz?"
+        "Bu klasörü ve içindeki tüm markaları silmek istediğinize emin misiniz?"
       )
     )
       return;
@@ -276,11 +276,11 @@ export default function SavedPage() {
   function exportCSV() {
     const escape = (v: string) => `"${v.replace(/"/g, '""')}"`;
     const header = [
-      "Marka", "Web Sitesi", "Ulke", "Kategori", "AOV ($)",
-      "Aylik Trafik", "TQS", "Donusum %", "Ciro ($)",
-      "Buyume Yontemi", "Pazarlama Acilari",
-      "One Cikan Ozellik", "Marka Hikayesi", "Kurulus Yili",
-      "Nis", "Meta Ads",
+      "Marka", "Web Sitesi", "Ülke", "Kategori", "AOV ($)",
+      "Aylık Trafik", "TQS", "Dönüşüm %", "Ciro ($)",
+      "Büyüme Yöntemi", "Pazarlama Açıları",
+      "Öne Çıkan Özellik", "Marka Hikayesi", "Kuruluş Yılı",
+      "Niş", "Meta Ads",
     ].join(",");
     const rows = brands.map((b) => {
       const d = b.brand_data || {};
@@ -319,7 +319,7 @@ export default function SavedPage() {
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-gray-900">Kaydedilenler</h1>
         <p className="text-gray-500 mt-1">
-          Kayitli markalarinizi klasorler halinde yonetin
+          Kayıtlı markalarınızı klasörler halinde yönetin
         </p>
       </div>
 
@@ -342,7 +342,7 @@ export default function SavedPage() {
           ))}
           {folders.length === 0 && (
             <span className="text-sm text-gray-400">
-              Henuz klasor yok. Asagidan olusturun.
+              Henüz klasör yok. Aşağıdan oluşturun.
             </span>
           )}
         </div>
@@ -353,7 +353,7 @@ export default function SavedPage() {
             value={newFolderName}
             onChange={(e) => setNewFolderName(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleCreateFolder()}
-            placeholder="Yeni klasor adi..."
+            placeholder="Yeni klasör adı..."
             className="flex-1 py-2 px-3 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#667eea]/30"
           />
           <button
@@ -361,7 +361,7 @@ export default function SavedPage() {
             className="flex items-center gap-1 px-4 py-2 bg-[#667eea] text-white rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
           >
             <Plus size={14} />
-            Olustur
+            Oluştur
           </button>
           {activeFolder && (
             <button
@@ -369,7 +369,7 @@ export default function SavedPage() {
               className="flex items-center gap-1 px-4 py-2 bg-red-50 text-red-600 rounded-lg text-sm font-medium hover:bg-red-100 transition-colors"
             >
               <Trash2 size={14} />
-              Klasoru Sil
+              Klasörü Sil
             </button>
           )}
         </div>
@@ -384,7 +384,7 @@ export default function SavedPage() {
             </span>
             {selectedBrands.size > 0 && (
               <span className="text-sm text-[#667eea] font-medium">
-                ({selectedBrands.size} secili)
+                ({selectedBrands.size} seçili)
               </span>
             )}
           </div>
@@ -399,16 +399,16 @@ export default function SavedPage() {
               }}
               className="py-1.5 px-3 border border-gray-200 rounded-lg text-xs text-gray-600 focus:outline-none focus:ring-2 focus:ring-[#667eea]/30"
             >
-              <option value="revenue-desc">Ciro (Yuksek)</option>
-              <option value="revenue-asc">Ciro (Dusuk)</option>
-              <option value="traffic-desc">Trafik (Yuksek)</option>
-              <option value="traffic-asc">Trafik (Dusuk)</option>
-              <option value="aov-desc">AOV (Yuksek)</option>
-              <option value="aov-asc">AOV (Dusuk)</option>
-              <option value="tqs-desc">TQS (Yuksek)</option>
-              <option value="tqs-asc">TQS (Dusuk)</option>
-              <option value="founded-desc">Kurulus (Yeni)</option>
-              <option value="founded-asc">Kurulus (Eski)</option>
+              <option value="revenue-desc">Ciro (Yüksek)</option>
+              <option value="revenue-asc">Ciro (Düşük)</option>
+              <option value="traffic-desc">Trafik (Yüksek)</option>
+              <option value="traffic-asc">Trafik (Düşük)</option>
+              <option value="aov-desc">AOV (Yüksek)</option>
+              <option value="aov-asc">AOV (Düşük)</option>
+              <option value="tqs-desc">TQS (Yüksek)</option>
+              <option value="tqs-asc">TQS (Düşük)</option>
+              <option value="founded-desc">Kuruluş (Yeni)</option>
+              <option value="founded-asc">Kuruluş (Eski)</option>
             </select>
 
             <button
@@ -420,7 +420,7 @@ export default function SavedPage() {
               ) : (
                 <Square size={13} />
               )}
-              Tumunu Sec
+              Tümünü Seç
             </button>
 
             <button
@@ -437,14 +437,14 @@ export default function SavedPage() {
               className="flex items-center gap-1 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-xs font-medium hover:bg-blue-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
             >
               <ArrowRight size={12} />
-              Tasi
+              Taşı
             </button>
             <button
               onClick={exportCSV}
               className="flex items-center gap-1 px-3 py-1.5 bg-gray-100 text-gray-600 rounded-lg text-xs font-medium hover:bg-gray-200 transition-colors"
             >
               <Download size={12} />
-              CSV Indir
+              CSV İndir
             </button>
           </div>
         </div>
@@ -452,11 +452,11 @@ export default function SavedPage() {
 
       {/* Content */}
       {loading ? (
-        <div className="text-center py-10 text-gray-400">Yukleniyor...</div>
+        <div className="text-center py-10 text-gray-400">Yükleniyor...</div>
       ) : brands.length === 0 ? (
         <div className="text-center py-16 text-gray-400">
           <FolderOpen size={48} className="mx-auto mb-3 opacity-50" />
-          <p className="text-base">Bu klasorde henuz marka yok</p>
+          <p className="text-base">Bu klasörde henüz marka yok</p>
         </div>
       ) : (
         /* Card Grid */
@@ -555,13 +555,13 @@ export default function SavedPage() {
                     )}
                   </div>
                   <div>
-                    <span className="text-sm text-gray-500">Donusum: </span>
+                    <span className="text-sm text-gray-500">Dönüşüm:</span>
                     <span className="text-base font-semibold text-gray-700">
                       {conversion != null ? `%${conversion}` : "-"}
                     </span>
                   </div>
                   <div>
-                    <span className="text-sm text-gray-500">Kurulus: </span>
+                    <span className="text-sm text-gray-500">Kuruluş:</span>
                     <span className="text-base font-semibold text-gray-700">
                       {founded || "-"}
                     </span>
@@ -581,7 +581,7 @@ export default function SavedPage() {
                 {/* Growth tags */}
                 {growth && (
                   <div className="mb-2">
-                    <span className="text-sm text-gray-500">Buyume: </span>
+                    <span className="text-sm text-gray-500">Büyüme:</span>
                     <span className="inline">
                       {growth.split(",").filter(Boolean).slice(0, 3).map((g, gi) => (
                         <span
@@ -598,7 +598,7 @@ export default function SavedPage() {
                 {/* Marketing angle */}
                 {angles && (
                   <div className="mb-2">
-                    <span className="text-sm text-gray-500">Ana Aci: </span>
+                    <span className="text-sm text-gray-500">Ana Açı:</span>
                     <span className="text-sm font-medium text-purple-700">
                       {angles.split(",")[0]?.trim() || "-"}
                     </span>
@@ -629,7 +629,7 @@ export default function SavedPage() {
                     className="inline-flex items-center gap-1 px-3 py-1.5 bg-[#667eea]/10 text-[#667eea] rounded-lg text-xs font-medium hover:bg-[#667eea]/20 transition-colors"
                   >
                     <Eye size={12} />
-                    Detayli Gor
+                    Detaylı Gör
                   </button>
                 </div>
               </div>
@@ -669,7 +669,7 @@ export default function SavedPage() {
                 <p className="text-2xl font-bold text-[#27AE60]">{formatRevenue(getBrandRevenue(detailBrand))}</p>
               </div>
               <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-                <p className="text-xs text-blue-600 font-medium mb-1">Aylik Trafik</p>
+                <p className="text-xs text-blue-600 font-medium mb-1">Aylık Trafik</p>
                 <p className="text-2xl font-bold text-[#2980B9]">{formatTraffic(getBrandTraffic(detailBrand))}</p>
               </div>
               <div className="bg-purple-50 border border-purple-200 rounded-xl p-4">
@@ -677,7 +677,7 @@ export default function SavedPage() {
                 <p className="text-2xl font-bold text-purple-700">{getBrandAov(detailBrand) != null ? `$${getBrandAov(detailBrand)}` : "-"}</p>
               </div>
               <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
-                <p className="text-xs text-amber-600 font-medium mb-1">TQS / Donusum</p>
+                <p className="text-xs text-amber-600 font-medium mb-1">TQS / Dönüşüm</p>
                 <p className="text-2xl font-bold text-amber-700">
                   {getBrandTQS(detailBrand) ?? "-"}{" "}
                   <span className="text-base font-medium text-gray-500">
@@ -686,7 +686,7 @@ export default function SavedPage() {
                 </p>
               </div>
               <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
-                <p className="text-xs text-gray-500 font-medium mb-1">Ulke & Kurulus</p>
+                <p className="text-xs text-gray-500 font-medium mb-1">Ülke & Kuruluş</p>
                 <p className="text-lg font-bold text-gray-800">
                   {FLAG[getBrandCountry(detailBrand).toUpperCase()] || ""} {getBrandCountry(detailBrand).toUpperCase() || "-"}{" "}
                   <span className="text-gray-400 font-normal">|</span> {getBrandFounded(detailBrand) || "-"}
@@ -701,13 +701,13 @@ export default function SavedPage() {
             <div className="px-6 pb-6 space-y-4">
               {getBrandInsight(detailBrand) && (
                 <div className="bg-gray-50 rounded-xl p-4">
-                  <p className="text-xs text-gray-500 font-semibold mb-2 uppercase tracking-wide">One Cikan Ozellik</p>
+                  <p className="text-xs text-gray-500 font-semibold mb-2 uppercase tracking-wide">Öne Çıkan Özellik</p>
                   <p className="text-sm text-gray-700 leading-relaxed">{getBrandInsight(detailBrand)}</p>
                 </div>
               )}
               {getBrandGrowth(detailBrand) && (
                 <div className="bg-gray-50 rounded-xl p-4">
-                  <p className="text-xs text-gray-500 font-semibold mb-2 uppercase tracking-wide">Buyume Yontemi</p>
+                  <p className="text-xs text-gray-500 font-semibold mb-2 uppercase tracking-wide">Büyüme Yöntemi</p>
                   <div className="flex flex-wrap gap-2">
                     {getBrandGrowth(detailBrand).split(",").filter(Boolean).map((g, i) => (
                       <span key={i} className="inline-block bg-emerald-100 text-emerald-700 px-2.5 py-1 rounded-lg text-xs font-medium">{g.trim()}</span>
@@ -717,7 +717,7 @@ export default function SavedPage() {
               )}
               {getBrandMarketingAngles(detailBrand) && (
                 <div className="bg-gray-50 rounded-xl p-4">
-                  <p className="text-xs text-gray-500 font-semibold mb-2 uppercase tracking-wide">Pazarlama Acilari</p>
+                  <p className="text-xs text-gray-500 font-semibold mb-2 uppercase tracking-wide">Pazarlama Açıları</p>
                   <div className="flex flex-wrap gap-2">
                     {getBrandMarketingAngles(detailBrand).split(",").filter(Boolean).map((a, i) => (
                       <span key={i} className="inline-block bg-purple-100 text-purple-700 px-2.5 py-1 rounded-lg text-xs font-medium">{a.trim()}</span>
@@ -734,7 +734,7 @@ export default function SavedPage() {
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-1 text-sm text-blue-600 hover:underline"
                   >
-                    Meta Reklam Kutuphanesi <ExternalLink size={12} />
+                    Meta Reklam Kütüphanesi <ExternalLink size={12} />
                   </a>
                 </div>
               )}
@@ -749,7 +749,7 @@ export default function SavedPage() {
           <div className="bg-white rounded-xl p-6 w-full max-w-sm shadow-xl">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold text-gray-900">
-                Klasore Tasi
+                Klasöre Taşı
               </h2>
               <button
                 onClick={() => setShowMoveModal(false)}
@@ -759,7 +759,7 @@ export default function SavedPage() {
               </button>
             </div>
             <p className="text-sm text-gray-500 mb-3">
-              {selectedBrands.size} marka tasinacak
+              {selectedBrands.size} marka taşınacak
             </p>
             <div className="space-y-2">
               {folders
@@ -776,7 +776,7 @@ export default function SavedPage() {
                 ))}
               {folders.filter((f) => f !== activeFolder).length === 0 && (
                 <p className="text-sm text-gray-400 text-center py-4">
-                  Tasinacak baska klasor yok
+                  Taşınacak başka klasör yok
                 </p>
               )}
             </div>

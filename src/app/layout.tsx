@@ -1,17 +1,17 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { DM_Sans } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import AppShell from "@/components/AppShell";
 
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter",
+const dmSans = DM_Sans({
+  subsets: ["latin", "latin-ext"],
+  variable: "--font-dm-sans",
 });
 
 export const metadata: Metadata = {
-  title: "DTC Arastirma Paneli",
-  description: "DTC marka arastirma ve analiz araci",
+  title: "DTC Araştırma Paneli",
+  description: "DTC marka araştırma ve analiz aracı",
 };
 
 export default function RootLayout({
@@ -20,8 +20,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="tr" className={`${inter.variable} h-full antialiased`}>
-      <body className="min-h-full">
+    <html lang="tr" className={`${dmSans.variable} h-full antialiased`}>
+      <body className="min-h-full font-sans" style={{ fontFamily: "var(--font-dm-sans), sans-serif" }}>
         <AuthProvider>
           <AppShell>{children}</AppShell>
         </AuthProvider>

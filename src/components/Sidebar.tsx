@@ -19,10 +19,10 @@ import { loadFolders, getAllSavedCount } from "@/lib/supabase";
 import { useAuth } from "@/context/AuthContext";
 
 const navItems = [
-  { href: "/", label: "Canli Arastirma", icon: Search },
+  { href: "/", label: "Canlı Araştırma", icon: Search },
   { href: "/saved", label: "Kaydedilenler", icon: Bookmark },
-  { href: "/brands", label: "Marka Tarayici", icon: Globe },
-  { href: "/tools", label: "Teknik Toollar", icon: Wrench },
+  { href: "/brands", label: "Marka Tarayıcı", icon: Globe },
+  { href: "/tools", label: "Teknik Araçlar", icon: Wrench },
 ];
 
 export default function Sidebar() {
@@ -47,9 +47,9 @@ export default function Sidebar() {
       {/* Logo */}
       <div className="px-6 py-6 border-b border-white/10">
         <h1 className="text-xl font-bold tracking-tight">
-          <span className="text-[#667eea]">DTC</span> Arastirma
+          <span className="text-[#667eea]">DTC</span> Araştırma
         </h1>
-        <p className="text-xs text-gray-400 mt-1">Marka Arastirma Paneli</p>
+        <p className="text-xs text-gray-400 mt-1">Marka Araştırma Paneli</p>
       </div>
 
       {/* Nav */}
@@ -95,11 +95,11 @@ export default function Sidebar() {
       <div className="px-6 py-4 border-t border-white/10 space-y-2">
         <div className="flex items-center gap-2 text-xs text-gray-400">
           <ShoppingBag size={14} />
-          <span>{brandCount} kayitli marka</span>
+          <span>{brandCount} kayıtlı marka</span>
         </div>
         <div className="flex items-center gap-2 text-xs text-gray-400">
           <FolderOpen size={14} />
-          <span>{folderCount} klasor</span>
+          <span>{folderCount} klasör</span>
         </div>
       </div>
 
@@ -118,7 +118,7 @@ export default function Sidebar() {
             <button
               onClick={logout}
               className="text-gray-500 hover:text-red-400 transition-colors"
-              title="Cikis Yap"
+              title="Çıkış Yap"
             >
               <LogOut size={16} />
             </button>

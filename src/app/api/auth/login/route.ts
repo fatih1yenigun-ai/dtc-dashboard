@@ -6,7 +6,7 @@ export async function POST(request: NextRequest) {
     const { username, password } = await request.json();
 
     if (!username || !password) {
-      return NextResponse.json({ error: "Kullanici adi ve sifre gerekli" }, { status: 400 });
+      return NextResponse.json({ error: "Kullanıcı adı ve şifre gerekli" }, { status: 400 });
     }
 
     const user = await loginUser(username, password);
@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
       user: { userId: user.id, username: user.username, role: user.role },
     });
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : "Giris sirasinda hata olustu";
+    const message = error instanceof Error ? error.message : "Giriş sırasında hata oluştu";
     return NextResponse.json({ error: message }, { status: 401 });
   }
 }
