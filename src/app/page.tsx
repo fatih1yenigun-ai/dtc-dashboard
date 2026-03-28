@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
+import LoadingInsights from "@/components/LoadingInsights";
 import {
   Search,
   Loader2,
@@ -509,14 +510,17 @@ export default function HomePage() {
         </div>
       )}
 
-      {/* Loading */}
+      {/* Loading with insights */}
       {loading && (
-        <div className="flex flex-col items-center justify-center py-20">
-          <Loader2 size={40} className="animate-spin text-[#667eea] mb-4" />
-          <p className="text-gray-500">Markalar arastiriliyor...</p>
-          <p className="text-gray-400 text-sm mt-1">
-            Bu islem 15-30 saniye surebilir
-          </p>
+        <div className="py-8">
+          <div className="flex flex-col items-center mb-6">
+            <Loader2 size={32} className="animate-spin text-[#667eea] mb-3" />
+            <p className="text-gray-500 font-medium">Markalar araştırılıyor...</p>
+            <p className="text-gray-400 text-xs mt-1">
+              {results.length > 0 ? `${results.length} marka bulundu, devam ediyor...` : "Bu işlem 15-30 saniye sürebilir"}
+            </p>
+          </div>
+          <LoadingInsights />
         </div>
       )}
 
