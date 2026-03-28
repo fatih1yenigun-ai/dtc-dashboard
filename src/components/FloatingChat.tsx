@@ -39,7 +39,7 @@ export default function FloatingChat() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           messages: [...messages, { role: "user", content: userMsg }],
-          model: "haiku",
+          model: "sonnet",
         }),
       });
       const data = await res.json();
@@ -114,7 +114,7 @@ export default function FloatingChat() {
             background: "linear-gradient(135deg, #0D1B2A 0%, #1a1a2e 100%)",
             boxShadow:
               "0 0 40px rgba(102,126,234,0.2), 0 20px 60px rgba(0,0,0,0.5)",
-            animation: "chatSlideUp 0.3s ease-out",
+            animation: "chatSlideUp 0.15s ease-out",
           }}
         >
           {/* Header */}
@@ -265,11 +265,9 @@ export default function FloatingChat() {
         @keyframes typeIn {
           from {
             opacity: 0;
-            transform: translateX(-8px);
           }
           to {
             opacity: 1;
-            transform: translateX(0);
           }
         }
       `}</style>

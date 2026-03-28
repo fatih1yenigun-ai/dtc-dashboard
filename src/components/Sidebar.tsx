@@ -6,10 +6,8 @@ import { usePathname } from "next/navigation";
 import {
   Search,
   Bookmark,
-  MessageCircle,
   Globe,
-  Calculator,
-  DollarSign,
+  Wrench,
   Menu,
   X,
   FolderOpen,
@@ -20,10 +18,8 @@ import { loadFolders, getAllSavedCount } from "@/lib/supabase";
 const navItems = [
   { href: "/", label: "Canli Arastirma", icon: Search },
   { href: "/saved", label: "Kaydedilenler", icon: Bookmark },
-  { href: "/chat", label: "Hintli Danisman", icon: MessageCircle },
   { href: "/brands", label: "Marka Tarayici", icon: Globe },
-  { href: "/tqs", label: "TQS Hesaplayici", icon: Calculator },
-  { href: "/aov", label: "AOV Tahminleyici", icon: DollarSign },
+  { href: "/tools", label: "Teknik Toollar", icon: Wrench },
 ];
 
 export default function Sidebar() {

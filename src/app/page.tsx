@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   Search,
   Loader2,
@@ -11,6 +11,8 @@ import {
   ChevronDown,
   CheckSquare,
   Square,
+  Eye,
+  X,
 } from "lucide-react";
 import { loadFolders, createFolder, saveBrandsBulk, type BrandData } from "@/lib/supabase";
 import { tqsToConversion, estimateRevenue } from "@/lib/tqs";
@@ -93,6 +95,21 @@ export default function HomePage() {
   const [saveMsg, setSaveMsg] = useState("");
   const [sortKey, setSortKey] = useState<SortKey>("estimated_revenue");
   const [sortAsc, setSortAsc] = useState(false);
+  const [detailBrand, setDetailBrand] = useState<BrandResult | null>(null);
+
+  // Restore from sessionStorage on mount
+  useEffect(() => {
+    try {
+      const saved = sessionStorage.getItem("lastResearch");
+      if (saved) {
+        const data = JSON.parse(saved);
+        if (data.results) setResults(data.results);
+        if (data.keyword) setKeyword(data.keyword);
+      }
+    } catch {
+      // ignore parse errors
+    }
+  }, []);
 
   // Niche summary from first brand
   const nicheSummary = results.length > 0 ? results[0].niche_summary : undefined;
@@ -245,6 +262,8 @@ export default function HomePage() {
           };
         });
         setResults(enriched);
+        // Persist to sessionStorage
+        sessionStorage.setItem("lastResearch", JSON.stringify({ keyword, results: enriched }));
       }
     } catch (err) {
       console.error("Research error:", err);
@@ -551,9 +570,10 @@ export default function HomePage() {
                         </span>
                       </div>
                       <span
-                        className="text-sm font-semibold text-white flex-shrink-0 px-2 py-0.5 rounded"
+                        className="text-sm font-semibold text-white flex-shrink-0 px-2 py-0.5 rounded flex items-center gap-1"
                         style={{ backgroundColor: "#1e293b" }}
                       >
+                        <span className="text-[10px] font-medium text-gray-400">AOV</span>
                         ${angle.avgAov}
                       </span>
                     </div>
@@ -687,6 +707,8 @@ export default function HomePage() {
                     >
                       Ulke <SortIcon col="country" />
                     </th>
+                    {/* 15. Detay */}
+                    <th className="px-3 py-3 text-center font-semibold whitespace-nowrap">Detay</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -823,6 +845,16 @@ export default function HomePage() {
                             <span className="text-gray-300">-</span>
                           )}
                         </td>
+                        {/* 15. Detay */}
+                        <td className="px-3 py-3 text-center">
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setDetailBrand(brand); }}
+                            className="inline-flex items-center gap-1 px-2.5 py-1 bg-[#667eea]/10 text-[#667eea] rounded-md text-xs font-medium hover:bg-[#667eea]/20 transition-colors"
+                          >
+                            <Eye size={12} />
+                            Detayli Gor
+                          </button>
+                        </td>
                       </tr>
                     );
                   })}
@@ -866,6 +898,121 @@ export default function HomePage() {
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {/* Detail Modal */}
+      {detailBrand && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setDetailBrand(null)}>
+          <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[85vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            {/* Header */}
+            <div className="sticky top-0 bg-[#0D1B2A] text-white px-6 py-4 rounded-t-2xl flex items-center justify-between">
+              <div>
+                <h2 className="text-lg font-bold">{detailBrand.brand_name}</h2>
+                <a
+                  href={detailBrand.website.startsWith("http") ? detailBrand.website : `https://${detailBrand.website}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[#4facfe] text-sm hover:underline inline-flex items-center gap-1"
+                >
+                  {detailBrand.website} <ExternalLink size={12} />
+                </a>
+              </div>
+              <button onClick={() => setDetailBrand(null)} className="text-gray-400 hover:text-white transition-colors">
+                <X size={22} />
+              </button>
+            </div>
+
+            {/* Content grid */}
+            <div className="p-6 grid grid-cols-2 gap-4">
+              {/* Revenue */}
+              <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4">
+                <p className="text-xs text-emerald-600 font-medium mb-1">Tahmini Ciro</p>
+                <p className="text-2xl font-bold text-[#27AE60]">${formatNumber(detailBrand.estimated_revenue ?? 0)}</p>
+              </div>
+              {/* Traffic */}
+              <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                <p className="text-xs text-blue-600 font-medium mb-1">Aylik Trafik</p>
+                <p className="text-2xl font-bold text-[#2980B9]">{formatNumber(detailBrand.estimated_traffic)}</p>
+              </div>
+              {/* AOV */}
+              <div className="bg-purple-50 border border-purple-200 rounded-xl p-4">
+                <p className="text-xs text-purple-600 font-medium mb-1">AOV</p>
+                <p className="text-2xl font-bold text-purple-700">${detailBrand.aov}</p>
+              </div>
+              {/* TQS / Conversion */}
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
+                <p className="text-xs text-amber-600 font-medium mb-1">TQS / Donusum</p>
+                <p className="text-2xl font-bold text-amber-700">{detailBrand.tqs} <span className="text-base font-medium text-gray-500">/ %{detailBrand.conversion}</span></p>
+              </div>
+              {/* Country & Founded */}
+              <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
+                <p className="text-xs text-gray-500 font-medium mb-1">Ulke & Kurulus</p>
+                <p className="text-lg font-bold text-gray-800">
+                  {FLAG[detailBrand.country?.toUpperCase()] || ""} {detailBrand.country?.toUpperCase() || "-"} <span className="text-gray-400 font-normal">|</span> {detailBrand.founded || "-"}
+                </p>
+              </div>
+              {/* Category & Niche */}
+              <div className="bg-[#667eea]/5 border border-[#667eea]/20 rounded-xl p-4">
+                <p className="text-xs text-[#667eea] font-medium mb-1">Kategori / Nis</p>
+                <p className="text-lg font-bold text-gray-800">{detailBrand.category} <span className="text-gray-400 font-normal">|</span> {detailBrand.niche}</p>
+              </div>
+            </div>
+
+            {/* Text sections */}
+            <div className="px-6 pb-6 space-y-4">
+              {/* Insight */}
+              {detailBrand.insight && (
+                <div className="bg-gray-50 rounded-xl p-4">
+                  <p className="text-xs text-gray-500 font-semibold mb-2 uppercase tracking-wide">One Cikan Ozellik</p>
+                  <p className="text-sm text-gray-700 leading-relaxed">{detailBrand.insight}</p>
+                </div>
+              )}
+              {/* History */}
+              {detailBrand.history && (
+                <div className="bg-gray-50 rounded-xl p-4">
+                  <p className="text-xs text-gray-500 font-semibold mb-2 uppercase tracking-wide">Marka Hikayesi</p>
+                  <p className="text-sm text-gray-700 leading-relaxed">{detailBrand.history}</p>
+                </div>
+              )}
+              {/* Growth Method */}
+              {detailBrand.growth_method && (
+                <div className="bg-gray-50 rounded-xl p-4">
+                  <p className="text-xs text-gray-500 font-semibold mb-2 uppercase tracking-wide">Buyume Yontemi</p>
+                  <div className="flex flex-wrap gap-2">
+                    {detailBrand.growth_method.split(",").filter(Boolean).map((g, i) => (
+                      <span key={i} className="inline-block bg-emerald-100 text-emerald-700 px-2.5 py-1 rounded-lg text-xs font-medium">{g.trim()}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {/* Marketing Angles */}
+              {detailBrand.marketing_angles && (
+                <div className="bg-gray-50 rounded-xl p-4">
+                  <p className="text-xs text-gray-500 font-semibold mb-2 uppercase tracking-wide">Pazarlama Acilari</p>
+                  <div className="flex flex-wrap gap-2">
+                    {detailBrand.marketing_angles.split(",").filter(Boolean).map((a, i) => (
+                      <span key={i} className="inline-block bg-purple-100 text-purple-700 px-2.5 py-1 rounded-lg text-xs font-medium">{a.trim()}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {/* Meta Ads */}
+              {detailBrand.meta_ads_url && (
+                <div className="bg-gray-50 rounded-xl p-4">
+                  <p className="text-xs text-gray-500 font-semibold mb-2 uppercase tracking-wide">Meta Ads</p>
+                  <a
+                    href={detailBrand.meta_ads_url.startsWith("http") ? detailBrand.meta_ads_url : `https://${detailBrand.meta_ads_url}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-sm text-blue-600 hover:underline"
+                  >
+                    Meta Reklam Kutuphanesi <ExternalLink size={12} />
+                  </a>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       )}
 
