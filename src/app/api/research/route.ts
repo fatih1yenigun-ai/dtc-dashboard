@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Keyword is required" }, { status: 400 });
     }
 
-    const batchCount = Math.min(count, 20);
+    const batchCount = Math.min(count, 10);
 
     let prompt = `"${keyword}" nişinde ${batchCount} DTC markası bul. JSON array döndür.
 
@@ -33,7 +33,7 @@ SADECE JSON array. Markdown yok.`;
 
     const message = await anthropic.messages.create({
       model: "claude-sonnet-4-20250514",
-      max_tokens: 6000,
+      max_tokens: 4000,
       messages: [{ role: "user", content: prompt }],
     });
 
