@@ -79,18 +79,20 @@ export function ResearchProvider({ children }: { children: ReactNode }) {
       nicheSummary: null,
     }));
 
-    const BATCH_SIZE = 5;
-    const totalBatches = Math.ceil(count / BATCH_SIZE);
+    const BATCH_SIZE = 10;
+    const MAX_RETRIES = Math.ceil(count * 3 / BATCH_SIZE); // Allow up to 3x batches to fill filtered gaps
     const allBrands: BrandResult[] = [];
     const seenNames = new Set<string>();
     let nicheSummaryResult: NicheSummary | null = null;
+    let retries = 0;
 
     try {
-      for (let batch = 0; batch < totalBatches; batch++) {
+      while (allBrands.length < count && retries < MAX_RETRIES) {
         if (controller.signal.aborted) return;
+        retries++;
 
-        const batchCount = Math.min(BATCH_SIZE, count - allBrands.length);
-        if (batchCount <= 0) break;
+        const remaining = count - allBrands.length;
+        const batchCount = Math.min(BATCH_SIZE, remaining + 5); // Ask for a few extra to account for filtering
 
         // Build exclude list from existing results
         const exclude = allBrands.slice(-20).map((b) => b.brand_name).join(", ");
@@ -139,7 +141,7 @@ export function ResearchProvider({ children }: { children: ReactNode }) {
           });
 
         // Extract niche summary from first batch
-        if (batch === 0 && batchBrands.length > 0) {
+        if (!nicheSummaryResult && batchBrands.length > 0) {
           const first = batchBrands[0];
           if (first?.niche_summary) {
             nicheSummaryResult = {
