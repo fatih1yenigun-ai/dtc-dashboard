@@ -493,11 +493,9 @@ export default function HomePage() {
               className="py-1.5 px-3 border border-gray-200 rounded-lg text-xs text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#667eea]/30 bg-gray-50"
             >
               <option value="all">Tumu</option>
-              <option value="10k-50k">$10K - $50K</option>
-              <option value="50k-150k">$50K - $150K</option>
-              <option value="150k-300k">$150K - $300K</option>
-              <option value="300k-500k">$300K - $500K</option>
-              <option value="500k+">$500K+</option>
+              <option value="below-50k">$50K Altı</option>
+              <option value="50k-300k">$50K - $300K</option>
+              <option value="300k+">$300K+</option>
             </select>
           </div>
         </div>

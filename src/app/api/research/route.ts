@@ -52,11 +52,9 @@ SADECE JSON array. Markdown yok.`;
 
     if (revenueRange !== "all") {
       const ranges: Record<string, string> = {
-        "10k-50k": "aylık $10,000 - $50,000 arası tahmini gelire sahip",
-        "50k-150k": "aylık $50,000 - $150,000 arası tahmini gelire sahip",
-        "150k-300k": "aylık $150,000 - $300,000 arası tahmini gelire sahip",
-        "300k-500k": "aylık $300,000 - $500,000 arası tahmini gelire sahip",
-        "500k+": "aylık $500,000 üzeri tahmini gelire sahip",
+        "below-50k": "aylık $50,000 altında tahmini gelire sahip küçük/yeni",
+        "50k-300k": "aylık $50,000 - $300,000 arası tahmini gelire sahip orta ölçekli",
+        "300k+": "aylık $300,000 üzeri tahmini gelire sahip büyük",
       };
       filterInstructions += `\nSADECE ${ranges[revenueRange]} markaları getir. estimated_traffic'i buna göre ayarla.`;
     }
