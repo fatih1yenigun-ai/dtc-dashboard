@@ -213,7 +213,7 @@ export default function LoadingInsights() {
         setCurrentIndex((prev) => (prev + 1) % cards.length);
         setIsVisible(true);
       }, 400);
-    }, 4500);
+    }, 8000);
     return () => clearInterval(interval);
   }, [cards.length]);
 
