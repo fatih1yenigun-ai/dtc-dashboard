@@ -34,7 +34,11 @@ Niş kodları: gida_icecek, kahve_cay, atistirmalik, takviye_supplement, cilt_ba
 
 İLK markaya ekle: "niche_summary":"3 cümle pazar özeti","niche_pros":"avantaj1, avantaj2, avantaj3","niche_cons":"dezavantaj1, dezavantaj2, dezavantaj3"
 
-ÖNEMLİ: Sadece GERÇEK, var olan markalar ve gerçek web siteleri yaz. Uydurma marka veya website YAZMA. Website'in gerçek olduğundan emin ol.
+ÖNEMLİ KURALLAR:
+1. Sadece GERÇEK, var olan markalar ve gerçek web siteleri yaz. Uydurma marka veya website YAZMA.
+2. Eğer yeterince gerçek marka bulamıyorsan, daha az marka döndür. 3 gerçek marka, 10 uydurma markadan iyidir.
+3. Website'lerin gerçek ve aktif olduğundan emin ol. Şüphe duyduğun domain'leri YAZMA.
+4. .com.tr gibi yerelleştirilmiş domain'ler UYDURMA — sadece gerçekten var olanları yaz.
 
 SADECE JSON array. Markdown yok.`;
 

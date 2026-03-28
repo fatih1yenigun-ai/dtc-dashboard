@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
       if (payload) userId = payload.userId;
     }
 
-    const { messages, model = "sonnet" } = await request.json();
+    const { messages, model = "sonnet", stream: wantStream = false } = await request.json();
 
     const modelId =
       model === "haiku"
@@ -44,8 +44,8 @@ export async function POST(request: NextRequest) {
 
     const maxTokens = model === "haiku" ? 1000 : 2048;
 
-    // For haiku (floating chat), return non-streaming JSON
-    if (model === "haiku") {
+    // Non-streaming mode (floating chat, or any request with stream:false)
+    if (!wantStream) {
       const response = await anthropic.messages.create({
         model: modelId,
         max_tokens: maxTokens,
