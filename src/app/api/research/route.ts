@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Keyword is required" }, { status: 400 });
     }
 
-    const batchCount = Math.min(count, 15);
+    const batchCount = Math.min(count, 5);
 
     let prompt = `"${keyword}" ile ilgili tam olarak ${batchCount} DTC e-ticaret markası listele. Bilinen, gerçek markalar olsun. Büyük ve küçük markalar karışık olabilir.
 
