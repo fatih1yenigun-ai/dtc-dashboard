@@ -1,15 +1,131 @@
 import { NextRequest } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
 import { verifyToken, logActivity } from "@/lib/auth";
-
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-});
 
 export const maxDuration = 60;
 
+// Module-level token cache
+let cachedToken: string | null = null;
+let tokenExpiry = 0;
+
+async function pipiadsLogin(): Promise<string> {
+  // Return cached token if still valid (cache for 30 minutes)
+  if (cachedToken && Date.now() < tokenExpiry) {
+    return cachedToken;
+  }
+
+  const res = await fetch("https://www.pipiads.com/v1/api/member/login", {
+    method: "PUT",
+    headers: { "content-type": "application/json", "device_id": "352039877" },
+    body: JSON.stringify({
+      email: process.env.PIPIADS_EMAIL || "burakyolive.06@gmail.com",
+      password: process.env.PIPIADS_PASSWORD || "oylesine123",
+      device_id: 352039877,
+      uuid: "1c16840e-17fd-4dba-ad3a-773f218d131e",
+    }),
+  });
+
+  const data = await res.json();
+  if (!data.access_token) {
+    throw new Error("PiPiAds login failed: " + JSON.stringify(data));
+  }
+
+  cachedToken = data.access_token;
+  tokenExpiry = Date.now() + 30 * 60 * 1000; // 30 min
+  return cachedToken!;
+}
+
+function buildHeaders(token: string): Record<string, string> {
+  return {
+    accept: "application/json",
+    access_token: token,
+    "content-type": "application/json",
+    device_id: "352039877",
+    origin: "https://www.pipiads.com",
+    referer: "https://www.pipiads.com/",
+    "user-agent":
+      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36",
+    cookie: `uid=${token}`,
+  };
+}
+
+async function searchVideos(
+  token: string,
+  keyword: string,
+  page: number,
+  pageSize: number
+) {
+  const url =
+    "https://www.pipiads.com/v3/api/search4/at/video/search-tiktok-shop";
+  const body = {
+    is_participle: false,
+    search_type: 1,
+    extend_keywords: [{ type: 1, keyword }],
+    sort: 999,
+    sort_type: "desc",
+    current_page: page,
+    page_size: pageSize,
+  };
+
+  const res = await fetch(url, {
+    method: "POST",
+    headers: buildHeaders(token),
+    body: JSON.stringify(body),
+  });
+
+  if (res.status === 401) {
+    // Token expired — clear cache and retry once
+    cachedToken = null;
+    tokenExpiry = 0;
+    const newToken = await pipiadsLogin();
+    const retryRes = await fetch(url, {
+      method: "POST",
+      headers: buildHeaders(newToken),
+      body: JSON.stringify(body),
+    });
+    return retryRes.json();
+  }
+
+  return res.json();
+}
+
+async function searchProducts(
+  token: string,
+  keyword: string,
+  page: number,
+  pageSize: number
+) {
+  const params = new URLSearchParams({
+    sort_key: "post",
+    sort_type: "desc",
+    current_page: String(page),
+    page_size: String(pageSize),
+    time_type: "1",
+    keyword,
+  });
+  const url = `https://www.pipiads.com/v3/api/homepage/top-product/search?${params}`;
+
+  const res = await fetch(url, {
+    method: "GET",
+    headers: buildHeaders(token),
+  });
+
+  if (res.status === 401) {
+    cachedToken = null;
+    tokenExpiry = 0;
+    const newToken = await pipiadsLogin();
+    const retryRes = await fetch(url, {
+      method: "GET",
+      headers: buildHeaders(newToken),
+    });
+    return retryRes.json();
+  }
+
+  return res.json();
+}
+
 export async function POST(request: NextRequest) {
   try {
+    // Auth verification
     let userId: number | null = null;
     const authHeader = request.headers.get("Authorization");
     if (authHeader?.startsWith("Bearer ")) {
@@ -17,103 +133,53 @@ export async function POST(request: NextRequest) {
       if (payload) userId = payload.userId;
     }
 
-    const { keyword, count = 10, exclude = "", country = "all", gmvRange = "all", dateRange = "all" } = await request.json();
+    const {
+      keyword,
+      page = 1,
+      pageSize = 20,
+      searchMode = "video",
+    } = await request.json();
 
     if (!keyword) {
-      return new Response(JSON.stringify({ error: "Keyword is required" }), {
-        status: 400,
-        headers: { "Content-Type": "application/json" },
-      });
+      return new Response(
+        JSON.stringify({ error: "Keyword is required" }),
+        { status: 400, headers: { "Content-Type": "application/json" } }
+      );
     }
 
-    const batchCount = Math.min(count, 10);
+    // Login to PiPiAds
+    const token = await pipiadsLogin();
 
-    let prompt = `"${keyword}" ile ilgili tam olarak ${batchCount} trend TikTok Shop ürünü listele.
-
-ÖNEMLİ: shop_name alanında GERÇEK TikTok Shop satıcı adını yaz. product_url alanında satıcının GERÇEK TikTok hesap adını @ ile yaz (örn: @realseller). Bildiğin gerçek TikTok Shop satıcılarını kullan.
-
-JSON array formatı:
-{"product_name":"X","shop_name":"Y Shop","product_url":"@yshop","product_price":14.99,"estimated_gmv":85000,"total_views":2500000,"total_videos":340,"marketing_angle":"açı1, açı2","category":"Türkçe kategori","creation_date":"2025-08","country":"US","insight":"Türkçe 1 cümle, neden viral/başarılı"}
-
-İLK ürüne ekle: "niche_summary":"3 cümle pazar özeti","niche_pros":"avantaj1, avantaj2","niche_cons":"dezavantaj1, dezavantaj2"
-
-Tam olarak ${batchCount} ürün döndür. SADECE JSON array. Markdown yok.`;
-
-    let filterInstructions = "";
-    if (country === "US") {
-      filterInstructions += "\nSADECE Amerikan ürünlerini getir. Ülke kodu US olmalı.";
-    } else if (country === "UK") {
-      filterInstructions += "\nSADECE İngiltere ürünlerini getir. Ülke kodu UK olmalı.";
-    }
-    if (gmvRange !== "all") {
-      const ranges: Record<string, string> = {
-        "below-50k": "$50K altında GMV",
-        "50k-300k": "$50K-$300K GMV",
-        "300k+": "$300K+ GMV",
-      };
-      filterInstructions += `\nSADECE ${ranges[gmvRange]} olan ürünleri getir.`;
-    }
-    if (dateRange !== "all") {
-      const dateRanges: Record<string, string> = {
-        "3m": "son 3 ayda TikTok Shop'a eklenen",
-        "6m": "son 6 ayda TikTok Shop'a eklenen",
-        "1y": "son 1 yılda TikTok Shop'a eklenen",
-      };
-      filterInstructions += `\nSADECE ${dateRanges[dateRange]} ürünleri getir.`;
-    }
-    if (filterInstructions) prompt += filterInstructions;
-    if (exclude) prompt += `\n\nBunları TEKRAR ETME: ${exclude}`;
-
-    // Use streaming to avoid Vercel timeout
-    const stream = await anthropic.messages.stream({
-      model: "claude-sonnet-4-20250514",
-      max_tokens: 4000,
-      messages: [{ role: "user", content: prompt }],
-    });
-
-    let fullText = "";
-    let tokensUsed = 0;
-
-    for await (const event of stream) {
-      if (event.type === "content_block_delta" && event.delta.type === "text_delta") {
-        fullText += event.delta.text;
-      }
-      if (event.type === "message_delta") {
-        const usage = (event as unknown as { usage?: { output_tokens?: number } }).usage;
-        if (usage?.output_tokens) tokensUsed = usage.output_tokens;
-      }
-    }
-
-    // Parse the collected text
-    let products;
-    try {
-      products = JSON.parse(fullText.trim());
-    } catch {
-      const match = fullText.match(/\[[\s\S]*\]/);
-      if (match) {
-        products = JSON.parse(match[0]);
-      } else {
-        return new Response(JSON.stringify({ error: "Sonuç ayrıştırılamadı", raw: fullText.substring(0, 200) }), {
-          status: 200,
-          headers: { "Content-Type": "application/json" },
-        });
-      }
+    // Call appropriate search endpoint
+    let data;
+    if (searchMode === "product") {
+      data = await searchProducts(token, keyword, page, pageSize);
+    } else {
+      data = await searchVideos(token, keyword, page, pageSize);
     }
 
     // Log activity
     if (userId) {
-      await logActivity(userId, "tts_search", keyword, { count: batchCount }, tokensUsed).catch(() => {});
+      await logActivity(userId, "tts_pipiads_search", keyword, {
+        searchMode,
+        page,
+        pageSize,
+      }).catch(() => {});
     }
 
-    return new Response(JSON.stringify({ products }), {
+    return new Response(JSON.stringify(data), {
       status: 200,
       headers: { "Content-Type": "application/json" },
     });
   } catch (error) {
     console.error("TikTok Shop API error:", error);
-    return new Response(JSON.stringify({ error: "Araştırma sırasında hata oluştu" }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" },
-    });
+    return new Response(
+      JSON.stringify({
+        error:
+          "PiPiAds API hatası: " +
+          (error instanceof Error ? error.message : "Bilinmeyen hata"),
+      }),
+      { status: 500, headers: { "Content-Type": "application/json" } }
+    );
   }
 }

@@ -1,52 +1,116 @@
 "use client";
 
-import { createContext, useContext, useState, useRef, useCallback, ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  useRef,
+  useCallback,
+  ReactNode,
+} from "react";
 import { useAuth } from "@/context/AuthContext";
 
-interface TTSProduct {
+export interface TTSProduct {
+  // Video search fields
   product_name: string;
   shop_name: string;
-  product_url: string;
-  product_price: number;
-  estimated_gmv: number;
-  total_views: number;
-  total_videos: number;
-  marketing_angle: string;
-  category: string;
-  creation_date: string;
-  country: string;
-  insight: string;
-  niche_summary?: string;
-  niche_pros?: string;
-  niche_cons?: string;
+  shop_handle: string;
+  cover_image: string;
+  video_url: string;
+  play_count: number;
+  like_count: number;
+  comment_count: number;
+  share_count: number;
+  duration: number;
+  region: string;
+  tags: string[];
+  hook: string;
+  ad_create_time: number;
+  put_days: number;
+  hot_value: number;
+  // Product search fields
+  estimated_gmv?: number;
+  total_videos?: number;
+  impression?: number;
+  category?: string;
+  cpa?: number;
+  ctr?: number;
+  cvr?: number;
 }
 
-interface NicheSummary {
-  summary: string;
-  pros: string[];
-  cons: string[];
-}
+export type SearchMode = "video" | "product";
 
 interface TTSState {
   keyword: string;
   results: TTSProduct[];
   loading: boolean;
-  nicheSummary: NicheSummary | null;
   error: string;
-}
-
-interface TTSFilters {
-  country?: string;
-  gmvRange?: string;
-  dateRange?: string;
+  page: number;
+  totalPages: number;
+  searchMode: SearchMode;
+  pageSize: number;
 }
 
 interface TikTokShopContextType extends TTSState {
-  startResearch: (keyword: string, count: number, filters?: TTSFilters) => void;
+  search: (keyword: string, mode: SearchMode, pageSize: number, page?: number) => void;
   setKeyword: (k: string) => void;
+  goToPage: (page: number) => void;
+  setSearchMode: (mode: SearchMode) => void;
+  setPageSize: (size: number) => void;
 }
 
 const TikTokShopContext = createContext<TikTokShopContextType | null>(null);
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function mapVideoResult(item: any): TTSProduct {
+  return {
+    product_name: item.desc || item.ai_analysis_main_hook || "",
+    shop_name: item.app_name || item.nickname || "",
+    shop_handle: item.unique_id || "",
+    cover_image: item.cover || "",
+    video_url: item.video_url || "",
+    play_count: item.play_count || 0,
+    like_count: item.digg_count || 0,
+    comment_count: item.comment_count || 0,
+    share_count: item.share_count || 0,
+    duration: item.duration || 0,
+    region: item.fetch_region?.[0] || item.region || "",
+    tags: item.ai_analysis_tags || [],
+    hook: item.ai_analysis_main_hook || "",
+    ad_create_time: item.ad_create_time || 0,
+    put_days: item.put_days || 0,
+    hot_value: item.hot_value || 0,
+  };
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function mapProductResult(item: any): TTSProduct {
+  return {
+    product_name: item.product_name || item.name || "",
+    shop_name: item.shop_name || "",
+    shop_handle: "",
+    cover_image: item.cover || item.image || "",
+    video_url: "",
+    play_count: 0,
+    like_count: 0,
+    comment_count: 0,
+    share_count: 0,
+    duration: 0,
+    region: item.region || "",
+    tags: [],
+    hook: "",
+    ad_create_time: 0,
+    put_days: 0,
+    hot_value: 0,
+    estimated_gmv: item.cost ? item.cost / 100 : 0,
+    total_videos: item.post || 0,
+    impression: item.impression || 0,
+    category: item.first_ecom_category?.value || item.category || "",
+    cpa: item.cpa || 0,
+    ctr: item.ctr || 0,
+    cvr: item.cvr || 0,
+  };
+}
 
 export function TikTokShopProvider({ children }: { children: ReactNode }) {
   const { token } = useAuth();
@@ -54,145 +118,134 @@ export function TikTokShopProvider({ children }: { children: ReactNode }) {
     keyword: "",
     results: [],
     loading: false,
-    nicheSummary: null,
     error: "",
+    page: 1,
+    totalPages: 1,
+    searchMode: "video",
+    pageSize: 20,
   });
   const abortRef = useRef<AbortController | null>(null);
+  const lastSearchRef = useRef<{
+    keyword: string;
+    mode: SearchMode;
+    pageSize: number;
+  } | null>(null);
 
-  const startResearch = useCallback(async (keyword: string, count: number, filters?: TTSFilters) => {
-    // Cancel any previous request
-    if (abortRef.current) abortRef.current.abort();
-    const controller = new AbortController();
-    abortRef.current = controller;
+  const search = useCallback(
+    async (keyword: string, mode: SearchMode, pageSize: number, page = 1) => {
+      if (abortRef.current) abortRef.current.abort();
+      const controller = new AbortController();
+      abortRef.current = controller;
 
-    setState((prev) => ({
-      ...prev,
-      keyword,
-      loading: true,
-      error: "",
-      results: [],
-      nicheSummary: null,
-    }));
+      lastSearchRef.current = { keyword, mode, pageSize };
 
-    const BATCH_SIZE = 10;
-    const MAX_RETRIES = Math.ceil(count * 3 / BATCH_SIZE);
-    const allProducts: TTSProduct[] = [];
-    const seenNames = new Set<string>();
-    let nicheSummaryResult: NicheSummary | null = null;
-    let retries = 0;
+      setState((prev) => ({
+        ...prev,
+        keyword,
+        searchMode: mode,
+        pageSize,
+        loading: true,
+        error: "",
+        results: [],
+        page,
+      }));
 
-    try {
-      while (allProducts.length < count && retries < MAX_RETRIES) {
-        if (controller.signal.aborted) return;
-        retries++;
-
-        const remaining = count - allProducts.length;
-        const batchCount = Math.min(BATCH_SIZE, remaining + 5);
-
-        // Build exclude list from existing results
-        const exclude = allProducts.slice(-20).map((p) => p.product_name).join(", ");
-
-        const headers: Record<string, string> = { "Content-Type": "application/json" };
+      try {
+        const headers: Record<string, string> = {
+          "Content-Type": "application/json",
+        };
         if (token) headers["Authorization"] = `Bearer ${token}`;
+
         const res = await fetch("/api/tiktok-shop", {
           method: "POST",
           headers,
-          body: JSON.stringify({ keyword, count: batchCount, exclude, country: filters?.country, gmvRange: filters?.gmvRange, dateRange: filters?.dateRange }),
+          body: JSON.stringify({
+            keyword,
+            page,
+            pageSize,
+            searchMode: mode,
+          }),
           signal: controller.signal,
         });
 
-        if (!res.ok) throw new Error("API error");
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.error || `API error ${res.status}`);
+        }
+
         const data = await res.json();
+
         if (data.error) {
           setState((prev) => ({ ...prev, loading: false, error: data.error }));
           return;
         }
 
-        const batchProducts: TTSProduct[] = (data.products || [])
-          .filter((p: TTSProduct) => {
-            const name = (p.product_name || "").toLowerCase();
-            if (!name || seenNames.has(name)) return false;
-            seenNames.add(name);
-            return true;
-          })
-          .map((p: TTSProduct) => {
-            const product_price = typeof p.product_price === "number" ? p.product_price : parseFloat(String(p.product_price)) || 0;
-            const estimated_gmv = typeof p.estimated_gmv === "number" ? p.estimated_gmv : parseFloat(String(p.estimated_gmv)) || 0;
-            const total_views = typeof p.total_views === "number" ? p.total_views : parseInt(String(p.total_views)) || 0;
-            const total_videos = typeof p.total_videos === "number" ? p.total_videos : parseInt(String(p.total_videos)) || 0;
-            return { ...p, product_price, estimated_gmv, total_views, total_videos };
-          })
-          .filter((p: TTSProduct) => {
-            // Client-side GMV filter
-            const gmv = p.estimated_gmv || 0;
-            const range = filters?.gmvRange;
-            if (!range || range === "all") return true;
-            if (range === "below-50k") return gmv < 50000;
-            if (range === "50k-300k") return gmv >= 50000 && gmv <= 300000;
-            if (range === "300k+") return gmv >= 300000;
-            return true;
-          });
+        // Map results based on search mode
+        let products: TTSProduct[];
+        let total = 1;
 
-        // Extract niche summary from first batch
-        if (!nicheSummaryResult && batchProducts.length > 0) {
-          const first = batchProducts[0];
-          if (first?.niche_summary) {
-            nicheSummaryResult = {
-              summary: first.niche_summary,
-              pros: (first.niche_pros || "").split(",").map((s: string) => s.trim()).filter(Boolean),
-              cons: (first.niche_cons || "").split(",").map((s: string) => s.trim()).filter(Boolean),
-            };
-          }
+        if (mode === "product") {
+          const list = data.data?.list || data.list || [];
+          products = list.map(mapProductResult);
+          const totalCount = data.data?.total || data.total || list.length;
+          total = Math.max(1, Math.ceil(totalCount / pageSize));
+        } else {
+          const list = data.data?.list || data.list || [];
+          products = list.map(mapVideoResult);
+          const totalCount = data.data?.total || data.total || list.length;
+          total = Math.max(1, Math.ceil(totalCount / pageSize));
         }
 
-        allProducts.push(...batchProducts);
-
-        // Progressive update — show results as they come in
-        const sorted = [...allProducts].sort((a, b) => (b.estimated_gmv || 0) - (a.estimated_gmv || 0));
         setState((prev) => ({
           ...prev,
-          results: sorted,
-          nicheSummary: nicheSummaryResult,
+          results: products,
+          loading: false,
+          page,
+          totalPages: total,
         }));
-      }
-
-      // Final sort and save
-      allProducts.sort((a, b) => (b.estimated_gmv || 0) - (a.estimated_gmv || 0));
-      setState((prev) => ({
-        ...prev,
-        results: allProducts,
-        nicheSummary: nicheSummaryResult,
-        loading: false,
-      }));
-
-      try {
-        sessionStorage.setItem(
-          "lastTTSResearch",
-          JSON.stringify({ keyword, results: allProducts, nicheSummary: nicheSummaryResult })
-        );
-      } catch { /* ignore */ }
-    } catch (err) {
-      if ((err as Error).name === "AbortError") return;
-      // If we have partial results, keep them
-      if (allProducts.length > 0) {
-        setState((prev) => ({ ...prev, loading: false }));
-      } else {
+      } catch (err) {
+        if ((err as Error).name === "AbortError") return;
         setState((prev) => ({
           ...prev,
           loading: false,
-          error: "Araştırma sırasında hata oluştu",
+          error: (err as Error).message || "Araştırma sırasında hata oluştu",
         }));
       }
-    }
-  }, [token]);
+    },
+    [token]
+  );
+
+  const goToPage = useCallback(
+    (page: number) => {
+      const last = lastSearchRef.current;
+      if (!last) return;
+      search(last.keyword, last.mode, last.pageSize, page);
+    },
+    [search]
+  );
 
   const setKeyword = useCallback((k: string) => {
     setState((prev) => ({ ...prev, keyword: k }));
   }, []);
 
+  const setSearchMode = useCallback((mode: SearchMode) => {
+    setState((prev) => ({ ...prev, searchMode: mode }));
+  }, []);
+
+  const setPageSize = useCallback((size: number) => {
+    setState((prev) => ({ ...prev, pageSize: size }));
+  }, []);
+
   return (
     <TikTokShopContext.Provider
-      value={{ ...state, startResearch, setKeyword }}
+      value={{
+        ...state,
+        search,
+        setKeyword,
+        goToPage,
+        setSearchMode,
+        setPageSize,
+      }}
     >
       {children}
     </TikTokShopContext.Provider>
@@ -201,6 +254,7 @@ export function TikTokShopProvider({ children }: { children: ReactNode }) {
 
 export function useTikTokShop() {
   const ctx = useContext(TikTokShopContext);
-  if (!ctx) throw new Error("useTikTokShop must be used within TikTokShopProvider");
+  if (!ctx)
+    throw new Error("useTikTokShop must be used within TikTokShopProvider");
   return ctx;
 }
