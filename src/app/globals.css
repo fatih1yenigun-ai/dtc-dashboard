@@ -67,3 +67,33 @@ body {
 .table-striped tr:nth-child(even) {
   background-color: rgba(0, 0, 0, 0.02);
 }
+
+/* Mobile responsive fixes */
+@media (max-width: 768px) {
+  .overflow-x-auto {
+    -webkit-overflow-scrolling: touch;
+  }
+
+  table {
+    font-size: 0.75rem;
+  }
+
+  table th, table td {
+    padding: 0.5rem 0.75rem;
+    white-space: nowrap;
+  }
+}
+
+/* PWA standalone mode */
+@media (display-mode: standalone) {
+  body {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* Prevent text overflow on mobile */
+.break-words {
+  word-break: break-word;
+  overflow-wrap: break-word;
+}

@@ -32,8 +32,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     <ResearchProvider>
       <div className="flex min-h-screen">
         <Sidebar />
-        <main className="flex-1 min-h-screen bg-[#f8f9fa]">
-          <div className="p-6 md:p-8 max-w-7xl mx-auto">{children}</div>
+        <main className="flex-1 min-h-screen bg-[#f8f9fa] w-0">
+          <div className="p-3 pt-14 md:pt-8 md:p-8 max-w-7xl mx-auto">{children}</div>
         </main>
         <FloatingChat />
       </div>
