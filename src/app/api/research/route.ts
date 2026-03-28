@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { verifyToken, logActivity } from "@/lib/auth";
 
@@ -6,11 +6,10 @@ const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
 
-export const maxDuration = 60; // Vercel Pro allows up to 60s, Hobby = 10s
+export const maxDuration = 60;
 
 export async function POST(request: NextRequest) {
   try {
-    // Get user from token (optional - don't block if no token)
     let userId: number | null = null;
     const authHeader = request.headers.get("Authorization");
     if (authHeader?.startsWith("Bearer ")) {
@@ -21,15 +20,18 @@ export async function POST(request: NextRequest) {
     const { keyword, count = 20, exclude = "", country = "all", foundedAfter = "all", revenueRange = "all" } = await request.json();
 
     if (!keyword) {
-      return NextResponse.json({ error: "Keyword is required" }, { status: 400 });
+      return new Response(JSON.stringify({ error: "Keyword is required" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
     }
 
-    const batchCount = Math.min(count, 5);
+    const batchCount = Math.min(count, 10);
 
     let prompt = `"${keyword}" ile ilgili tam olarak ${batchCount} DTC e-ticaret markası listele. Bilinen, gerçek markalar olsun. Büyük ve küçük markalar karışık olabilir.
 
 JSON array formatı:
-{"brand_name":"X","website":"x.com","category":"Türkçe","niche":"kod","aov":50,"estimated_traffic":100000,"insight":"Türkçe 1 cümle, pazarlama açısı ve fark","marketing_angles":"açı1, açı2","growth_method":"yöntem1, yöntem2","history":"Türkçe 1 cümle","founded":2020,"country":"US","meta_ads_url":"https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=ALL&q=X"}
+{"brand_name":"X","website":"x.com","category":"Türkçe","niche":"kod","aov":50,"estimated_traffic":100000,"insight":"Türkçe 1 cümle","marketing_angles":"açı1, açı2","growth_method":"yöntem1, yöntem2","history":"Türkçe 1 cümle","founded":2020,"country":"US","meta_ads_url":"https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=ALL&q=X"}
 
 Niş kodları: gida_icecek, kahve_cay, atistirmalik, takviye_supplement, cilt_bakim, sac_bakim, makyaj, parfum_koku, vucut_bakim, erkek_bakim, bebek_anne, evcil_hayvan, saglik_wellness, kadin_sagligi, moda_kadin, moda_erkek, ic_giyim, ayakkabi, aksesuar_taki, spor_giyim, ev_tekstil, battaniye_yorgan, organizasyon, hali_kilim, mum_koku, mutfak, temizlik, outdoor, seyahat, teknoloji_aksesuar, elektronik, luks_moda, genel
 
@@ -38,54 +40,58 @@ Niş kodları: gida_icecek, kahve_cay, atistirmalik, takviye_supplement, cilt_ba
 Tam olarak ${batchCount} marka döndür. SADECE JSON array. Markdown yok.`;
 
     let filterInstructions = "";
-
     if (country === "US") {
-      filterInstructions += "\nSADECE Amerikan (ABD) markalarını getir. Ülke kodu US olmalı.";
+      filterInstructions += "\nSADECE Amerikan markalarını getir. Ülke kodu US olmalı.";
     } else if (country === "TR") {
-      filterInstructions += "\nSADECE Türk markalarını getir. Türkiye'de kurulmuş, Türk girişimcilerin sahip olduğu markalar. Ülke kodu TR olmalı. Website'leri gerçek olmalı - uydurma .com.tr domain'leri YAZMA.";
+      filterInstructions += "\nSADECE Türk markalarını getir. Ülke kodu TR olmalı.";
     }
-
     if (foundedAfter !== "all") {
       filterInstructions += `\nSADECE ${foundedAfter} yılı ve sonrasında kurulan markaları getir.`;
     }
-
     if (revenueRange !== "all") {
       const ranges: Record<string, string> = {
-        "below-50k": "aylık $50,000 altında tahmini gelire sahip küçük/yeni",
-        "50k-300k": "aylık $50,000 - $300,000 arası tahmini gelire sahip orta ölçekli",
-        "300k+": "aylık $300,000 üzeri tahmini gelire sahip büyük",
+        "below-50k": "aylık $50,000 altında gelire sahip küçük",
+        "50k-300k": "aylık $50,000-$300,000 arası gelire sahip orta",
+        "300k+": "aylık $300,000+ gelire sahip büyük",
       };
-      filterInstructions += `\nSADECE ${ranges[revenueRange]} markaları getir. estimated_traffic'i buna göre ayarla.`;
+      filterInstructions += `\nSADECE ${ranges[revenueRange]} markaları getir.`;
     }
+    if (filterInstructions) prompt += filterInstructions;
+    if (exclude) prompt += `\n\nBunları TEKRAR ETME: ${exclude}`;
 
-    if (filterInstructions) {
-      prompt += filterInstructions;
-    }
-
-    if (exclude) {
-      prompt += `\n\nBunları TEKRAR ETME: ${exclude}`;
-    }
-
-    const message = await anthropic.messages.create({
+    // Use streaming to avoid Vercel timeout
+    const stream = await anthropic.messages.stream({
       model: "claude-sonnet-4-20250514",
       max_tokens: 4000,
       messages: [{ role: "user", content: prompt }],
     });
 
-    const text = message.content[0].type === "text" ? message.content[0].text : "";
+    let fullText = "";
+    let tokensUsed = 0;
 
-    // Calculate tokens used
-    const tokensUsed = (message.usage?.input_tokens || 0) + (message.usage?.output_tokens || 0);
+    for await (const event of stream) {
+      if (event.type === "content_block_delta" && event.delta.type === "text_delta") {
+        fullText += event.delta.text;
+      }
+      if (event.type === "message_delta") {
+        const usage = (event as unknown as { usage?: { output_tokens?: number } }).usage;
+        if (usage?.output_tokens) tokensUsed = usage.output_tokens;
+      }
+    }
 
+    // Parse the collected text
     let brands;
     try {
-      brands = JSON.parse(text);
+      brands = JSON.parse(fullText.trim());
     } catch {
-      const match = text.match(/\[[\s\S]*\]/);
+      const match = fullText.match(/\[[\s\S]*\]/);
       if (match) {
         brands = JSON.parse(match[0]);
       } else {
-        return NextResponse.json({ error: "Sonuç ayrıştırılamadı", brands: [] });
+        return new Response(JSON.stringify({ error: "Sonuç ayrıştırılamadı", raw: fullText.substring(0, 200) }), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        });
       }
     }
 
@@ -94,9 +100,15 @@ Tam olarak ${batchCount} marka döndür. SADECE JSON array. Markdown yok.`;
       await logActivity(userId, "search", keyword, { count: batchCount }, tokensUsed).catch(() => {});
     }
 
-    return NextResponse.json({ brands });
+    return new Response(JSON.stringify({ brands }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
   } catch (error) {
     console.error("Research API error:", error);
-    return NextResponse.json({ error: "Araştırma sırasında hata oluştu" }, { status: 500 });
+    return new Response(JSON.stringify({ error: "Araştırma sırasında hata oluştu" }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
   }
 }
