@@ -72,15 +72,25 @@ Her marka için şunları ver:
 ${NICHE_LIST}
 5. aov: Tahmini Ortalama Sipariş Değeri (USD sayı olarak, örn: 45)
 6. estimated_traffic: Tahmini aylık trafik (sayı olarak, örn: 150000). Marka büyüklüğüne göre tahmin et.
-7. insight: Markanın pazarlama açısı, ne ile farklılaştığı (Türkçe, 1-2 cümle)
-8. history: Kuruluş hikayesi, nasıl büyüdüğü (Türkçe, 1 cümle)
-9. founded: Kuruluş yılı (sayı, örn: 2019)
-10. meta_ads_url: Facebook Reklam Kütüphanesi URL'si (format: https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=ALL&q=MARKA_ADI)
+7. insight: Markanın pazarlama açısı, ne ile farklılaştığı (Türkçe, 1-2 cümle). İçerik olarak: kullandığı özel malzemeler, hedef kitlesi, fiyatlandırma stratejisi gibi detaylar.
+8. marketing_angles: Markanın kullandığı pazarlama açıları/stratejileri (Türkçe, virgülle ayrılmış, örn: "influencer marketing, UGC, TikTok viral, doğal içerikler, abonelik modeli")
+9. growth_method: Markanın büyüme yöntemi (örn: "TikTok Shop", "Influencer Marketing", "Meta Ads", "Organik SEO", "Amazon FBA", "Kickstarter", "Referral", "Celebrity Endorsement", "Podcast Sponsorship"). Birden fazla olabilir, virgülle ayır.
+10. history: Kuruluş hikayesi, nasıl büyüdüğü (Türkçe, 1-2 cümle)
+11. founded: Kuruluş yılı (sayı, örn: 2019)
+12. country: Markanın ülkesi (2 harfli ülke kodu, örn: "US", "UK", "DE", "TR", "AU", "FR", "KR")
+13. meta_ads_url: Facebook Reklam Kütüphanesi URL'si (format: https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=ALL&q=MARKA_ADI)
+
+Ayrıca araştırma sonunda şu ek bilgileri de ver:
+14. niche_summary: Bu niş hakkında kısa bir özet (Türkçe, 3-4 cümle). Pazarın durumu, büyüme trendi, rekabet seviyesi.
+15. niche_pros: Bu nişin avantajları (Türkçe, virgülle ayrılmış 4-5 madde)
+16. niche_cons: Bu nişin dezavantajları (Türkçe, virgülle ayrılmış 4-5 madde)
+
+ÖNEMLI: niche_summary, niche_pros ve niche_cons alanlarını SADECE ilk marka objesine ekle. Diğer markalara ekleme.
 
 SADECE geçerli JSON array döndür. Markdown yok, açıklama yok. Ham JSON array.
 
 Örnek:
-[{"brand_name":"Bearaby","website":"bearaby.com","category":"Ağırlıklı Battaniye","niche":"ev_tekstil","aov":249,"estimated_traffic":210000,"insight":"Dolgu malzemesiz örgü ağırlıklı battaniye ile kategoride devrim yarattı","history":"2018'de Kickstarter ile kuruldu, Inc. 5000'de 82. sıra","founded":2019,"meta_ads_url":"https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=ALL&q=Bearaby"}]`;
+[{"brand_name":"Bearaby","website":"bearaby.com","category":"Ağırlıklı Battaniye","niche":"ev_tekstil","aov":249,"estimated_traffic":210000,"insight":"Dolgu malzemesiz örgü ağırlıklı battaniye ile kategoride devrim yarattı; cam boncuk yerine organik pamuk kullanımı","marketing_angles":"sürdürülebilirlik, premium tasarım, anksiyete çözümü, Instagram estetik","growth_method":"Kickstarter, Instagram Ads, Influencer Marketing","history":"2018'de Kickstarter ile kuruldu, Inc. 5000'de 82. sıra, $1.9M aylık gelir","founded":2018,"country":"US","meta_ads_url":"https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=ALL&q=Bearaby","niche_summary":"Ağırlıklı battaniye pazarı 2018'den beri hızla büyüyor. Anksiyete ve uyku sorunlarına çözüm olarak konumlandırılıyor.","niche_pros":"Yüksek AOV, düşük iade oranı, duygusal satın alma, tekrarlı müşteri potansiyeli","niche_cons":"Mevsimsel talep dalgalanması, yüksek kargo maliyeti, sınırlı SKU çeşitliliği, büyük markalarla rekabet"}]`;
 
     const message = await anthropic.messages.create({
       model: "claude-sonnet-4-20250514",
