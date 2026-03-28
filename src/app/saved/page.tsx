@@ -9,22 +9,55 @@ import {
   ArrowRight,
   ExternalLink,
   X,
+  CheckSquare,
+  Square,
 } from "lucide-react";
 import {
   loadFolders,
   createFolder,
   deleteFolder,
   loadBrands,
-  removeBrandsByName,
+  removeBrandsByIds,
   moveBrands,
-  type Folder,
-  type Brand,
+  type SavedBrand,
 } from "@/lib/supabase";
 
+function getBrandName(brand: SavedBrand): string {
+  const d = brand.brand_data;
+  return (d?.Marka as string) || (d?.brand as string) || "Bilinmeyen";
+}
+
+function getBrandWebsite(brand: SavedBrand): string {
+  const d = brand.brand_data;
+  return (d?.["Web Sitesi"] as string) || (d?.website as string) || "";
+}
+
+function getBrandCategory(brand: SavedBrand): string {
+  const d = brand.brand_data;
+  return (d?.Kategori as string) || (d?.category as string) || "";
+}
+
+function getBrandAov(brand: SavedBrand): string {
+  const d = brand.brand_data;
+  const aov = d?.["AOV ($)"] ?? d?.aov;
+  if (aov == null) return "-";
+  return typeof aov === "number" ? `$${aov}` : String(aov);
+}
+
+function getBrandInsight(brand: SavedBrand): string {
+  const d = brand.brand_data;
+  return (d?.["Öne Çıkan Özellik"] as string) || (d?.insight as string) || "";
+}
+
+function getBrandMetaAds(brand: SavedBrand): string {
+  const d = brand.brand_data;
+  return (d?.["Meta Ads"] as string) || (d?.meta_ads_url as string) || "";
+}
+
 export default function SavedPage() {
-  const [folders, setFolders] = useState<Folder[]>([]);
-  const [activeFolder, setActiveFolder] = useState<number | null>(null);
-  const [brands, setBrands] = useState<Brand[]>([]);
+  const [folders, setFolders] = useState<string[]>([]);
+  const [activeFolder, setActiveFolder] = useState<string | null>(null);
+  const [brands, setBrands] = useState<SavedBrand[]>([]);
   const [newFolderName, setNewFolderName] = useState("");
   const [selectedBrands, setSelectedBrands] = useState<Set<number>>(new Set());
   const [showMoveModal, setShowMoveModal] = useState(false);
@@ -35,7 +68,7 @@ export default function SavedPage() {
       const f = await loadFolders();
       setFolders(f);
       if (f.length > 0 && activeFolder === null) {
-        setActiveFolder(f[0].id);
+        setActiveFolder(f[0]);
       }
     } catch {
       // ignore
@@ -69,12 +102,15 @@ export default function SavedPage() {
   }, [fetchBrands]);
 
   async function handleCreateFolder() {
-    if (!newFolderName.trim()) return;
+    const name = newFolderName.trim();
+    if (!name) return;
     try {
-      const f = await createFolder(newFolderName.trim());
-      setFolders((prev) => [...prev, f]);
-      setActiveFolder(f.id);
-      setNewFolderName("");
+      const ok = await createFolder(name);
+      if (ok) {
+        setFolders((prev) => [...prev, name]);
+        setActiveFolder(name);
+        setNewFolderName("");
+      }
     } catch {
       // ignore
     }
@@ -82,24 +118,26 @@ export default function SavedPage() {
 
   async function handleDeleteFolder() {
     if (activeFolder === null) return;
-    if (!confirm("Bu klasoru ve icindeki tum markalari silmek istediginize emin misiniz?"))
+    if (
+      !confirm(
+        "Bu klasörü ve içindeki tüm markaları silmek istediğinize emin misiniz?"
+      )
+    )
       return;
     try {
       await deleteFolder(activeFolder);
-      setFolders((prev) => prev.filter((f) => f.id !== activeFolder));
-      setActiveFolder(folders.length > 1 ? folders[0].id : null);
+      const remaining = folders.filter((f) => f !== activeFolder);
+      setFolders(remaining);
+      setActiveFolder(remaining.length > 0 ? remaining[0] : null);
     } catch {
       // ignore
     }
   }
 
   async function handleRemoveBrands() {
-    if (activeFolder === null || selectedBrands.size === 0) return;
-    const names = brands
-      .filter((b) => selectedBrands.has(b.id))
-      .map((b) => b.brand_name);
+    if (selectedBrands.size === 0) return;
     try {
-      await removeBrandsByName(activeFolder, names);
+      await removeBrandsByIds(Array.from(selectedBrands));
       await fetchBrands();
       setSelectedBrands(new Set());
     } catch {
@@ -107,10 +145,10 @@ export default function SavedPage() {
     }
   }
 
-  async function handleMoveBrands(targetFolderId: number) {
+  async function handleMoveBrands(targetFolder: string) {
     const ids = Array.from(selectedBrands);
     try {
-      await moveBrands(ids, targetFolderId);
+      await moveBrands(ids, targetFolder);
       setShowMoveModal(false);
       setSelectedBrands(new Set());
       await fetchBrands();
@@ -126,45 +164,69 @@ export default function SavedPage() {
     setSelectedBrands(next);
   }
 
+  function toggleAll() {
+    if (selectedBrands.size === brands.length) {
+      setSelectedBrands(new Set());
+    } else {
+      setSelectedBrands(new Set(brands.map((b) => b.id)));
+    }
+  }
+
   function exportCSV() {
+    const escape = (v: string) => `"${v.replace(/"/g, '""')}"`;
+    const header = "Marka,Web Sitesi,Kategori,AOV,Öne Çıkan Özellik,Meta Ads";
     const rows = brands.map((b) =>
-      [b.brand_name, b.website, b.category, b.aov, b.insight, b.meta_ads_url].join(",")
+      [
+        escape(getBrandName(b)),
+        escape(getBrandWebsite(b)),
+        escape(getBrandCategory(b)),
+        escape(getBrandAov(b)),
+        escape(getBrandInsight(b)),
+        escape(getBrandMetaAds(b)),
+      ].join(",")
     );
-    const csv =
-      "Marka,Website,Kategori,AOV,Insight,Meta Ads\n" + rows.join("\n");
-    const blob = new Blob([csv], { type: "text/csv" });
+    const csv = "\uFEFF" + header + "\n" + rows.join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    const folderName = folders.find((f) => f.id === activeFolder)?.name ?? "export";
-    a.download = `${folderName}.csv`;
+    a.download = `${activeFolder ?? "export"}.csv`;
     a.click();
+    URL.revokeObjectURL(url);
   }
 
   return (
     <div>
+      {/* Header */}
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-gray-900">Kaydedilenler</h1>
-        <p className="text-gray-500 mt-1">Kayitli markalarinizi yonetin</p>
+        <p className="text-gray-500 mt-1">
+          Kayıtlı markalarınızı klasörler halinde yönetin
+        </p>
       </div>
 
       {/* Folder tabs + create */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-6">
         <div className="flex flex-wrap items-center gap-2 mb-3">
-          {folders.map((f) => (
+          {folders.map((name) => (
             <button
-              key={f.id}
-              onClick={() => setActiveFolder(f.id)}
+              key={name}
+              onClick={() => setActiveFolder(name)}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                activeFolder === f.id
-                  ? "bg-[#667eea] text-white"
+                activeFolder === name
+                  ? "bg-[#667eea] text-white shadow-sm"
                   : "bg-gray-100 text-gray-600 hover:bg-gray-200"
               }`}
             >
               <FolderOpen size={14} />
-              {f.name}
+              {name}
             </button>
           ))}
+          {folders.length === 0 && (
+            <span className="text-sm text-gray-400">
+              Henüz klasör yok. Aşağıdan oluşturun.
+            </span>
+          )}
         </div>
 
         <div className="flex gap-2">
@@ -173,93 +235,92 @@ export default function SavedPage() {
             value={newFolderName}
             onChange={(e) => setNewFolderName(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleCreateFolder()}
-            placeholder="Yeni klasor adi..."
+            placeholder="Yeni klasör adı..."
             className="flex-1 py-2 px-3 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#667eea]/30"
           />
           <button
             onClick={handleCreateFolder}
-            className="flex items-center gap-1 px-4 py-2 bg-[#667eea] text-white rounded-lg text-sm font-medium hover:opacity-90"
+            className="flex items-center gap-1 px-4 py-2 bg-[#667eea] text-white rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
           >
             <Plus size={14} />
-            Olustur
+            Oluştur
           </button>
           {activeFolder && (
             <button
               onClick={handleDeleteFolder}
-              className="flex items-center gap-1 px-4 py-2 bg-red-50 text-red-600 rounded-lg text-sm font-medium hover:bg-red-100"
+              className="flex items-center gap-1 px-4 py-2 bg-red-50 text-red-600 rounded-lg text-sm font-medium hover:bg-red-100 transition-colors"
             >
               <Trash2 size={14} />
-              Sil
+              Klasörü Sil
             </button>
           )}
         </div>
       </div>
 
-      {/* Actions */}
+      {/* Actions bar */}
       {brands.length > 0 && (
-        <div className="flex items-center gap-2 mb-4">
+        <div className="flex items-center gap-3 mb-4">
           <span className="text-sm text-gray-500">
-            {selectedBrands.size} secili
+            {selectedBrands.size > 0
+              ? `${selectedBrands.size} / ${brands.length} seçili`
+              : `${brands.length} marka`}
           </span>
-          <button
-            onClick={handleRemoveBrands}
-            disabled={selectedBrands.size === 0}
-            className="flex items-center gap-1 px-3 py-1.5 bg-red-50 text-red-600 rounded-lg text-xs font-medium hover:bg-red-100 disabled:opacity-50"
-          >
-            <Trash2 size={12} />
-            Sil
-          </button>
-          <button
-            onClick={() => setShowMoveModal(true)}
-            disabled={selectedBrands.size === 0}
-            className="flex items-center gap-1 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-xs font-medium hover:bg-blue-100 disabled:opacity-50"
-          >
-            <ArrowRight size={12} />
-            Tasi
-          </button>
-          <button
-            onClick={exportCSV}
-            className="flex items-center gap-1 px-3 py-1.5 bg-gray-100 text-gray-600 rounded-lg text-xs font-medium hover:bg-gray-200"
-          >
-            <Download size={12} />
-            CSV Indir
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleRemoveBrands}
+              disabled={selectedBrands.size === 0}
+              className="flex items-center gap-1 px-3 py-1.5 bg-red-50 text-red-600 rounded-lg text-xs font-medium hover:bg-red-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            >
+              <Trash2 size={12} />
+              Seçilenleri Sil
+            </button>
+            <button
+              onClick={() => setShowMoveModal(true)}
+              disabled={selectedBrands.size === 0}
+              className="flex items-center gap-1 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-xs font-medium hover:bg-blue-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            >
+              <ArrowRight size={12} />
+              Taşı
+            </button>
+            <button
+              onClick={exportCSV}
+              className="flex items-center gap-1 px-3 py-1.5 bg-gray-100 text-gray-600 rounded-lg text-xs font-medium hover:bg-gray-200 transition-colors"
+            >
+              <Download size={12} />
+              CSV İndir
+            </button>
+          </div>
         </div>
       )}
 
       {/* Brands Table */}
       {loading ? (
-        <div className="text-center py-10 text-gray-400">Yukleniyor...</div>
+        <div className="text-center py-10 text-gray-400">Yükleniyor...</div>
       ) : brands.length === 0 ? (
         <div className="text-center py-16 text-gray-400">
           <FolderOpen size={48} className="mx-auto mb-3 opacity-50" />
-          <p>Bu klasorde henuz marka yok</p>
+          <p className="text-base">Bu klasörde henüz marka yok</p>
         </div>
       ) : (
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full text-sm table-striped">
+            <table className="w-full text-sm">
               <thead>
                 <tr className="bg-gray-50 border-b border-gray-200">
                   <th className="py-3 px-4 text-left font-medium text-gray-500 w-10">
-                    <input
-                      type="checkbox"
-                      checked={selectedBrands.size === brands.length && brands.length > 0}
-                      onChange={() => {
-                        if (selectedBrands.size === brands.length) {
-                          setSelectedBrands(new Set());
-                        } else {
-                          setSelectedBrands(new Set(brands.map((b) => b.id)));
-                        }
-                      }}
-                      className="rounded"
-                    />
+                    <button onClick={toggleAll} className="text-gray-400 hover:text-gray-600">
+                      {selectedBrands.size === brands.length && brands.length > 0 ? (
+                        <CheckSquare size={16} />
+                      ) : (
+                        <Square size={16} />
+                      )}
+                    </button>
                   </th>
                   <th className="py-3 px-4 text-left font-medium text-gray-500">
                     Marka
                   </th>
                   <th className="py-3 px-4 text-left font-medium text-gray-500">
-                    Website
+                    Web Sitesi
                   </th>
                   <th className="py-3 px-4 text-left font-medium text-gray-500">
                     Kategori
@@ -268,7 +329,7 @@ export default function SavedPage() {
                     AOV
                   </th>
                   <th className="py-3 px-4 text-left font-medium text-gray-500">
-                    Insight
+                    Öne Çıkan Özellik
                   </th>
                   <th className="py-3 px-4 text-left font-medium text-gray-500">
                     Meta Ads
@@ -276,60 +337,90 @@ export default function SavedPage() {
                 </tr>
               </thead>
               <tbody>
-                {brands.map((brand) => (
-                  <tr
-                    key={brand.id}
-                    className="border-b border-gray-100 hover:bg-gray-50"
-                  >
-                    <td className="py-3 px-4">
-                      <input
-                        type="checkbox"
-                        checked={selectedBrands.has(brand.id)}
-                        onChange={() => toggleBrand(brand.id)}
-                        className="rounded"
-                      />
-                    </td>
-                    <td className="py-3 px-4 font-medium text-gray-900">
-                      {brand.brand_name}
-                    </td>
-                    <td className="py-3 px-4">
-                      <a
-                        href={
-                          brand.website.startsWith("http")
-                            ? brand.website
-                            : `https://${brand.website}`
-                        }
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-[#2980B9] hover:underline flex items-center gap-1"
-                      >
-                        {brand.website}
-                        <ExternalLink size={12} />
-                      </a>
-                    </td>
-                    <td className="py-3 px-4">
-                      <span className="text-xs bg-[#667eea]/10 text-[#667eea] px-2 py-0.5 rounded-full">
-                        {brand.category}
-                      </span>
-                    </td>
-                    <td className="py-3 px-4 text-[#27AE60] font-medium">
-                      {brand.aov}
-                    </td>
-                    <td className="py-3 px-4 text-gray-600 max-w-xs truncate">
-                      {brand.insight}
-                    </td>
-                    <td className="py-3 px-4">
-                      <a
-                        href={brand.meta_ads_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-600 hover:underline text-xs"
-                      >
-                        Gor
-                      </a>
-                    </td>
-                  </tr>
-                ))}
+                {brands.map((brand) => {
+                  const website = getBrandWebsite(brand);
+                  const metaAds = getBrandMetaAds(brand);
+                  const category = getBrandCategory(brand);
+
+                  return (
+                    <tr
+                      key={brand.id}
+                      className={`border-b border-gray-100 hover:bg-gray-50 transition-colors ${
+                        selectedBrands.has(brand.id) ? "bg-[#667eea]/5" : ""
+                      }`}
+                    >
+                      <td className="py-3 px-4">
+                        <button
+                          onClick={() => toggleBrand(brand.id)}
+                          className="text-gray-400 hover:text-gray-600"
+                        >
+                          {selectedBrands.has(brand.id) ? (
+                            <CheckSquare size={16} className="text-[#667eea]" />
+                          ) : (
+                            <Square size={16} />
+                          )}
+                        </button>
+                      </td>
+                      <td className="py-3 px-4 font-medium text-gray-900">
+                        {getBrandName(brand)}
+                      </td>
+                      <td className="py-3 px-4">
+                        {website ? (
+                          <a
+                            href={
+                              website.startsWith("http")
+                                ? website
+                                : `https://${website}`
+                            }
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-[#2980B9] hover:underline flex items-center gap-1"
+                          >
+                            {website}
+                            <ExternalLink size={12} />
+                          </a>
+                        ) : (
+                          <span className="text-gray-300">-</span>
+                        )}
+                      </td>
+                      <td className="py-3 px-4">
+                        {category ? (
+                          <span className="text-xs bg-[#667eea]/10 text-[#667eea] px-2 py-0.5 rounded-full">
+                            {category}
+                          </span>
+                        ) : (
+                          <span className="text-gray-300">-</span>
+                        )}
+                      </td>
+                      <td className="py-3 px-4 text-[#27AE60] font-medium">
+                        {getBrandAov(brand)}
+                      </td>
+                      <td className="py-3 px-4 text-gray-600 max-w-xs truncate">
+                        {getBrandInsight(brand) || (
+                          <span className="text-gray-300">-</span>
+                        )}
+                      </td>
+                      <td className="py-3 px-4">
+                        {metaAds ? (
+                          <a
+                            href={
+                              metaAds.startsWith("http")
+                                ? metaAds
+                                : `https://${metaAds}`
+                            }
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:underline text-xs"
+                          >
+                            Gör
+                          </a>
+                        ) : (
+                          <span className="text-gray-300">-</span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -339,26 +430,39 @@ export default function SavedPage() {
       {/* Move Modal */}
       {showMoveModal && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl p-6 w-full max-w-sm">
+          <div className="bg-white rounded-xl p-6 w-full max-w-sm shadow-xl">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold">Klasore Tasi</h2>
-              <button onClick={() => setShowMoveModal(false)}>
-                <X size={18} className="text-gray-400" />
+              <h2 className="text-lg font-semibold text-gray-900">
+                Klasöre Taşı
+              </h2>
+              <button
+                onClick={() => setShowMoveModal(false)}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <X size={18} />
               </button>
             </div>
+            <p className="text-sm text-gray-500 mb-3">
+              {selectedBrands.size} marka taşınacak
+            </p>
             <div className="space-y-2">
               {folders
-                .filter((f) => f.id !== activeFolder)
-                .map((f) => (
+                .filter((f) => f !== activeFolder)
+                .map((name) => (
                   <button
-                    key={f.id}
-                    onClick={() => handleMoveBrands(f.id)}
+                    key={name}
+                    onClick={() => handleMoveBrands(name)}
                     className="w-full flex items-center gap-2 px-4 py-3 rounded-lg bg-gray-50 hover:bg-[#667eea]/10 text-sm text-left transition-colors"
                   >
                     <FolderOpen size={16} className="text-[#667eea]" />
-                    {f.name}
+                    {name}
                   </button>
                 ))}
+              {folders.filter((f) => f !== activeFolder).length === 0 && (
+                <p className="text-sm text-gray-400 text-center py-4">
+                  Taşınacak başka klasör yok
+                </p>
+              )}
             </div>
           </div>
         </div>

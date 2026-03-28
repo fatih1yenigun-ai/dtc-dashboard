@@ -10,7 +10,7 @@ import {
   CheckSquare,
   Square,
 } from "lucide-react";
-import { loadFolders, createFolder, saveBrandsBulk, type Folder } from "@/lib/supabase";
+import { loadFolders, createFolder, saveBrandsBulk, type BrandData } from "@/lib/supabase";
 
 interface BrandResult {
   brand_name: string;
@@ -28,8 +28,8 @@ export default function HomePage() {
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<BrandResult[]>([]);
   const [selected, setSelected] = useState<Set<number>>(new Set());
-  const [folders, setFolders] = useState<Folder[]>([]);
-  const [selectedFolder, setSelectedFolder] = useState<number | null>(null);
+  const [folders, setFolders] = useState<string[]>([]);
+  const [selectedFolder, setSelectedFolder] = useState<string>("");
   const [newFolderName, setNewFolderName] = useState("");
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [saveMsg, setSaveMsg] = useState("");
@@ -88,30 +88,44 @@ export default function HomePage() {
     try {
       const f = await loadFolders();
       setFolders(f);
-      if (f.length > 0 && !selectedFolder) setSelectedFolder(f[0].id);
+      if (f.length > 0 && !selectedFolder) setSelectedFolder(f[0]);
     } catch {
-      // ignore
+      setFolders(["Genel"]);
     }
   }
 
   async function handleCreateFolder() {
     if (!newFolderName.trim()) return;
-    try {
-      const f = await createFolder(newFolderName.trim());
-      setFolders((prev) => [...prev, f]);
-      setSelectedFolder(f.id);
+    const name = newFolderName.trim();
+    const ok = await createFolder(name);
+    if (ok) {
+      setFolders((prev) => prev.includes(name) ? prev : [...prev, name]);
+      setSelectedFolder(name);
       setNewFolderName("");
-    } catch {
-      // ignore
     }
   }
 
   async function handleSave() {
-    if (!selectedFolder || selected.size === 0) return;
-    const brands = Array.from(selected).map((i) => results[i]);
+    const folder = newFolderName.trim() || selectedFolder;
+    if (!folder || selected.size === 0) return;
+
+    // Convert BrandResult to BrandData format
+    const brandsToSave: BrandData[] = Array.from(selected).map((i) => {
+      const r = results[i];
+      return {
+        Marka: r.brand_name,
+        "Web Sitesi": r.website,
+        Kategori: r.category,
+        "AOV ($)": parseFloat(r.aov) || 0,
+        "Öne Çıkan Özellik": r.insight,
+        "Meta Ads": r.meta_ads_url,
+      };
+    });
+
     try {
-      await saveBrandsBulk(selectedFolder, brands);
-      setSaveMsg(`${brands.length} marka kaydedildi!`);
+      if (newFolderName.trim()) await createFolder(newFolderName.trim());
+      const added = await saveBrandsBulk(folder, brandsToSave);
+      setSaveMsg(`${added} marka kaydedildi!`);
       setTimeout(() => {
         setShowSaveModal(false);
         setSaveMsg("");
@@ -339,26 +353,29 @@ export default function HomePage() {
       {showSaveModal && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-xl p-6 w-full max-w-md">
-            <h2 className="text-lg font-semibold mb-4">Klasore Kaydet</h2>
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-semibold">Klasöre Kaydet</h2>
+              <button onClick={() => setShowSaveModal(false)} className="text-gray-400 hover:text-gray-600 text-xl font-bold">✕</button>
+            </div>
 
             {saveMsg ? (
-              <p className="text-center text-[#27AE60] font-medium py-4">
+              <p className={`text-center font-medium py-4 ${saveMsg.includes("Hata") ? "text-red-500" : "text-[#27AE60]"}`}>
                 {saveMsg}
               </p>
             ) : (
               <>
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Klasor Sec
+                    Klasör Seç
                   </label>
                   <select
-                    value={selectedFolder ?? ""}
-                    onChange={(e) => setSelectedFolder(Number(e.target.value))}
+                    value={selectedFolder}
+                    onChange={(e) => setSelectedFolder(e.target.value)}
                     className="w-full py-2 px-3 border border-gray-200 rounded-lg text-sm"
                   >
                     {folders.map((f) => (
-                      <option key={f.id} value={f.id}>
-                        {f.name}
+                      <option key={f} value={f}>
+                        {f}
                       </option>
                     ))}
                   </select>

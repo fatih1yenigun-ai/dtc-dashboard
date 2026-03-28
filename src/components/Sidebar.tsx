@@ -15,7 +15,7 @@ import {
   FolderOpen,
   ShoppingBag,
 } from "lucide-react";
-import { loadFolders, loadBrands } from "@/lib/supabase";
+import { loadFolders, getAllSavedCount } from "@/lib/supabase";
 
 const navItems = [
   { href: "/", label: "Canli Arastirma", icon: Search },
@@ -36,8 +36,8 @@ export default function Sidebar() {
     loadFolders()
       .then((f) => setFolderCount(f.length))
       .catch(() => {});
-    loadBrands()
-      .then((b) => setBrandCount(b.length))
+    getAllSavedCount()
+      .then((c) => setBrandCount(c))
       .catch(() => {});
   }, [pathname]);
 
