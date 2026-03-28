@@ -28,9 +28,9 @@ export async function POST(request: NextRequest) {
 
     const batchCount = Math.min(count, 10);
 
-    let prompt = `"${keyword}" ile ilgili tam olarak ${batchCount} trend TikTok Shop ürünü listele. Gerçek veya gerçekçi TikTok Shop ürünleri olsun.
+    let prompt = `"${keyword}" ile ilgili tam olarak ${batchCount} trend TikTok Shop ürünü listele.
 
-shop_name alanında gerçek veya gerçekçi TikTok Shop mağaza ismi yaz. product_url alanında mağazanın TikTok handle'ını yaz (örn: @shopname)
+ÖNEMLİ: shop_name alanında GERÇEK TikTok Shop satıcı adını yaz. product_url alanında satıcının GERÇEK TikTok hesap adını @ ile yaz (örn: @realseller). Bildiğin gerçek TikTok Shop satıcılarını kullan.
 
 JSON array formatı:
 {"product_name":"X","shop_name":"Y Shop","product_url":"@yshop","product_price":14.99,"estimated_gmv":85000,"total_views":2500000,"total_videos":340,"marketing_angle":"açı1, açı2","category":"Türkçe kategori","creation_date":"2025-08","country":"US","insight":"Türkçe 1 cümle, neden viral/başarılı"}

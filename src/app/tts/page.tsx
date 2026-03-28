@@ -289,7 +289,7 @@ export default function TTSPage() {
       const p = results[i];
       return {
         Marka: `${p.product_name} (${p.shop_name})`,
-        "Web Sitesi": `https://www.tiktok.com/search?q=${encodeURIComponent(p.product_name)}`,
+        "Web Sitesi": `https://www.tiktok.com/${p.product_url?.startsWith("@") ? p.product_url : "@" + (p.product_url || "").replace("@", "")}`,
         Kategori: p.category,
         "AOV ($)": p.product_price,
         "Aylık Trafik": p.total_views,
@@ -327,7 +327,7 @@ export default function TTSPage() {
       [
         `"${(p.product_name || "").replace(/"/g, '""')}"`,
         `"${(p.shop_name || "").replace(/"/g, '""')}"`,
-        `https://www.tiktok.com/search?q=${encodeURIComponent(p.product_name)}`,
+        `https://www.tiktok.com/${p.product_url?.startsWith("@") ? p.product_url : "@" + (p.product_url || "").replace("@", "")}`,
         p.product_price,
         p.estimated_gmv,
         p.total_views,
@@ -702,7 +702,7 @@ export default function TTSPage() {
                   {sortedResults.map((product, idx) => {
                     // Find original index for selection
                     const origIdx = results.indexOf(product);
-                    const tiktokSearchUrl = `https://www.tiktok.com/search?q=${encodeURIComponent(product.product_name)}`;
+                    const tiktokSearchUrl = `https://www.tiktok.com/${product.product_url?.startsWith("@") ? product.product_url : "@" + (product.product_url || "").replace("@", "")}`;
                     return (
                       <tr
                         key={idx}
@@ -845,12 +845,12 @@ export default function TTSPage() {
                 <h2 className="text-lg font-bold">{detailProduct.product_name}</h2>
                 <p className="text-gray-400 text-sm">{detailProduct.shop_name}</p>
                 <a
-                  href={`https://www.tiktok.com/search?q=${encodeURIComponent(detailProduct.product_name)}`}
+                  href={`https://www.tiktok.com/${detailProduct.product_url?.startsWith("@") ? detailProduct.product_url : "@" + (detailProduct.product_url || "").replace("@", "")}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="mt-2 inline-flex items-center gap-2 px-3 py-1.5 bg-[#4facfe]/20 text-[#4facfe] rounded-lg text-sm font-medium hover:bg-[#4facfe]/30 transition-colors"
                 >
-                  TikTok&apos;ta Ara <ExternalLink size={12} />
+                  TikTok Hesabı <ExternalLink size={12} />
                 </a>
               </div>
               <button onClick={() => setDetailProduct(null)} className="text-gray-400 hover:text-white transition-colors">
