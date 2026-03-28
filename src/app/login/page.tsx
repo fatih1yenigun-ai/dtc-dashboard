@@ -31,7 +31,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen relative flex items-center justify-center overflow-hidden">
+    <div className="fixed inset-0 flex items-center justify-center overflow-hidden">
       {/* Animated wave background */}
       <div className="absolute inset-0 z-0">
         {/* Base gradient */}
