@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { loadFolders, createFolder, saveBrandsBulk, type BrandData } from "@/lib/supabase";
 import { useResearch } from "@/context/ResearchContext";
+import { useAuth } from "@/context/AuthContext";
 
 interface BrandResult {
   brand_name: string;
@@ -81,6 +82,9 @@ const CHART_STYLE_TAG = `
 `;
 
 export default function HomePage() {
+  // Auth
+  const { user } = useAuth();
+
   // Context state (persistent across navigation)
   const { keyword, results, loading, nicheSummary, error, startResearch, setKeyword: setGlobalKeyword } = useResearch();
 
@@ -272,7 +276,7 @@ export default function HomePage() {
     setShowSaveModal(true);
     setSaveMsg("");
     try {
-      const f = await loadFolders();
+      const f = await loadFolders(user?.userId);
       setFolders(f);
       if (f.length > 0 && !selectedFolder) setSelectedFolder(f[0]);
     } catch {
@@ -283,7 +287,7 @@ export default function HomePage() {
   async function handleCreateFolder() {
     if (!newFolderName.trim()) return;
     const name = newFolderName.trim();
-    const ok = await createFolder(name);
+    const ok = await createFolder(name, user?.userId);
     if (ok) {
       setFolders((prev) => (prev.includes(name) ? prev : [...prev, name]));
       setSelectedFolder(name);
@@ -318,8 +322,8 @@ export default function HomePage() {
     });
 
     try {
-      if (newFolderName.trim()) await createFolder(newFolderName.trim());
-      const added = await saveBrandsBulk(folder, brandsToSave);
+      if (newFolderName.trim()) await createFolder(newFolderName.trim(), user?.userId);
+      const added = await saveBrandsBulk(folder, brandsToSave, user?.userId);
       setSaveMsg(`${added} marka kaydedildi!`);
       setTimeout(() => {
         setShowSaveModal(false);

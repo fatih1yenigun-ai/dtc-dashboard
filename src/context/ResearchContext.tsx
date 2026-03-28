@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useRef, useCallback, ReactNode } from "react";
 import { tqsToConversion, estimateRevenue } from "@/lib/tqs";
+import { useAuth } from "@/context/AuthContext";
 
 interface BrandResult {
   brand_name: string;
@@ -47,6 +48,7 @@ interface ResearchContextType extends ResearchState {
 const ResearchContext = createContext<ResearchContextType | null>(null);
 
 export function ResearchProvider({ children }: { children: ReactNode }) {
+  const { token } = useAuth();
   const [state, setState] = useState<ResearchState>({
     keyword: "",
     results: [],
@@ -87,9 +89,11 @@ export function ResearchProvider({ children }: { children: ReactNode }) {
         // Build exclude list from existing results
         const exclude = allBrands.slice(-20).map((b) => b.brand_name).join(", ");
 
+        const headers: Record<string, string> = { "Content-Type": "application/json" };
+        if (token) headers["Authorization"] = `Bearer ${token}`;
         const res = await fetch("/api/research", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers,
           body: JSON.stringify({ keyword, count: batchCount, exclude }),
           signal: controller.signal,
         });
@@ -169,7 +173,7 @@ export function ResearchProvider({ children }: { children: ReactNode }) {
         }));
       }
     }
-  }, []);
+  }, [token]);
 
   const setKeyword = useCallback((k: string) => {
     setState((prev) => ({ ...prev, keyword: k }));

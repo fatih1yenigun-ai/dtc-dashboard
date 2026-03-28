@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
+import { verifyToken, logActivity } from "@/lib/auth";
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -9,6 +10,14 @@ export const maxDuration = 60; // Vercel Pro allows up to 60s, Hobby = 10s
 
 export async function POST(request: NextRequest) {
   try {
+    // Get user from token (optional - don't block if no token)
+    let userId: number | null = null;
+    const authHeader = request.headers.get("Authorization");
+    if (authHeader?.startsWith("Bearer ")) {
+      const payload = verifyToken(authHeader.split(" ")[1]);
+      if (payload) userId = payload.userId;
+    }
+
     const { keyword, count = 20, exclude = "" } = await request.json();
 
     if (!keyword) {
@@ -39,6 +48,9 @@ SADECE JSON array. Markdown yok.`;
 
     const text = message.content[0].type === "text" ? message.content[0].text : "";
 
+    // Calculate tokens used
+    const tokensUsed = (message.usage?.input_tokens || 0) + (message.usage?.output_tokens || 0);
+
     let brands;
     try {
       brands = JSON.parse(text);
@@ -49,6 +61,11 @@ SADECE JSON array. Markdown yok.`;
       } else {
         return NextResponse.json({ error: "Sonuç ayrıştırılamadı", brands: [] });
       }
+    }
+
+    // Log activity
+    if (userId) {
+      await logActivity(userId, "search", keyword, { count: batchCount }, tokensUsed).catch(() => {});
     }
 
     return NextResponse.json({ brands });

@@ -12,8 +12,11 @@ import {
   X,
   FolderOpen,
   ShoppingBag,
+  Shield,
+  LogOut,
 } from "lucide-react";
 import { loadFolders, getAllSavedCount } from "@/lib/supabase";
+import { useAuth } from "@/context/AuthContext";
 
 const navItems = [
   { href: "/", label: "Canli Arastirma", icon: Search },
@@ -24,18 +27,20 @@ const navItems = [
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const { user, logout } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [folderCount, setFolderCount] = useState(0);
   const [brandCount, setBrandCount] = useState(0);
 
   useEffect(() => {
-    loadFolders()
+    if (!user) return;
+    loadFolders(user.userId)
       .then((f) => setFolderCount(f.length))
       .catch(() => {});
-    getAllSavedCount()
+    getAllSavedCount(user.userId)
       .then((c) => setBrandCount(c))
       .catch(() => {});
-  }, [pathname]);
+  }, [pathname, user]);
 
   const sidebar = (
     <div className="flex flex-col h-full bg-[#0D1B2A] text-white w-[260px] min-w-[260px]">
@@ -68,6 +73,22 @@ export default function Sidebar() {
             </Link>
           );
         })}
+
+        {/* Admin link */}
+        {user?.role === "admin" && (
+          <Link
+            href="/admin"
+            onClick={() => setMobileOpen(false)}
+            className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
+              pathname === "/admin"
+                ? "bg-[#667eea]/20 text-[#667eea]"
+                : "text-gray-300 hover:bg-white/5 hover:text-white"
+            }`}
+          >
+            <Shield size={18} />
+            Admin Paneli
+          </Link>
+        )}
       </nav>
 
       {/* Stats */}
@@ -81,6 +102,29 @@ export default function Sidebar() {
           <span>{folderCount} klasor</span>
         </div>
       </div>
+
+      {/* User info + logout */}
+      {user && (
+        <div className="px-6 py-4 border-t border-white/10">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="w-7 h-7 rounded-full bg-[#667eea]/20 flex items-center justify-center flex-shrink-0">
+                <span className="text-xs font-bold text-[#667eea]">
+                  {user.username.charAt(0).toUpperCase()}
+                </span>
+              </div>
+              <span className="text-sm text-gray-300 truncate">{user.username}</span>
+            </div>
+            <button
+              onClick={logout}
+              className="text-gray-500 hover:text-red-400 transition-colors"
+              title="Cikis Yap"
+            >
+              <LogOut size={16} />
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 

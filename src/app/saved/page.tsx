@@ -22,6 +22,7 @@ import {
   moveBrands,
   type SavedBrand,
 } from "@/lib/supabase";
+import { useAuth } from "@/context/AuthContext";
 
 const FLAG: Record<string, string> = {
   US: "\u{1F1FA}\u{1F1F8}", UK: "\u{1F1EC}\u{1F1E7}", DE: "\u{1F1E9}\u{1F1EA}", FR: "\u{1F1EB}\u{1F1F7}",
@@ -118,6 +119,7 @@ function getBrandMarketingAngles(brand: SavedBrand): string {
 type SortKey = "revenue" | "traffic" | "tqs" | "aov" | "founded";
 
 export default function SavedPage() {
+  const { user } = useAuth();
   const [folders, setFolders] = useState<string[]>([]);
   const [activeFolder, setActiveFolder] = useState<string | null>(null);
   const [brands, setBrands] = useState<SavedBrand[]>([]);
@@ -131,7 +133,7 @@ export default function SavedPage() {
 
   const fetchFolders = useCallback(async () => {
     try {
-      const f = await loadFolders();
+      const f = await loadFolders(user?.userId);
       setFolders(f);
       if (f.length > 0 && activeFolder === null) {
         setActiveFolder(f[0]);
@@ -139,7 +141,7 @@ export default function SavedPage() {
     } catch {
       // ignore
     }
-  }, [activeFolder]);
+  }, [activeFolder, user?.userId]);
 
   const fetchBrands = useCallback(async () => {
     if (activeFolder === null) {
@@ -149,14 +151,14 @@ export default function SavedPage() {
     }
     setLoading(true);
     try {
-      const b = await loadBrands(activeFolder);
+      const b = await loadBrands(activeFolder, user?.userId);
       setBrands(b);
     } catch {
       // ignore
     } finally {
       setLoading(false);
     }
-  }, [activeFolder]);
+  }, [activeFolder, user?.userId]);
 
   useEffect(() => {
     fetchFolders();
@@ -204,7 +206,7 @@ export default function SavedPage() {
     const name = newFolderName.trim();
     if (!name) return;
     try {
-      const ok = await createFolder(name);
+      const ok = await createFolder(name, user?.userId);
       if (ok) {
         setFolders((prev) => [...prev, name]);
         setActiveFolder(name);
@@ -224,7 +226,7 @@ export default function SavedPage() {
     )
       return;
     try {
-      await deleteFolder(activeFolder);
+      await deleteFolder(activeFolder, user?.userId);
       const remaining = folders.filter((f) => f !== activeFolder);
       setFolders(remaining);
       setActiveFolder(remaining.length > 0 ? remaining[0] : null);
@@ -247,7 +249,7 @@ export default function SavedPage() {
   async function handleMoveBrands(targetFolder: string) {
     const ids = Array.from(selectedBrands);
     try {
-      await moveBrands(ids, targetFolder);
+      await moveBrands(ids, targetFolder, user?.userId);
       setShowMoveModal(false);
       setSelectedBrands(new Set());
       await fetchBrands();

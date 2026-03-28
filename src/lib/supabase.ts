@@ -13,11 +13,11 @@ export interface BrandData {
   website?: string;
   Kategori?: string;
   category?: string;
-  "Alt Niş"?: string;
+  "Alt Nis"?: string;
   sub_niche?: string;
   "AOV ($)"?: number;
   est_aov?: number;
-  "Öne Çıkan Özellik"?: string;
+  "One Cikan Ozellik"?: string;
   insight?: string;
   "Marka Hikayesi"?: string;
   history?: string;
@@ -33,11 +33,13 @@ export interface SavedBrand {
 }
 
 // ---------- Folders ----------
-export async function loadFolders(): Promise<string[]> {
-  const { data, error } = await supabase
+export async function loadFolders(userId?: number): Promise<string[]> {
+  let query = supabase
     .from("folders")
     .select("name")
     .order("created_at", { ascending: true });
+  if (userId) query = query.eq("user_id", userId);
+  const { data, error } = await query;
   if (error) {
     console.error("loadFolders error:", error);
     return ["Genel"];
@@ -46,15 +48,16 @@ export async function loadFolders(): Promise<string[]> {
   return names.length > 0 ? names : ["Genel"];
 }
 
-export async function createFolder(name: string): Promise<boolean> {
+export async function createFolder(name: string, userId?: number): Promise<boolean> {
   // Check if exists
-  const { data: existing } = await supabase
-    .from("folders")
-    .select("name")
-    .eq("name", name);
+  let checkQuery = supabase.from("folders").select("name").eq("name", name);
+  if (userId) checkQuery = checkQuery.eq("user_id", userId);
+  const { data: existing } = await checkQuery;
   if (existing && existing.length > 0) return true;
 
-  const { error } = await supabase.from("folders").insert({ name });
+  const row: Record<string, unknown> = { name };
+  if (userId) row.user_id = userId;
+  const { error } = await supabase.from("folders").insert(row);
   if (error) {
     console.error("createFolder error:", error);
     return false;
@@ -62,18 +65,25 @@ export async function createFolder(name: string): Promise<boolean> {
   return true;
 }
 
-export async function deleteFolder(name: string): Promise<void> {
-  await supabase.from("saved_brands").delete().eq("folder_name", name);
-  await supabase.from("folders").delete().eq("name", name);
+export async function deleteFolder(name: string, userId?: number): Promise<void> {
+  if (userId) {
+    await supabase.from("saved_brands").delete().eq("folder_name", name).eq("user_id", userId);
+    await supabase.from("folders").delete().eq("name", name).eq("user_id", userId);
+  } else {
+    await supabase.from("saved_brands").delete().eq("folder_name", name);
+    await supabase.from("folders").delete().eq("name", name);
+  }
 }
 
 // ---------- Brands ----------
-export async function loadBrands(folderName: string): Promise<SavedBrand[]> {
-  const { data, error } = await supabase
+export async function loadBrands(folderName: string, userId?: number): Promise<SavedBrand[]> {
+  let query = supabase
     .from("saved_brands")
     .select("id, folder_name, brand_data, created_at")
     .eq("folder_name", folderName)
     .order("created_at", { ascending: true });
+  if (userId) query = query.eq("user_id", userId);
+  const { data, error } = await query;
   if (error) {
     console.error("loadBrands error:", error);
     return [];
@@ -99,27 +109,30 @@ function cleanBrandData(data: Record<string, unknown>): Record<string, unknown> 
 
 export async function saveBrandsBulk(
   folderName: string,
-  brands: BrandData[]
+  brands: BrandData[],
+  userId?: number
 ): Promise<number> {
   // Ensure folder exists
-  await createFolder(folderName);
+  await createFolder(folderName, userId);
 
   // Get existing brand names
-  const existing = await loadBrands(folderName);
+  const existing = await loadBrands(folderName, userId);
   const existingNames = new Set(
     existing.map((b) =>
       (b.brand_data?.Marka || b.brand_data?.brand || "").toLowerCase()
     )
   );
 
-  const rows: { folder_name: string; brand_data: Record<string, unknown> }[] = [];
+  const rows: { folder_name: string; brand_data: Record<string, unknown>; user_id?: number }[] = [];
   for (const brand of brands) {
     const name = (brand.Marka || brand.brand || "").toLowerCase();
     if (name && !existingNames.has(name)) {
-      rows.push({
+      const row: { folder_name: string; brand_data: Record<string, unknown>; user_id?: number } = {
         folder_name: folderName,
         brand_data: cleanBrandData(brand as Record<string, unknown>),
-      });
+      };
+      if (userId) row.user_id = userId;
+      rows.push(row);
       existingNames.add(name);
     }
   }
@@ -150,9 +163,10 @@ export async function removeBrandsByIds(ids: number[]): Promise<void> {
 
 export async function moveBrands(
   brandIds: number[],
-  targetFolder: string
+  targetFolder: string,
+  userId?: number
 ): Promise<void> {
-  await createFolder(targetFolder);
+  await createFolder(targetFolder, userId);
   const { error } = await supabase
     .from("saved_brands")
     .update({ folder_name: targetFolder })
@@ -160,10 +174,12 @@ export async function moveBrands(
   if (error) console.error("moveBrands error:", error);
 }
 
-export async function getAllSavedCount(): Promise<number> {
-  const { count, error } = await supabase
+export async function getAllSavedCount(userId?: number): Promise<number> {
+  let query = supabase
     .from("saved_brands")
     .select("id", { count: "exact", head: true });
+  if (userId) query = query.eq("user_id", userId);
+  const { count, error } = await query;
   if (error) return 0;
   return count ?? 0;
 }

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
+import { verifyToken, logActivity } from "@/lib/auth";
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -26,6 +27,14 @@ Yanıtlarını kısa, öz ve pratik tut. Önemli kelimeleri **kalın** yaz. Raka
 
 export async function POST(request: NextRequest) {
   try {
+    // Get user from token (optional)
+    let userId: number | null = null;
+    const authHeader = request.headers.get("Authorization");
+    if (authHeader?.startsWith("Bearer ")) {
+      const payload = verifyToken(authHeader.split(" ")[1]);
+      if (payload) userId = payload.userId;
+    }
+
     const { messages, model = "sonnet" } = await request.json();
 
     const modelId =
@@ -49,6 +58,13 @@ export async function POST(request: NextRequest) {
 
       const reply =
         response.content[0].type === "text" ? response.content[0].text : "";
+
+      // Log activity
+      const tokensUsed = (response.usage?.input_tokens || 0) + (response.usage?.output_tokens || 0);
+      if (userId) {
+        await logActivity(userId, "chat", undefined, undefined, tokensUsed).catch(() => {});
+      }
+
       return NextResponse.json({ reply });
     }
 
@@ -66,6 +82,7 @@ export async function POST(request: NextRequest) {
     const encoder = new TextEncoder();
     const readable = new ReadableStream({
       async start(controller) {
+        let totalTokens = 0;
         for await (const event of stream) {
           if (
             event.type === "content_block_delta" &&
@@ -73,6 +90,14 @@ export async function POST(request: NextRequest) {
           ) {
             controller.enqueue(encoder.encode(event.delta.text));
           }
+          if (event.type === "message_delta") {
+            const usage = (event as unknown as { usage?: { output_tokens?: number } }).usage;
+            if (usage?.output_tokens) totalTokens = usage.output_tokens;
+          }
+        }
+        // Log activity after stream completes
+        if (userId) {
+          await logActivity(userId, "chat", undefined, undefined, totalTokens).catch(() => {});
         }
         controller.close();
       },
