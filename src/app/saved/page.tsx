@@ -12,6 +12,8 @@ import {
   CheckSquare,
   Square,
   Eye,
+  Link,
+  Loader2,
 } from "lucide-react";
 import {
   loadFolders,
@@ -20,6 +22,7 @@ import {
   loadBrands,
   removeBrandsByIds,
   moveBrands,
+  saveBrandsBulk,
   type SavedBrand,
 } from "@/lib/supabase";
 import { useAuth } from "@/context/AuthContext";
@@ -130,6 +133,9 @@ export default function SavedPage() {
   const [sortKey, setSortKey] = useState<SortKey>("revenue");
   const [sortAsc, setSortAsc] = useState(false);
   const [detailBrand, setDetailBrand] = useState<SavedBrand | null>(null);
+  const [quickAddUrl, setQuickAddUrl] = useState("");
+  const [quickAddLoading, setQuickAddLoading] = useState(false);
+  const [quickAddMsg, setQuickAddMsg] = useState("");
 
   const fetchFolders = useCallback(async () => {
     try {
@@ -258,6 +264,42 @@ export default function SavedPage() {
     }
   }
 
+  async function handleQuickAdd() {
+    if (!quickAddUrl.trim() || !activeFolder) return;
+    setQuickAddLoading(true);
+    setQuickAddMsg("");
+    try {
+      // Extract domain from URL
+      let domain = quickAddUrl.trim();
+      domain = domain.replace(/^https?:\/\//, "").replace(/^www\./, "").split("/")[0];
+      const brandName = domain.split(".")[0].charAt(0).toUpperCase() + domain.split(".")[0].slice(1);
+
+      const brandData = {
+        Marka: brandName,
+        "Web Sitesi": `https://${domain}`,
+        Kategori: "-",
+        "AOV ($)": 0,
+        "Öne Çıkan Özellik": "Manuel eklendi",
+        "Meta Ads": `https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=ALL&q=${encodeURIComponent(brandName)}`,
+      };
+
+      const added = await saveBrandsBulk(activeFolder, [brandData], user?.userId);
+      if (added > 0) {
+        setQuickAddMsg("Eklendi!");
+        setQuickAddUrl("");
+        await fetchBrands();
+      } else {
+        setQuickAddMsg("Zaten kayıtlı");
+      }
+      setTimeout(() => setQuickAddMsg(""), 2000);
+    } catch {
+      setQuickAddMsg("Hata oluştu");
+      setTimeout(() => setQuickAddMsg(""), 2000);
+    } finally {
+      setQuickAddLoading(false);
+    }
+  }
+
   function toggleBrand(id: number) {
     const next = new Set(selectedBrands);
     if (next.has(id)) next.delete(id);
@@ -374,6 +416,40 @@ export default function SavedPage() {
           )}
         </div>
       </div>
+
+      {/* Quick add by URL */}
+      {activeFolder && (
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-6">
+          <div className="flex items-center gap-2 mb-2">
+            <Link size={16} className="text-[#667eea]" />
+            <span className="text-sm font-semibold text-gray-700">Hızlı Ekle</span>
+            <span className="text-xs text-gray-400">— Link yapıştırarak marka ekle</span>
+          </div>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={quickAddUrl}
+              onChange={(e) => setQuickAddUrl(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleQuickAdd()}
+              placeholder="https://marka.com veya marka.com"
+              className="flex-1 py-2.5 px-4 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#667eea]/30"
+            />
+            <button
+              onClick={handleQuickAdd}
+              disabled={quickAddLoading || !quickAddUrl.trim()}
+              className="flex items-center gap-2 px-5 py-2.5 bg-[#667eea] text-white rounded-lg text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-40"
+            >
+              {quickAddLoading ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />}
+              Ekle
+            </button>
+            {quickAddMsg && (
+              <span className={`flex items-center text-sm font-medium ${quickAddMsg.includes("Hata") ? "text-red-500" : "text-[#27AE60]"}`}>
+                {quickAddMsg}
+              </span>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Actions bar */}
       {brands.length > 0 && (
