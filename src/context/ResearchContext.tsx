@@ -71,7 +71,7 @@ export function ResearchProvider({ children }: { children: ReactNode }) {
       nicheSummary: null,
     }));
 
-    const BATCH_SIZE = 30;
+    const BATCH_SIZE = 20;
     const totalBatches = Math.ceil(count / BATCH_SIZE);
     const allBrands: BrandResult[] = [];
     const seenNames = new Set<string>();
