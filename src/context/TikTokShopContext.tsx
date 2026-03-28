@@ -49,14 +49,16 @@ interface TTSState {
   totalPages: number;
   searchMode: SearchMode;
   pageSize: number;
+  sortBy: number;
 }
 
 interface TikTokShopContextType extends TTSState {
-  search: (keyword: string, mode: SearchMode, pageSize: number, page?: number) => void;
+  search: (keyword: string, mode: SearchMode, pageSize: number, page?: number, sortBy?: number) => void;
   setKeyword: (k: string) => void;
   goToPage: (page: number) => void;
   setSearchMode: (mode: SearchMode) => void;
   setPageSize: (size: number) => void;
+  setSortBy: (sortBy: number) => void;
 }
 
 const TikTokShopContext = createContext<TikTokShopContextType | null>(null);
@@ -123,27 +125,30 @@ export function TikTokShopProvider({ children }: { children: ReactNode }) {
     totalPages: 1,
     searchMode: "video",
     pageSize: 20,
+    sortBy: 999,
   });
   const abortRef = useRef<AbortController | null>(null);
   const lastSearchRef = useRef<{
     keyword: string;
     mode: SearchMode;
     pageSize: number;
+    sortBy: number;
   } | null>(null);
 
   const search = useCallback(
-    async (keyword: string, mode: SearchMode, pageSize: number, page = 1) => {
+    async (keyword: string, mode: SearchMode, pageSize: number, page = 1, sortBy = 999) => {
       if (abortRef.current) abortRef.current.abort();
       const controller = new AbortController();
       abortRef.current = controller;
 
-      lastSearchRef.current = { keyword, mode, pageSize };
+      lastSearchRef.current = { keyword, mode, pageSize, sortBy };
 
       setState((prev) => ({
         ...prev,
         keyword,
         searchMode: mode,
         pageSize,
+        sortBy,
         loading: true,
         error: "",
         results: [],
@@ -164,6 +169,7 @@ export function TikTokShopProvider({ children }: { children: ReactNode }) {
             page,
             pageSize,
             searchMode: mode,
+            sortBy,
           }),
           signal: controller.signal,
         });
@@ -221,7 +227,7 @@ export function TikTokShopProvider({ children }: { children: ReactNode }) {
     (page: number) => {
       const last = lastSearchRef.current;
       if (!last) return;
-      search(last.keyword, last.mode, last.pageSize, page);
+      search(last.keyword, last.mode, last.pageSize, page, last.sortBy);
     },
     [search]
   );
@@ -238,6 +244,10 @@ export function TikTokShopProvider({ children }: { children: ReactNode }) {
     setState((prev) => ({ ...prev, pageSize: size }));
   }, []);
 
+  const setSortBy = useCallback((sortBy: number) => {
+    setState((prev) => ({ ...prev, sortBy }));
+  }, []);
+
   return (
     <TikTokShopContext.Provider
       value={{
@@ -247,6 +257,7 @@ export function TikTokShopProvider({ children }: { children: ReactNode }) {
         goToPage,
         setSearchMode,
         setPageSize,
+        setSortBy,
       }}
     >
       {children}

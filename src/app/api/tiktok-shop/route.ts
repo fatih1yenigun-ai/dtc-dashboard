@@ -52,7 +52,8 @@ async function searchVideos(
   token: string,
   keyword: string,
   page: number,
-  pageSize: number
+  pageSize: number,
+  sortBy: number = 999
 ) {
   const url =
     "https://www.pipiads.com/v3/api/search4/at/video/search-tiktok-shop";
@@ -60,7 +61,7 @@ async function searchVideos(
     is_participle: false,
     search_type: 1,
     extend_keywords: [{ type: 1, keyword }],
-    sort: 999,
+    sort: sortBy,
     sort_type: "desc",
     current_page: page,
     page_size: pageSize,
@@ -138,6 +139,7 @@ export async function POST(request: NextRequest) {
       page = 1,
       pageSize = 20,
       searchMode = "video",
+      sortBy = 999,
     } = await request.json();
 
     if (!keyword) {
@@ -155,7 +157,7 @@ export async function POST(request: NextRequest) {
     if (searchMode === "product") {
       data = await searchProducts(token, keyword, page, pageSize);
     } else {
-      data = await searchVideos(token, keyword, page, pageSize);
+      data = await searchVideos(token, keyword, page, pageSize, sortBy);
     }
 
     // Debug: log if no results

@@ -10,9 +10,11 @@ import {
   ChevronLeft,
   ChevronRight,
   X,
+  Clock,
+  Share2,
 } from "lucide-react";
 import { loadFolders, createFolder, saveBrandsBulk, type BrandData } from "@/lib/supabase";
-import { useTikTokShop, type TTSProduct, type SearchMode } from "@/context/TikTokShopContext";
+import { useTikTokShop, type TTSProduct } from "@/context/TikTokShopContext";
 import { useAuth } from "@/context/AuthContext";
 
 const FLAG: Record<string, string> = {
@@ -26,16 +28,35 @@ const FLAG: Record<string, string> = {
   PH: "\u{1F1F5}\u{1F1ED}", SG: "\u{1F1F8}\u{1F1EC}", MX: "\u{1F1F2}\u{1F1FD}",
 };
 
+const TAG_COLORS = [
+  "bg-blue-100 text-blue-700",
+  "bg-purple-100 text-purple-700",
+  "bg-pink-100 text-pink-700",
+  "bg-emerald-100 text-emerald-700",
+  "bg-amber-100 text-amber-700",
+  "bg-cyan-100 text-cyan-700",
+  "bg-rose-100 text-rose-700",
+  "bg-indigo-100 text-indigo-700",
+];
+
+const SORT_OPTIONS = [
+  { value: 999, label: "En Pop\u00FCler" },
+  { value: 1, label: "En Yeni" },
+  { value: 2, label: "En \u00C7ok \u0130zlenen" },
+  { value: 3, label: "En \u00C7ok Be\u011Fenilen" },
+];
+
 function formatCompact(n: number): string {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
   if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
   return String(n);
 }
 
-function formatDate(ts: number): string {
-  if (!ts) return "";
-  const d = new Date(ts * 1000);
-  return d.toLocaleDateString("tr-TR", { day: "2-digit", month: "short", year: "numeric" });
+function formatDuration(seconds: number): string {
+  if (!seconds) return "";
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `${m}:${String(s).padStart(2, "0")}`;
 }
 
 function HotBadge({ value }: { value: number }) {
@@ -61,12 +82,12 @@ function toBrandData(product: TTSProduct): BrandData {
       : "",
     Kategori: product.category || product.tags?.[0] || "",
     "Ciro ($)": product.estimated_gmv,
-    "Öne Çıkan Özellik": product.hook,
-    "Büyüme Yöntemi": "TikTok Shop",
-    "Pazarlama Açıları": product.tags?.join(", ") || "",
+    "\u00D6ne \u00C7\u0131kan \u00D6zellik": product.hook,
+    "B\u00FCy\u00FCme Y\u00F6ntemi": "TikTok Shop",
+    "Pazarlama A\u00E7\u0131lar\u0131": product.tags?.join(", ") || "",
     Kaynak: "PiPiAds",
-    "Video Sayısı": product.total_videos,
-    "Görüntülenme": product.play_count,
+    "Video Say\u0131s\u0131": product.total_videos,
+    "G\u00F6r\u00FCnt\u00FClenme": product.play_count,
     Cover: product.cover_image,
   };
 }
@@ -80,13 +101,13 @@ export default function TTSPage() {
     error,
     page,
     totalPages,
-    searchMode,
     pageSize,
+    sortBy,
     search,
     setKeyword,
     goToPage,
-    setSearchMode,
     setPageSize,
+    setSortBy,
   } = useTikTokShop();
 
   const [localKeyword, setLocalKeyword] = useState("");
@@ -104,7 +125,7 @@ export default function TTSPage() {
   function handleSearch() {
     if (!localKeyword.trim()) return;
     setKeyword(localKeyword);
-    search(localKeyword, searchMode, pageSize, 1);
+    search(localKeyword, "video", pageSize, 1, sortBy);
   }
 
   async function openSaveModal(product: TTSProduct) {
@@ -183,33 +204,22 @@ export default function TTSPage() {
             </div>
           </div>
 
-          {/* Search Mode Toggle */}
-          <div>
+          {/* Sort */}
+          <div className="w-44">
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Arama Modu
+              Siralama
             </label>
-            <div className="flex rounded-lg border border-gray-200 overflow-hidden">
-              <button
-                onClick={() => setSearchMode("video")}
-                className={`px-4 py-2.5 text-sm font-medium transition-colors ${
-                  searchMode === "video"
-                    ? "bg-[#667eea] text-white"
-                    : "bg-white text-gray-600 hover:bg-gray-50"
-                }`}
-              >
-                Video Aramasi
-              </button>
-              <button
-                onClick={() => setSearchMode("product")}
-                className={`px-4 py-2.5 text-sm font-medium transition-colors ${
-                  searchMode === "product"
-                    ? "bg-[#667eea] text-white"
-                    : "bg-white text-gray-600 hover:bg-gray-50"
-                }`}
-              >
-                Urun Aramasi
-              </button>
-            </div>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(Number(e.target.value))}
+              className="w-full py-2.5 px-3 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#667eea]/30"
+            >
+              {SORT_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
           </div>
 
           {/* Page Size */}
@@ -222,8 +232,8 @@ export default function TTSPage() {
               onChange={(e) => setPageSize(Number(e.target.value))}
               className="w-full py-2.5 px-3 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#667eea]/30"
             >
-              <option value={10}>10</option>
               <option value={20}>20</option>
+              <option value={50}>50</option>
             </select>
           </div>
 
@@ -268,29 +278,15 @@ export default function TTSPage() {
             </p>
           </div>
 
-          {/* Video mode: Card grid */}
-          {searchMode === "video" ? (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {results.map((product, i) => (
-                <VideoCard
-                  key={i}
-                  product={product}
-                  onSave={() => openSaveModal(product)}
-                />
-              ))}
-            </div>
-          ) : (
-            /* Product mode: Card grid */
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {results.map((product, i) => (
-                <ProductCard
-                  key={i}
-                  product={product}
-                  onSave={() => openSaveModal(product)}
-                />
-              ))}
-            </div>
-          )}
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {results.map((product, i) => (
+              <VideoCard
+                key={i}
+                product={product}
+                onSave={() => openSaveModal(product)}
+              />
+            ))}
+          </div>
 
           {/* Pagination */}
           <div className="flex items-center justify-center gap-4 mt-8">
@@ -413,14 +409,14 @@ function VideoCard({
   onSave: () => void;
 }) {
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
-      {/* Cover Image */}
-      <div className="relative aspect-[9/16] bg-gray-100">
+    <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow flex flex-col">
+      {/* Cover Image - larger, fills card top */}
+      <div className="relative aspect-[9/16] bg-gray-100 flex-shrink-0">
         {product.cover_image ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={product.cover_image}
-            alt={product.product_name}
+            alt={product.hook || product.product_name}
             className="w-full h-full object-cover"
           />
         ) : (
@@ -441,25 +437,39 @@ function VideoCard({
             </div>
           </a>
         )}
-        {/* Hot badge */}
+        {/* Top left: Region flag */}
+        {product.region && (
+          <div className="absolute top-2 left-2 text-lg drop-shadow">
+            {FLAG[product.region.toUpperCase()] || product.region}
+          </div>
+        )}
+        {/* Top right: Hot badge */}
         {product.hot_value > 0 && (
           <div className="absolute top-2 right-2">
             <HotBadge value={product.hot_value} />
           </div>
         )}
-        {/* Region flag */}
-        {product.region && (
-          <div className="absolute top-2 left-2 text-lg">
-            {FLAG[product.region.toUpperCase()] || product.region}
+        {/* Bottom left: Duration badge */}
+        {product.duration > 0 && (
+          <div className="absolute bottom-2 left-2">
+            <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-black/60 text-white flex items-center gap-1">
+              <Clock size={10} />
+              {formatDuration(product.duration)}
+            </span>
           </div>
         )}
       </div>
 
       {/* Content */}
-      <div className="p-3">
+      <div className="p-3 flex flex-col flex-1">
+        {/* Hook / Product name */}
+        <p className="text-sm font-semibold text-gray-900 line-clamp-2 mb-1.5 leading-snug">
+          {product.hook || product.product_name || "Bilinmeyen"}
+        </p>
+
         {/* Shop info */}
         <div className="mb-2">
-          <p className="text-sm font-semibold text-gray-900 truncate">
+          <p className="text-xs text-gray-500 truncate">
             {product.shop_name || "Bilinmeyen"}
           </p>
           {product.shop_handle && (
@@ -467,7 +477,7 @@ function VideoCard({
               href={`https://www.tiktok.com/@${product.shop_handle}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-xs text-[#667eea] hover:underline flex items-center gap-1"
+              className="text-xs text-[#667eea] hover:underline flex items-center gap-1 mt-0.5"
             >
               @{product.shop_handle}
               <ExternalLink size={10} />
@@ -475,27 +485,21 @@ function VideoCard({
           )}
         </div>
 
-        {/* Hook */}
-        {product.hook && (
-          <p className="text-xs text-gray-600 mb-2 line-clamp-2">
-            {product.hook}
-          </p>
-        )}
-
-        {/* Stats */}
-        <div className="flex items-center gap-3 text-[11px] text-gray-500 mb-2">
+        {/* Stats row */}
+        <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-[11px] text-gray-500 mb-2">
           <span>{"\u25B6\uFE0F"} {formatCompact(product.play_count)}</span>
           <span>{"\u2764\uFE0F"} {formatCompact(product.like_count)}</span>
           <span>{"\uD83D\uDCAC"} {formatCompact(product.comment_count)}</span>
+          <span className="flex items-center gap-0.5"><Share2 size={10} /> {formatCompact(product.share_count)}</span>
         </div>
 
-        {/* Tags */}
+        {/* Tags as colorful pills */}
         {product.tags && product.tags.length > 0 && (
           <div className="flex flex-wrap gap-1 mb-2">
-            {product.tags.slice(0, 3).map((tag, i) => (
+            {product.tags.slice(0, 4).map((tag, i) => (
               <span
                 key={i}
-                className="text-[10px] px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded-full"
+                className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${TAG_COLORS[i % TAG_COLORS.length]}`}
               >
                 {tag}
               </span>
@@ -503,128 +507,13 @@ function VideoCard({
           </div>
         )}
 
-        {/* Ad duration */}
-        {product.put_days > 0 && (
-          <p className="text-[10px] text-gray-400 mb-2">
-            Reklam suresi: {product.put_days} gun
-          </p>
-        )}
-
-        {/* Date */}
-        {product.ad_create_time > 0 && (
-          <p className="text-[10px] text-gray-400 mb-2">
-            {formatDate(product.ad_create_time)}
-          </p>
-        )}
+        {/* Spacer to push button to bottom */}
+        <div className="flex-1" />
 
         {/* Save button */}
         <button
           onClick={onSave}
-          className="w-full mt-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#667eea]/30 text-[#667eea] text-xs font-medium hover:bg-[#667eea]/5 transition-colors"
-        >
-          <Save size={12} />
-          Kaydet
-        </button>
-      </div>
-    </div>
-  );
-}
-
-/* ---- Product Card Component ---- */
-function ProductCard({
-  product,
-  onSave,
-}: {
-  product: TTSProduct;
-  onSave: () => void;
-}) {
-  return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
-      {/* Cover Image */}
-      <div className="relative aspect-square bg-gray-100">
-        {product.cover_image ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={product.cover_image}
-            alt={product.product_name}
-            className="w-full h-full object-cover"
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center text-gray-300 text-4xl">
-            {"\uD83D\uDCE6"}
-          </div>
-        )}
-        {/* Region */}
-        {product.region && (
-          <div className="absolute top-2 left-2 text-lg">
-            {FLAG[product.region.toUpperCase()] || product.region}
-          </div>
-        )}
-      </div>
-
-      {/* Content */}
-      <div className="p-3">
-        {/* Product name */}
-        <p className="text-sm font-semibold text-gray-900 truncate mb-1">
-          {product.product_name || "Urun"}
-        </p>
-
-        {/* Category */}
-        {product.category && (
-          <p className="text-[10px] text-gray-400 mb-2 truncate">
-            {product.category}
-          </p>
-        )}
-
-        {/* GMV */}
-        {product.estimated_gmv !== undefined && product.estimated_gmv > 0 && (
-          <p className="text-lg font-bold text-green-600 mb-1">
-            ${formatCompact(product.estimated_gmv)}
-          </p>
-        )}
-
-        {/* Metrics grid */}
-        <div className="grid grid-cols-2 gap-1 text-[11px] text-gray-500 mb-2">
-          {product.total_videos !== undefined && product.total_videos > 0 && (
-            <div>
-              <span className="text-gray-400">Video:</span>{" "}
-              {formatCompact(product.total_videos)}
-            </div>
-          )}
-          {product.impression !== undefined && product.impression > 0 && (
-            <div>
-              <span className="text-gray-400">Gosterim:</span>{" "}
-              {formatCompact(product.impression)}
-            </div>
-          )}
-          {product.cpa !== undefined && product.cpa > 0 && (
-            <div>
-              <span className="text-gray-400">CPA:</span> ${product.cpa.toFixed(2)}
-            </div>
-          )}
-          {product.ctr !== undefined && product.ctr > 0 && (
-            <div>
-              <span className="text-gray-400">CTR:</span> {(product.ctr * 100).toFixed(1)}%
-            </div>
-          )}
-          {product.cvr !== undefined && product.cvr > 0 && (
-            <div>
-              <span className="text-gray-400">CVR:</span> {(product.cvr * 100).toFixed(1)}%
-            </div>
-          )}
-        </div>
-
-        {/* Shop */}
-        {product.shop_name && (
-          <p className="text-[10px] text-gray-400 truncate mb-2">
-            {product.shop_name}
-          </p>
-        )}
-
-        {/* Save button */}
-        <button
-          onClick={onSave}
-          className="w-full mt-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#667eea]/30 text-[#667eea] text-xs font-medium hover:bg-[#667eea]/5 transition-colors"
+          className="w-full mt-2 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border border-[#667eea]/30 text-[#667eea] text-xs font-medium hover:bg-[#667eea]/5 transition-colors"
         >
           <Save size={12} />
           Kaydet
