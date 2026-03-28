@@ -93,20 +93,20 @@ async function searchProducts(
   token: string,
   keyword: string,
   page: number,
-  pageSize: number
+  pageSize: number,
+  sortKey: string = "gmv"
 ) {
   const params = new URLSearchParams({
-    sort_key: "post",
+    keyword,
+    sort_key: sortKey,
     sort_type: "desc",
     current_page: String(page),
     page_size: String(pageSize),
-    time_type: "1",
-    keyword,
   });
-  const url = `https://www.pipiads.com/v3/api/homepage/top-product/search?${params}`;
+  const url = `https://www.pipiads.com/v1/api/tiktok-shop/product?${params}`;
 
   const res = await fetch(url, {
-    method: "GET",
+    method: "POST",
     headers: buildHeaders(token),
   });
 
@@ -115,7 +115,7 @@ async function searchProducts(
     tokenExpiry = 0;
     const newToken = await pipiadsLogin();
     const retryRes = await fetch(url, {
-      method: "GET",
+      method: "POST",
       headers: buildHeaders(newToken),
     });
     return retryRes.json();
@@ -140,6 +140,7 @@ export async function POST(request: NextRequest) {
       pageSize = 20,
       searchMode = "video",
       sortBy = 999,
+      sortKey = "gmv",
     } = await request.json();
 
     if (!keyword) {
@@ -155,7 +156,7 @@ export async function POST(request: NextRequest) {
     // Call appropriate search endpoint
     let data;
     if (searchMode === "product") {
-      data = await searchProducts(token, keyword, page, pageSize);
+      data = await searchProducts(token, keyword, page, pageSize, sortKey);
     } else {
       data = await searchVideos(token, keyword, page, pageSize, sortBy);
     }
@@ -183,7 +184,7 @@ export async function POST(request: NextRequest) {
     return new Response(
       JSON.stringify({
         error:
-          "PiPiAds API hatası: " +
+          "PiPiAds API hatasi: " +
           (error instanceof Error ? error.message : "Bilinmeyen hata"),
       }),
       { status: 500, headers: { "Content-Type": "application/json" } }

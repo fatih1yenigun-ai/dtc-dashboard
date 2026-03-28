@@ -11,24 +11,43 @@ import {
 import { useAuth } from "@/context/AuthContext";
 
 export interface TTSProduct {
-  // Video search fields
-  product_name: string;
+  id: string;
+  title: string;
+  image: string;
+  image_list: string[];
+  landing_page: string;
+  price_usd: number;
+  sales_volume: number;
+  gmv_usd: number;
+  score: number;
   shop_name: string;
-  shop_handle: string;
-  cover_image: string;
-  video_url: string;
+  shop_image: string;
+  shop_id: string;
+  video_count: number;
   play_count: number;
   like_count: number;
-  comment_count: number;
   share_count: number;
-  duration: number;
+  comment_count: number;
   region: string;
-  tags: string[];
-  hook: string;
-  ad_create_time: number;
+  person_count: number;
+  commission_rate: number;
+  seller_location: string;
+  found_time: number;
+  day7_gmv_usd: number;
+  day7_sales: number;
+  day30_gmv_usd: number;
+  day30_sales: number;
   put_days: number;
-  hot_value: number;
-  // Product search fields
+  // For video search (keep backward compat)
+  product_name?: string;
+  shop_handle?: string;
+  cover_image?: string;
+  video_url?: string;
+  hook?: string;
+  tags?: string[];
+  hot_value?: number;
+  duration?: number;
+  ad_create_time?: number;
   estimated_gmv?: number;
   total_videos?: number;
   impression?: number;
@@ -50,15 +69,17 @@ interface TTSState {
   searchMode: SearchMode;
   pageSize: number;
   sortBy: number;
+  sortKey: string;
 }
 
 interface TikTokShopContextType extends TTSState {
-  search: (keyword: string, mode: SearchMode, pageSize: number, page?: number, sortBy?: number) => void;
+  search: (keyword: string, mode: SearchMode, pageSize: number, page?: number, sortBy?: number, sortKey?: string) => void;
   setKeyword: (k: string) => void;
   goToPage: (page: number) => void;
   setSearchMode: (mode: SearchMode) => void;
   setPageSize: (size: number) => void;
   setSortBy: (sortBy: number) => void;
+  setSortKey: (sortKey: string) => void;
 }
 
 const TikTokShopContext = createContext<TikTokShopContextType | null>(null);
@@ -66,51 +87,76 @@ const TikTokShopContext = createContext<TikTokShopContextType | null>(null);
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function mapVideoResult(item: any): TTSProduct {
   return {
-    product_name: item.desc || item.ai_analysis_main_hook || "",
+    id: item.id || "",
+    title: item.desc || item.ai_analysis_main_hook || "",
+    image: item.cover || "",
+    image_list: [],
+    landing_page: "",
+    price_usd: 0,
+    sales_volume: 0,
+    gmv_usd: 0,
+    score: 0,
     shop_name: item.app_name || item.nickname || "",
+    shop_image: "",
+    shop_id: "",
+    video_count: 0,
+    play_count: item.play_count || 0,
+    like_count: item.digg_count || 0,
+    share_count: item.share_count || 0,
+    comment_count: item.comment_count || 0,
+    region: item.fetch_region?.[0] || item.region || "",
+    person_count: 0,
+    commission_rate: 0,
+    seller_location: "",
+    found_time: 0,
+    day7_gmv_usd: 0,
+    day7_sales: 0,
+    day30_gmv_usd: 0,
+    day30_sales: 0,
+    put_days: item.put_days || 0,
+    // Video-specific fields
+    product_name: item.desc || item.ai_analysis_main_hook || "",
     shop_handle: item.unique_id || "",
     cover_image: item.cover || "",
     video_url: item.video_url || "",
-    play_count: item.play_count || 0,
-    like_count: item.digg_count || 0,
-    comment_count: item.comment_count || 0,
-    share_count: item.share_count || 0,
-    duration: item.duration || 0,
-    region: item.fetch_region?.[0] || item.region || "",
-    tags: item.ai_analysis_tags || [],
     hook: item.ai_analysis_main_hook || "",
-    ad_create_time: item.ad_create_time || 0,
-    put_days: item.put_days || 0,
+    tags: item.ai_analysis_tags || [],
     hot_value: item.hot_value || 0,
+    duration: item.duration || 0,
+    ad_create_time: item.ad_create_time || 0,
   };
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function mapProductResult(item: any): TTSProduct {
   return {
-    product_name: item.product_name || item.name || "",
+    id: item.id || "",
+    title: item.title || "",
+    image: item.image || "",
+    image_list: item.image_list || [],
+    landing_page: item.landing_page || "",
+    price_usd: item.price_usd || item.price || 0,
+    sales_volume: item.sales_volume || 0,
+    gmv_usd: item.gmv_usd || item.gmv || 0,
+    score: item.score || 0,
     shop_name: item.shop_name || "",
-    shop_handle: "",
-    cover_image: item.cover || item.image || "",
-    video_url: "",
-    play_count: 0,
-    like_count: 0,
-    comment_count: 0,
-    share_count: 0,
-    duration: 0,
+    shop_image: item.shop_image || "",
+    shop_id: item.shop_id || "",
+    video_count: item.video_count || 0,
+    play_count: item.play_count || 0,
+    like_count: item.like_count || 0,
+    share_count: item.share_count || 0,
+    comment_count: item.comment_count || 0,
     region: item.region || "",
-    tags: [],
-    hook: "",
-    ad_create_time: 0,
-    put_days: 0,
-    hot_value: 0,
-    estimated_gmv: item.cost ? item.cost / 100 : 0,
-    total_videos: item.post || 0,
-    impression: item.impression || 0,
-    category: item.first_ecom_category?.value || item.category || "",
-    cpa: item.cpa || 0,
-    ctr: item.ctr || 0,
-    cvr: item.cvr || 0,
+    person_count: item.person_count || 0,
+    commission_rate: item.commission_rate || 0,
+    seller_location: item.seller_location || "",
+    found_time: item.found_time || 0,
+    day7_gmv_usd: item.day7?.gmv_usd || 0,
+    day7_sales: item.day7?.sales_volume || 0,
+    day30_gmv_usd: item.day30?.gmv_usd || 0,
+    day30_sales: item.day30?.sales_volume || 0,
+    put_days: item.put_days || 0,
   };
 }
 
@@ -123,9 +169,10 @@ export function TikTokShopProvider({ children }: { children: ReactNode }) {
     error: "",
     page: 1,
     totalPages: 1,
-    searchMode: "video",
+    searchMode: "product",
     pageSize: 20,
     sortBy: 999,
+    sortKey: "gmv",
   });
   const abortRef = useRef<AbortController | null>(null);
   const lastSearchRef = useRef<{
@@ -133,15 +180,16 @@ export function TikTokShopProvider({ children }: { children: ReactNode }) {
     mode: SearchMode;
     pageSize: number;
     sortBy: number;
+    sortKey: string;
   } | null>(null);
 
   const search = useCallback(
-    async (keyword: string, mode: SearchMode, pageSize: number, page = 1, sortBy = 999) => {
+    async (keyword: string, mode: SearchMode, pageSize: number, page = 1, sortBy = 999, sortKey = "gmv") => {
       if (abortRef.current) abortRef.current.abort();
       const controller = new AbortController();
       abortRef.current = controller;
 
-      lastSearchRef.current = { keyword, mode, pageSize, sortBy };
+      lastSearchRef.current = { keyword, mode, pageSize, sortBy, sortKey };
 
       setState((prev) => ({
         ...prev,
@@ -149,6 +197,7 @@ export function TikTokShopProvider({ children }: { children: ReactNode }) {
         searchMode: mode,
         pageSize,
         sortBy,
+        sortKey,
         loading: true,
         error: "",
         results: [],
@@ -170,6 +219,7 @@ export function TikTokShopProvider({ children }: { children: ReactNode }) {
             pageSize,
             searchMode: mode,
             sortBy,
+            sortKey,
           }),
           signal: controller.signal,
         });
@@ -191,13 +241,11 @@ export function TikTokShopProvider({ children }: { children: ReactNode }) {
         let total = 1;
 
         if (mode === "product") {
-          // Product response: { result: { data: [...], total: N } }
           const list = data.result?.data || data.data?.list || data.list || [];
           products = list.map(mapProductResult);
           const totalCount = data.result?.total || data.data?.total || data.total || list.length;
           total = Math.max(1, Math.ceil(totalCount / pageSize));
         } else {
-          // Video response: { result: { data: [...], total: N } }
           const list = data.result?.data || data.data?.list || data.list || [];
           products = list.map(mapVideoResult);
           const totalCount = data.result?.total || data.data?.total || data.total || list.length;
@@ -216,7 +264,7 @@ export function TikTokShopProvider({ children }: { children: ReactNode }) {
         setState((prev) => ({
           ...prev,
           loading: false,
-          error: (err as Error).message || "Araştırma sırasında hata oluştu",
+          error: (err as Error).message || "Arastirma sirasinda hata olustu",
         }));
       }
     },
@@ -227,7 +275,7 @@ export function TikTokShopProvider({ children }: { children: ReactNode }) {
     (page: number) => {
       const last = lastSearchRef.current;
       if (!last) return;
-      search(last.keyword, last.mode, last.pageSize, page, last.sortBy);
+      search(last.keyword, last.mode, last.pageSize, page, last.sortBy, last.sortKey);
     },
     [search]
   );
@@ -248,6 +296,10 @@ export function TikTokShopProvider({ children }: { children: ReactNode }) {
     setState((prev) => ({ ...prev, sortBy }));
   }, []);
 
+  const setSortKey = useCallback((sortKey: string) => {
+    setState((prev) => ({ ...prev, sortKey }));
+  }, []);
+
   return (
     <TikTokShopContext.Provider
       value={{
@@ -258,6 +310,7 @@ export function TikTokShopProvider({ children }: { children: ReactNode }) {
         setSearchMode,
         setPageSize,
         setSortBy,
+        setSortKey,
       }}
     >
       {children}
