@@ -1,63 +1,173 @@
 "use client";
 
 import { useState } from "react";
-import { Search, Loader2, ExternalLink, Globe } from "lucide-react";
+import {
+  Search,
+  Loader2,
+  ExternalLink,
+  Globe,
+  DollarSign,
+  TrendingUp,
+  Users,
+  Calendar,
+  ShieldCheck,
+  ShieldAlert,
+  Sparkles,
+  Target,
+  Package,
+  Megaphone,
+  Swords,
+  MapPin,
+} from "lucide-react";
 
-interface BrandInfo {
+const FLAG: Record<string, string> = {
+  US: "\u{1F1FA}\u{1F1F8}", UK: "\u{1F1EC}\u{1F1E7}", DE: "\u{1F1E9}\u{1F1EA}", FR: "\u{1F1EB}\u{1F1F7}",
+  TR: "\u{1F1F9}\u{1F1F7}", AU: "\u{1F1E6}\u{1F1FA}", KR: "\u{1F1F0}\u{1F1F7}", JP: "\u{1F1EF}\u{1F1F5}",
+  CA: "\u{1F1E8}\u{1F1E6}", NL: "\u{1F1F3}\u{1F1F1}", SE: "\u{1F1F8}\u{1F1EA}", DK: "\u{1F1E9}\u{1F1F0}",
+  IT: "\u{1F1EE}\u{1F1F9}", ES: "\u{1F1EA}\u{1F1F8}", BR: "\u{1F1E7}\u{1F1F7}", IN: "\u{1F1EE}\u{1F1F3}",
+  CN: "\u{1F1E8}\u{1F1F3}", IL: "\u{1F1EE}\u{1F1F1}",
+};
+
+interface Product {
+  name: string;
+  price: string;
+  category: string;
+}
+
+interface TargetAudience {
+  age_range: string;
+  gender: string;
+  interests: string[];
+  income_level: string;
+  demographics: string;
+}
+
+interface BrandDetail {
   brand_name: string;
   website: string;
-  description: string;
-  founded: string;
-  category: string;
-  estimated_revenue: string;
-  target_audience: string;
+  tagline: string;
+  founded: number;
+  country: string;
+  founder_story: string;
+  scaling_story: string;
+  products: Product[];
+  target_audience: TargetAudience;
   marketing_channels: string[];
-  unique_selling_point: string;
-  meta_ads_url: string;
+  marketing_angles: string[];
+  growth_methods: string[];
+  estimated_traffic: number;
+  estimated_aov: number;
+  estimated_revenue: number;
+  competitors: string[];
+  strengths: string[];
+  weaknesses: string[];
+  turkey_potential: string;
+}
+
+function formatNumber(n: number): string {
+  return n.toLocaleString("tr-TR");
+}
+
+function formatCompact(n: number): string {
+  if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1_000) return `$${(n / 1_000).toFixed(0)}K`;
+  return `$${n}`;
+}
+
+const TAG_COLORS = [
+  "bg-indigo-100 text-indigo-700",
+  "bg-purple-100 text-purple-700",
+  "bg-pink-100 text-pink-700",
+  "bg-blue-100 text-blue-700",
+  "bg-cyan-100 text-cyan-700",
+  "bg-emerald-100 text-emerald-700",
+  "bg-rose-100 text-rose-700",
+  "bg-amber-100 text-amber-700",
+  "bg-teal-100 text-teal-700",
+  "bg-orange-100 text-orange-700",
+];
+
+function SkeletonBlock({ className }: { className?: string }) {
+  return (
+    <div className={`animate-pulse bg-gray-200 rounded-lg ${className || ""}`} />
+  );
+}
+
+function SkeletonDashboard() {
+  return (
+    <div className="space-y-6">
+      {/* Hero skeleton */}
+      <div className="bg-white rounded-xl border border-gray-200 p-6">
+        <SkeletonBlock className="h-8 w-64 mb-3" />
+        <SkeletonBlock className="h-4 w-96 mb-2" />
+        <SkeletonBlock className="h-4 w-48" />
+      </div>
+      {/* Metrics skeleton */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {[1, 2, 3, 4].map((i) => (
+          <div key={i} className="bg-white rounded-xl border border-gray-200 p-5">
+            <SkeletonBlock className="h-4 w-24 mb-3" />
+            <SkeletonBlock className="h-8 w-32" />
+          </div>
+        ))}
+      </div>
+      {/* Story skeletons */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {[1, 2].map((i) => (
+          <div key={i} className="bg-white rounded-xl border border-gray-200 p-6">
+            <SkeletonBlock className="h-5 w-40 mb-4" />
+            <SkeletonBlock className="h-4 w-full mb-2" />
+            <SkeletonBlock className="h-4 w-full mb-2" />
+            <SkeletonBlock className="h-4 w-3/4" />
+          </div>
+        ))}
+      </div>
+      {/* More skeletons */}
+      <div className="bg-white rounded-xl border border-gray-200 p-6">
+        <SkeletonBlock className="h-5 w-32 mb-4" />
+        <div className="flex gap-3">
+          {[1, 2, 3].map((i) => (
+            <SkeletonBlock key={i} className="h-20 w-32" />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export default function BrandsPage() {
-  const [url, setUrl] = useState("");
+  const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
-  const [brand, setBrand] = useState<BrandInfo | null>(null);
+  const [brand, setBrand] = useState<BrandDetail | null>(null);
   const [error, setError] = useState("");
 
-  async function handleScan() {
-    if (!url.trim()) return;
+  async function handleSearch() {
+    const q = query.trim();
+    if (!q) return;
     setLoading(true);
     setBrand(null);
     setError("");
 
+    // Determine if input looks like a website or brand name
+    const isUrl = q.includes(".") && !q.includes(" ");
+    const payload = isUrl
+      ? { brand_name: "", website: q }
+      : { brand_name: q, website: "" };
+
     try {
-      const res = await fetch("/api/research", {
+      const res = await fetch("/api/brand-detail", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          keyword: `Analyze the DTC brand at ${url.trim()}`,
-          count: 1,
-          niche: "fashion",
-        }),
+        body: JSON.stringify(payload),
       });
-      const data = await res.json();
-      if (data.brands && data.brands.length > 0) {
-        const b = data.brands[0];
-        setBrand({
-          brand_name: b.brand_name,
-          website: b.website,
-          description: b.insight,
-          founded: "N/A",
-          category: b.category,
-          estimated_revenue: "N/A",
-          target_audience: "DTC tuketiciler",
-          marketing_channels: ["Meta Ads", "Google Ads", "Email"],
-          unique_selling_point: b.insight,
-          meta_ads_url: b.meta_ads_url,
-        });
-      } else {
-        setError("Marka bilgisi bulunamadi.");
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || "Hata oluştu");
       }
-    } catch {
-      setError("Tarama sirasinda hata olustu.");
+      const data: BrandDetail = await res.json();
+      setBrand(data);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Marka analizi sırasında hata oluştu.");
     } finally {
       setLoading(false);
     }
@@ -65,10 +175,11 @@ export default function BrandsPage() {
 
   return (
     <div>
+      {/* Header */}
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Marka Tarayici</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Marka Analizi</h1>
         <p className="text-gray-500 mt-1">
-          Bir DTC markasini URL ile analiz et
+          Bir DTC markasını derinlemesine analiz et
         </p>
       </div>
 
@@ -82,16 +193,16 @@ export default function BrandsPage() {
             />
             <input
               type="text"
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleScan()}
-              placeholder="ornegin: glossier.com, allbirds.com..."
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+              placeholder="Marka adı veya website gir (ör: glossier.com, Allbirds)"
               className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#667eea]/30 focus:border-[#667eea]"
             />
           </div>
           <button
-            onClick={handleScan}
-            disabled={loading || !url.trim()}
+            onClick={handleSearch}
+            disabled={loading || !query.trim()}
             className="gradient-accent text-white px-6 py-2.5 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center gap-2"
           >
             {loading ? (
@@ -99,18 +210,13 @@ export default function BrandsPage() {
             ) : (
               <Search size={16} />
             )}
-            Tara
+            Analiz Et
           </button>
         </div>
       </div>
 
-      {/* Loading */}
-      {loading && (
-        <div className="flex flex-col items-center justify-center py-20">
-          <Loader2 size={40} className="animate-spin text-[#667eea] mb-4" />
-          <p className="text-gray-500">Marka analiz ediliyor...</p>
-        </div>
-      )}
+      {/* Loading skeleton */}
+      {loading && <SkeletonDashboard />}
 
       {/* Error */}
       {error && (
@@ -119,80 +225,353 @@ export default function BrandsPage() {
         </div>
       )}
 
-      {/* Result */}
+      {/* Results Dashboard */}
       {brand && !loading && (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <div className="flex items-start justify-between mb-6">
-            <div>
-              <h2 className="text-xl font-bold text-gray-900">
-                {brand.brand_name}
-              </h2>
-              <a
-                href={
-                  brand.website.startsWith("http")
-                    ? brand.website
-                    : `https://${brand.website}`
-                }
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-[#2980B9] hover:underline flex items-center gap-1 text-sm"
-              >
-                {brand.website} <ExternalLink size={12} />
-              </a>
+        <div className="space-y-5">
+          {/* Row 1: Hero */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <div className="flex items-start justify-between">
+              <div>
+                <div className="flex items-center gap-3 mb-2">
+                  <h2 className="text-2xl font-bold text-gray-900">
+                    {brand.brand_name}
+                  </h2>
+                  {brand.country && (
+                    <span className="text-xl">
+                      {FLAG[brand.country.toUpperCase()] || ""}
+                    </span>
+                  )}
+                </div>
+                {brand.tagline && (
+                  <p className="text-gray-500 text-sm mb-2 italic">
+                    &ldquo;{brand.tagline}&rdquo;
+                  </p>
+                )}
+                {brand.website && (
+                  <a
+                    href={
+                      brand.website.startsWith("http")
+                        ? brand.website
+                        : `https://${brand.website}`
+                    }
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[#667eea] hover:underline flex items-center gap-1 text-sm"
+                  >
+                    {brand.website.replace(/^https?:\/\//, "")}
+                    <ExternalLink size={12} />
+                  </a>
+                )}
+              </div>
+              {brand.founded && (
+                <div className="text-right">
+                  <span className="text-xs text-gray-400">Kuruluş</span>
+                  <p className="text-lg font-bold text-gray-700">{brand.founded}</p>
+                </div>
+              )}
             </div>
-            <span className="text-xs bg-[#667eea]/10 text-[#667eea] px-3 py-1 rounded-full font-medium">
-              {brand.category}
-            </span>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <h3 className="text-sm font-medium text-gray-500 mb-1">
-                Aciklama
-              </h3>
-              <p className="text-gray-800 text-sm">{brand.description}</p>
+          {/* Row 2: Metric cards */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center">
+                  <DollarSign size={16} className="text-emerald-600" />
+                </div>
+                <span className="text-xs font-medium text-gray-400">Tahmini Ciro</span>
+              </div>
+              <p className="text-2xl font-bold text-emerald-600">
+                {formatCompact(brand.estimated_revenue)}
+              </p>
+              <p className="text-[10px] text-gray-400 mt-0.5">aylık</p>
             </div>
-            <div>
-              <h3 className="text-sm font-medium text-gray-500 mb-1">
-                Benzersiz Deger Onerisi
-              </h3>
-              <p className="text-gray-800 text-sm">
-                {brand.unique_selling_point}
+
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
+                  <TrendingUp size={16} className="text-blue-600" />
+                </div>
+                <span className="text-xs font-medium text-gray-400">Aylık Trafik</span>
+              </div>
+              <p className="text-2xl font-bold text-blue-600">
+                {formatNumber(brand.estimated_traffic)}
+              </p>
+              <p className="text-[10px] text-gray-400 mt-0.5">ziyaret/ay</p>
+            </div>
+
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center">
+                  <DollarSign size={16} className="text-purple-600" />
+                </div>
+                <span className="text-xs font-medium text-gray-400">AOV</span>
+              </div>
+              <p className="text-2xl font-bold text-purple-600">
+                ${brand.estimated_aov}
+              </p>
+              <p className="text-[10px] text-gray-400 mt-0.5">ortalama sipariş</p>
+            </div>
+
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center">
+                  <Calendar size={16} className="text-gray-600" />
+                </div>
+                <span className="text-xs font-medium text-gray-400">Kuruluş Yılı</span>
+              </div>
+              <p className="text-2xl font-bold text-gray-700">
+                {brand.founded || "-"}
+              </p>
+              <p className="text-[10px] text-gray-400 mt-0.5">
+                {brand.founded ? `${new Date().getFullYear() - brand.founded} yıl` : ""}
               </p>
             </div>
-            <div>
-              <h3 className="text-sm font-medium text-gray-500 mb-1">
-                Hedef Kitle
-              </h3>
-              <p className="text-gray-800 text-sm">{brand.target_audience}</p>
-            </div>
-            <div>
-              <h3 className="text-sm font-medium text-gray-500 mb-1">
-                Pazarlama Kanallari
-              </h3>
-              <div className="flex flex-wrap gap-1">
-                {brand.marketing_channels.map((ch) => (
-                  <span
-                    key={ch}
-                    className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full"
-                  >
-                    {ch}
-                  </span>
-                ))}
+          </div>
+
+          {/* Row 3: Stories */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center gap-2 mb-3">
+                <Sparkles size={16} className="text-amber-500" />
+                <h3 className="text-sm font-semibold text-gray-800">Kurucu Hikayesi</h3>
               </div>
+              <p className="text-sm text-gray-600 leading-relaxed">
+                {brand.founder_story}
+              </p>
+            </div>
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center gap-2 mb-3">
+                <TrendingUp size={16} className="text-blue-500" />
+                <h3 className="text-sm font-semibold text-gray-800">Büyüme Hikayesi</h3>
+              </div>
+              <p className="text-sm text-gray-600 leading-relaxed">
+                {brand.scaling_story}
+              </p>
             </div>
           </div>
 
-          <div className="mt-6 pt-4 border-t border-gray-100">
-            <a
-              href={brand.meta_ads_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 text-sm text-blue-600 hover:underline"
-            >
-              Meta Reklam Kutuphanesi <ExternalLink size={12} />
-            </a>
+          {/* Row 4: Target audience */}
+          {brand.target_audience && (
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center gap-2 mb-4">
+                <Users size={16} className="text-indigo-500" />
+                <h3 className="text-sm font-semibold text-gray-800">Hedef Kitle</h3>
+              </div>
+              <div className="flex flex-wrap gap-3 mb-4">
+                <div className="bg-indigo-50 rounded-lg px-4 py-3 text-center min-w-[100px]">
+                  <p className="text-[10px] text-indigo-400 font-medium mb-0.5">Yaş Aralığı</p>
+                  <p className="text-sm font-bold text-indigo-700">{brand.target_audience.age_range}</p>
+                </div>
+                <div className="bg-pink-50 rounded-lg px-4 py-3 text-center min-w-[100px]">
+                  <p className="text-[10px] text-pink-400 font-medium mb-0.5">Cinsiyet</p>
+                  <p className="text-sm font-bold text-pink-700">{brand.target_audience.gender}</p>
+                </div>
+                <div className="bg-emerald-50 rounded-lg px-4 py-3 text-center min-w-[100px]">
+                  <p className="text-[10px] text-emerald-400 font-medium mb-0.5">Gelir Seviyesi</p>
+                  <p className="text-sm font-bold text-emerald-700">{brand.target_audience.income_level}</p>
+                </div>
+              </div>
+              {brand.target_audience.interests && brand.target_audience.interests.length > 0 && (
+                <div className="mb-3">
+                  <p className="text-xs text-gray-400 font-medium mb-2">İlgi Alanları</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {brand.target_audience.interests.map((interest, i) => (
+                      <span
+                        key={i}
+                        className={`text-xs px-2.5 py-1 rounded-full font-medium ${TAG_COLORS[i % TAG_COLORS.length]}`}
+                      >
+                        {interest}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {brand.target_audience.demographics && (
+                <p className="text-sm text-gray-500 mt-2 leading-relaxed">
+                  {brand.target_audience.demographics}
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* Row 5: Products & Competitors */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Products */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center gap-2 mb-4">
+                <Package size={16} className="text-orange-500" />
+                <h3 className="text-sm font-semibold text-gray-800">Ürün Portföyü</h3>
+              </div>
+              {brand.products && brand.products.length > 0 ? (
+                <div className="space-y-2">
+                  {brand.products.map((p, i) => (
+                    <div
+                      key={i}
+                      className="flex items-center justify-between py-2 px-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors"
+                    >
+                      <div>
+                        <p className="text-sm font-medium text-gray-800">{p.name}</p>
+                        {p.category && (
+                          <p className="text-[10px] text-gray-400">{p.category}</p>
+                        )}
+                      </div>
+                      <span className="text-sm font-bold text-gray-700">{p.price}</span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-gray-400">Ürün bilgisi bulunamadı</p>
+              )}
+            </div>
+
+            {/* Competitors */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center gap-2 mb-4">
+                <Swords size={16} className="text-red-500" />
+                <h3 className="text-sm font-semibold text-gray-800">Rakipler</h3>
+              </div>
+              {brand.competitors && brand.competitors.length > 0 ? (
+                <div className="space-y-2">
+                  {brand.competitors.map((c, i) => (
+                    <div
+                      key={i}
+                      className="flex items-center gap-2 py-2 px-3 rounded-lg bg-gray-50"
+                    >
+                      <div className="w-6 h-6 rounded-full bg-red-100 text-red-600 flex items-center justify-center text-[10px] font-bold">
+                        {i + 1}
+                      </div>
+                      <span className="text-sm text-gray-700">{c}</span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-gray-400">Rakip bilgisi bulunamadı</p>
+              )}
+            </div>
           </div>
+
+          {/* Row 6: Marketing channels & Growth methods */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Marketing */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center gap-2 mb-4">
+                <Megaphone size={16} className="text-violet-500" />
+                <h3 className="text-sm font-semibold text-gray-800">Pazarlama Kanalları & Açıları</h3>
+              </div>
+              {brand.marketing_channels && brand.marketing_channels.length > 0 && (
+                <div className="mb-3">
+                  <p className="text-[10px] text-gray-400 font-medium mb-2">Kanallar</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {brand.marketing_channels.map((ch, i) => (
+                      <span
+                        key={i}
+                        className={`text-xs px-2.5 py-1 rounded-full font-medium ${TAG_COLORS[i % TAG_COLORS.length]}`}
+                      >
+                        {ch}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {brand.marketing_angles && brand.marketing_angles.length > 0 && (
+                <div>
+                  <p className="text-[10px] text-gray-400 font-medium mb-2">Pazarlama Açıları</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {brand.marketing_angles.map((angle, i) => (
+                      <span
+                        key={i}
+                        className="text-xs px-2.5 py-1 rounded-full font-medium bg-violet-100 text-violet-700"
+                      >
+                        {angle}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Growth methods */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center gap-2 mb-4">
+                <Target size={16} className="text-cyan-500" />
+                <h3 className="text-sm font-semibold text-gray-800">Büyüme Yöntemleri</h3>
+              </div>
+              {brand.growth_methods && brand.growth_methods.length > 0 ? (
+                <div className="flex flex-wrap gap-1.5">
+                  {brand.growth_methods.map((method, i) => (
+                    <span
+                      key={i}
+                      className={`text-xs px-2.5 py-1 rounded-full font-medium ${TAG_COLORS[(i + 3) % TAG_COLORS.length]}`}
+                    >
+                      {method}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-gray-400">Büyüme yöntemi bilgisi bulunamadı</p>
+              )}
+            </div>
+          </div>
+
+          {/* Row 7: Strengths & Weaknesses */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center gap-2 mb-4">
+                <ShieldCheck size={16} className="text-emerald-500" />
+                <h3 className="text-sm font-semibold text-gray-800">Güçlü Yönler</h3>
+              </div>
+              {brand.strengths && brand.strengths.length > 0 ? (
+                <ul className="space-y-2">
+                  {brand.strengths.map((s, i) => (
+                    <li key={i} className="flex items-start gap-2 text-sm text-gray-600">
+                      <div className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <span className="text-[10px] font-bold">+</span>
+                      </div>
+                      {s}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-sm text-gray-400">-</p>
+              )}
+            </div>
+
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center gap-2 mb-4">
+                <ShieldAlert size={16} className="text-red-500" />
+                <h3 className="text-sm font-semibold text-gray-800">Zayıf Yönler</h3>
+              </div>
+              {brand.weaknesses && brand.weaknesses.length > 0 ? (
+                <ul className="space-y-2">
+                  {brand.weaknesses.map((w, i) => (
+                    <li key={i} className="flex items-start gap-2 text-sm text-gray-600">
+                      <div className="w-5 h-5 rounded-full bg-red-100 text-red-600 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <span className="text-[10px] font-bold">-</span>
+                      </div>
+                      {w}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-sm text-gray-400">-</p>
+              )}
+            </div>
+          </div>
+
+          {/* Row 8: Turkey potential */}
+          {brand.turkey_potential && (
+            <div className="bg-gradient-to-r from-red-50 to-orange-50 rounded-xl shadow-sm border border-red-200/50 p-6">
+              <div className="flex items-center gap-2 mb-3">
+                <MapPin size={16} className="text-red-500" />
+                <h3 className="text-sm font-semibold text-gray-800">Türkiye Potansiyeli</h3>
+                <span className="text-lg">{FLAG["TR"]}</span>
+              </div>
+              <p className="text-sm text-gray-700 leading-relaxed">
+                {brand.turkey_potential}
+              </p>
+            </div>
+          )}
         </div>
       )}
     </div>

@@ -84,7 +84,7 @@ const CHART_STYLE_TAG = `
 
 export default function HomePage() {
   const [keyword, setKeyword] = useState("");
-  const [count, setCount] = useState(10);
+  const [count, setCount] = useState(50);
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<BrandResult[]>([]);
   const [selected, setSelected] = useState<Set<number>>(new Set());
@@ -447,10 +447,10 @@ export default function HomePage() {
               onChange={(e) => setCount(Number(e.target.value))}
               className="w-full py-2.5 px-3 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#667eea]/30"
             >
-              <option value={10}>10</option>
-              <option value={20}>20</option>
-              <option value={30}>30</option>
               <option value={50}>50</option>
+              <option value={100}>100</option>
+              <option value={200}>200</option>
+              <option value={500}>500</option>
             </select>
           </div>
 

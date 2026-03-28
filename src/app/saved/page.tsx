@@ -13,6 +13,8 @@ import {
   Square,
   ChevronUp,
   ChevronDown,
+  LayoutGrid,
+  Table,
 } from "lucide-react";
 import {
   loadFolders,
@@ -32,8 +34,19 @@ const FLAG: Record<string, string> = {
   CN: "\u{1F1E8}\u{1F1F3}", IL: "\u{1F1EE}\u{1F1F1}",
 };
 
+const COLUMN_COLORS = [
+  "#667eea", "#764ba2", "#f093fb", "#4facfe",
+  "#00f2fe", "#43e97b", "#fa709a", "#fee140",
+];
+
 function formatNumber(n: number): string {
   return n.toLocaleString("tr-TR");
+}
+
+function formatCompact(n: number): string {
+  if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1_000) return `$${(n / 1_000).toFixed(0)}K`;
+  return `$${n}`;
 }
 
 function getBrandName(brand: SavedBrand): string {
@@ -65,7 +78,7 @@ function getBrandAovDisplay(brand: SavedBrand): string {
 
 function getBrandInsight(brand: SavedBrand): string {
   const d = brand.brand_data;
-  return (d?.["\u00d6ne \u00c7\u0131kan \u00d6zellik"] as string) || (d?.insight as string) || "";
+  return (d?.["Öne Çıkan Özellik"] as string) || (d?.insight as string) || "";
 }
 
 function getBrandMetaAds(brand: SavedBrand): string {
@@ -74,7 +87,7 @@ function getBrandMetaAds(brand: SavedBrand): string {
 }
 
 function getBrandTraffic(brand: SavedBrand): number | null {
-  return (brand.brand_data?.["Ayl\u0131k Trafik"] as number) ?? null;
+  return (brand.brand_data?.["Aylık Trafik"] as number) ?? null;
 }
 
 function getBrandTQS(brand: SavedBrand): number | null {
@@ -82,26 +95,41 @@ function getBrandTQS(brand: SavedBrand): number | null {
 }
 
 function getBrandRevenue(brand: SavedBrand): number | null {
-  return (brand.brand_data?.["Tahmini Ayl\u0131k Gelir ($)"] as number) ?? null;
+  return (brand.brand_data?.["Tahmini Aylık Gelir ($)"] as number) ?? null;
 }
 
 function getBrandCountry(brand: SavedBrand): string {
-  return (brand.brand_data?.["\u00dclke"] as string) || "";
+  return (brand.brand_data?.["Ülke"] as string) || "";
 }
 
 function getBrandGrowth(brand: SavedBrand): string {
-  return (brand.brand_data?.["B\u00fcy\u00fcme Y\u00f6ntemi"] as string) || "";
+  return (brand.brand_data?.["Büyüme Yöntemi"] as string) || "";
 }
 
 function getBrandFounded(brand: SavedBrand): number | null {
-  return (brand.brand_data?.["Kurulu\u015f Y\u0131l\u0131"] as number) ?? null;
+  return (brand.brand_data?.["Kuruluş Yılı"] as number) ?? null;
 }
 
 function getBrandConversion(brand: SavedBrand): number | null {
-  return (brand.brand_data?.["D\u00f6n\u00fc\u015f\u00fcm %"] as number) ?? null;
+  return (brand.brand_data?.["Dönüşüm %"] as number) ?? null;
+}
+
+function getBrandMarketingAngles(brand: SavedBrand): string[] {
+  const raw = (brand.brand_data?.["Pazarlama Açıları"] as string) || "";
+  if (!raw.trim()) return [];
+  return raw.split(",").map((a) => a.trim()).filter(Boolean);
 }
 
 type SortKey = "revenue" | "traffic" | "tqs" | "aov" | "founded" | "name" | "conversion";
+type ViewMode = "kanban" | "table";
+
+// Kanban column type
+interface KanbanColumn {
+  angle: string;
+  brands: SavedBrand[];
+  totalRevenue: number;
+  color: string;
+}
 
 export default function SavedPage() {
   const [folders, setFolders] = useState<string[]>([]);
@@ -113,6 +141,7 @@ export default function SavedPage() {
   const [loading, setLoading] = useState(true);
   const [sortKey, setSortKey] = useState<SortKey>("revenue");
   const [sortAsc, setSortAsc] = useState(false);
+  const [viewMode, setViewMode] = useState<ViewMode>("kanban");
 
   const fetchFolders = useCallback(async () => {
     try {
@@ -152,7 +181,7 @@ export default function SavedPage() {
     setSelectedBrands(new Set());
   }, [fetchBrands]);
 
-  // Sorted brands
+  // Sorted brands for table view
   const sortedBrands = useMemo(() => {
     const sorted = [...brands];
     sorted.sort((a, b) => {
@@ -196,6 +225,44 @@ export default function SavedPage() {
     return sorted;
   }, [brands, sortKey, sortAsc]);
 
+  // Kanban columns grouped by marketing angle
+  const kanbanColumns = useMemo((): KanbanColumn[] => {
+    const angleMap = new Map<string, SavedBrand[]>();
+
+    brands.forEach((brand) => {
+      const angles = getBrandMarketingAngles(brand);
+      if (angles.length === 0) {
+        const existing = angleMap.get("Diğer") || [];
+        existing.push(brand);
+        angleMap.set("Diğer", existing);
+      } else {
+        angles.forEach((angle) => {
+          const existing = angleMap.get(angle) || [];
+          existing.push(brand);
+          angleMap.set(angle, existing);
+        });
+      }
+    });
+
+    const columns: KanbanColumn[] = [];
+    let colorIndex = 0;
+    angleMap.forEach((columnBrands, angle) => {
+      const totalRevenue = columnBrands.reduce((sum, b) => sum + (getBrandRevenue(b) ?? 0), 0);
+      columns.push({
+        angle,
+        brands: columnBrands,
+        totalRevenue,
+        color: COLUMN_COLORS[colorIndex % COLUMN_COLORS.length],
+      });
+      colorIndex++;
+    });
+
+    // Sort columns by total revenue descending
+    columns.sort((a, b) => b.totalRevenue - a.totalRevenue);
+
+    return columns;
+  }, [brands]);
+
   function handleSort(key: SortKey) {
     if (sortKey === key) {
       setSortAsc(!sortAsc);
@@ -233,7 +300,7 @@ export default function SavedPage() {
     if (activeFolder === null) return;
     if (
       !confirm(
-        "Bu klas\u00f6r\u00fc ve i\u00e7indeki t\u00fcm markalar\u0131 silmek istedi\u011finize emin misiniz?"
+        "Bu klasörü ve içindeki tüm markaları silmek istediğinize emin misiniz?"
       )
     )
       return;
@@ -307,11 +374,11 @@ export default function SavedPage() {
         getBrandConversion(b) ?? "",
         getBrandRevenue(b) ?? "",
         escape(getBrandGrowth(b)),
-        escape((d["Pazarlama A\u00e7\u0131lar\u0131"] as string) || ""),
+        escape((d["Pazarlama Açıları"] as string) || ""),
         escape(getBrandInsight(b)),
         escape((d["Marka Hikayesi"] as string) || ""),
         getBrandFounded(b) ?? "",
-        escape((d["Ni\u015f"] as string) || (d?.Nis as string) || ""),
+        escape((d["Niş"] as string) || (d?.Nis as string) || ""),
         escape(getBrandMetaAds(b)),
       ].join(",");
     });
@@ -325,13 +392,118 @@ export default function SavedPage() {
     URL.revokeObjectURL(url);
   }
 
+  // ---- Kanban Card Component ----
+  function BrandCard({ brand }: { brand: SavedBrand }) {
+    const website = getBrandWebsite(brand);
+    const country = getBrandCountry(brand);
+    const category = getBrandCategory(brand);
+    const aov = getBrandAov(brand);
+    const revenue = getBrandRevenue(brand);
+    const tqs = getBrandTQS(brand);
+    const conversion = getBrandConversion(brand);
+    const growth = getBrandGrowth(brand);
+    const isSelected = selectedBrands.has(brand.id);
+
+    return (
+      <div
+        className={`bg-white rounded-lg p-3 shadow-sm border mb-2 hover:shadow-md transition-shadow ${
+          isSelected ? "border-[#667eea] ring-1 ring-[#667eea]/30" : "border-gray-100"
+        }`}
+      >
+        <div className="flex items-start justify-between mb-1.5">
+          <div className="flex items-center gap-2 min-w-0">
+            <button
+              onClick={() => toggleBrand(brand.id)}
+              className="text-gray-400 hover:text-gray-600 flex-shrink-0"
+            >
+              {isSelected ? (
+                <CheckSquare size={14} className="text-[#667eea]" />
+              ) : (
+                <Square size={14} />
+              )}
+            </button>
+            {website ? (
+              <a
+                href={website.startsWith("http") ? website : `https://${website}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-bold text-sm text-gray-900 hover:text-[#667eea] truncate"
+                title={getBrandName(brand)}
+              >
+                {getBrandName(brand)}
+              </a>
+            ) : (
+              <span className="font-bold text-sm text-gray-900 truncate">
+                {getBrandName(brand)}
+              </span>
+            )}
+          </div>
+          {country && (
+            <span className="text-xs flex-shrink-0 ml-1">
+              {FLAG[country.toUpperCase()] || country.toUpperCase()}
+            </span>
+          )}
+        </div>
+
+        {category && (
+          <span className="inline-block text-[10px] bg-[#667eea]/10 text-[#667eea] px-1.5 py-0.5 rounded-full mb-2">
+            {category}
+          </span>
+        )}
+
+        <div className="flex items-center gap-3 text-[11px] text-gray-600 mb-1.5">
+          {aov != null && (
+            <span>
+              <span className="text-gray-400">AOV:</span>{" "}
+              <span className="font-semibold text-gray-800">${aov}</span>
+            </span>
+          )}
+          {revenue != null && (
+            <span>
+              <span className="text-gray-400">Ciro:</span>{" "}
+              <span className="font-semibold text-emerald-600">{formatCompact(revenue)}</span>
+            </span>
+          )}
+        </div>
+
+        <div className="flex items-center gap-3 text-[11px] text-gray-600 mb-1.5">
+          {tqs != null && (
+            <span>
+              <span className="text-gray-400">TQS:</span>{" "}
+              <span className="font-semibold text-amber-700">{tqs}</span>
+            </span>
+          )}
+          {conversion != null && (
+            <span>
+              <span className="text-gray-400">Conv:</span>{" "}
+              <span className="font-semibold text-gray-800">{conversion}%</span>
+            </span>
+          )}
+        </div>
+
+        {growth && (
+          <div className="flex flex-wrap gap-1 mt-1">
+            {growth.split(",").filter(Boolean).slice(0, 3).map((g, gi) => (
+              <span
+                key={gi}
+                className="inline-block bg-emerald-50 text-emerald-700 px-1.5 py-0.5 rounded text-[9px] font-medium whitespace-nowrap"
+              >
+                {g.trim()}
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div>
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-gray-900">Kaydedilenler</h1>
         <p className="text-gray-500 mt-1">
-          Kay&#305;tl&#305; markalar&#305;n&#305;z&#305; klas&#246;rler halinde y&#246;netin
+          Kayıtlı markalarınızı klasörler halinde yönetin
         </p>
       </div>
 
@@ -354,7 +526,7 @@ export default function SavedPage() {
           ))}
           {folders.length === 0 && (
             <span className="text-sm text-gray-400">
-              Hen&#252;z klas&#246;r yok. A&#351;a&#287;&#305;dan olu&#351;turun.
+              Henüz klasör yok. Aşağıdan oluşturun.
             </span>
           )}
         </div>
@@ -365,7 +537,7 @@ export default function SavedPage() {
             value={newFolderName}
             onChange={(e) => setNewFolderName(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleCreateFolder()}
-            placeholder="Yeni klas&#246;r ad&#305;..."
+            placeholder="Yeni klasör adı..."
             className="flex-1 py-2 px-3 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#667eea]/30"
           />
           <button
@@ -373,7 +545,7 @@ export default function SavedPage() {
             className="flex items-center gap-1 px-4 py-2 bg-[#667eea] text-white rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
           >
             <Plus size={14} />
-            Olu&#351;tur
+            Oluştur
           </button>
           {activeFolder && (
             <button
@@ -381,57 +553,143 @@ export default function SavedPage() {
               className="flex items-center gap-1 px-4 py-2 bg-red-50 text-red-600 rounded-lg text-sm font-medium hover:bg-red-100 transition-colors"
             >
               <Trash2 size={14} />
-              Klas&#246;r&#252; Sil
+              Klasörü Sil
             </button>
           )}
         </div>
       </div>
 
-      {/* Actions bar */}
+      {/* View toggle + Actions bar */}
       {brands.length > 0 && (
-        <div className="flex items-center gap-3 mb-4">
-          <span className="text-sm text-gray-500">
-            {selectedBrands.size > 0
-              ? `${selectedBrands.size} / ${brands.length} se\u00e7ili`
-              : `${brands.length} marka`}
-          </span>
-          <div className="flex items-center gap-2">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <span className="text-sm text-gray-500">
+              {selectedBrands.size > 0
+                ? `${selectedBrands.size} / ${brands.length} seçili`
+                : `${brands.length} marka`}
+            </span>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleRemoveBrands}
+                disabled={selectedBrands.size === 0}
+                className="flex items-center gap-1 px-3 py-1.5 bg-red-50 text-red-600 rounded-lg text-xs font-medium hover:bg-red-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              >
+                <Trash2 size={12} />
+                Seçilenleri Sil
+              </button>
+              <button
+                onClick={() => setShowMoveModal(true)}
+                disabled={selectedBrands.size === 0}
+                className="flex items-center gap-1 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-xs font-medium hover:bg-blue-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              >
+                <ArrowRight size={12} />
+                Taşı
+              </button>
+              <button
+                onClick={exportCSV}
+                className="flex items-center gap-1 px-3 py-1.5 bg-gray-100 text-gray-600 rounded-lg text-xs font-medium hover:bg-gray-200 transition-colors"
+              >
+                <Download size={12} />
+                CSV İndir
+              </button>
+            </div>
+          </div>
+
+          {/* View mode toggle */}
+          <div className="flex items-center bg-gray-100 rounded-lg p-0.5">
             <button
-              onClick={handleRemoveBrands}
-              disabled={selectedBrands.size === 0}
-              className="flex items-center gap-1 px-3 py-1.5 bg-red-50 text-red-600 rounded-lg text-xs font-medium hover:bg-red-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              onClick={() => setViewMode("kanban")}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                viewMode === "kanban"
+                  ? "bg-white text-[#667eea] shadow-sm"
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
             >
-              <Trash2 size={12} />
-              Se&#231;ilenleri Sil
+              <LayoutGrid size={13} />
+              Kanban
             </button>
             <button
-              onClick={() => setShowMoveModal(true)}
-              disabled={selectedBrands.size === 0}
-              className="flex items-center gap-1 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-xs font-medium hover:bg-blue-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              onClick={() => setViewMode("table")}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                viewMode === "table"
+                  ? "bg-white text-[#667eea] shadow-sm"
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
             >
-              <ArrowRight size={12} />
-              Ta&#351;&#305;
-            </button>
-            <button
-              onClick={exportCSV}
-              className="flex items-center gap-1 px-3 py-1.5 bg-gray-100 text-gray-600 rounded-lg text-xs font-medium hover:bg-gray-200 transition-colors"
-            >
-              <Download size={12} />
-              CSV &#304;ndir
+              <Table size={13} />
+              Tablo
             </button>
           </div>
         </div>
       )}
 
-      {/* Brands Table */}
+      {/* Content */}
       {loading ? (
-        <div className="text-center py-10 text-gray-400">Y&#252;kleniyor...</div>
+        <div className="text-center py-10 text-gray-400">Yükleniyor...</div>
       ) : brands.length === 0 ? (
         <div className="text-center py-16 text-gray-400">
           <FolderOpen size={48} className="mx-auto mb-3 opacity-50" />
-          <p className="text-base">Bu klas&#246;rde hen&#252;z marka yok</p>
+          <p className="text-base">Bu klasörde henüz marka yok</p>
+        </div>
+      ) : viewMode === "kanban" ? (
+        /* ========== KANBAN VIEW ========== */
+        <div className="flex overflow-x-auto gap-4 pb-4">
+          {kanbanColumns.map((col) => {
+            // Count unique brands
+            const uniqueIds = new Set(col.brands.map((b) => b.id));
+            return (
+              <div
+                key={col.angle}
+                className="min-w-[280px] max-w-[300px] flex-shrink-0 flex flex-col"
+              >
+                {/* Column header */}
+                <div
+                  className="rounded-t-xl px-3 py-2.5 flex items-center justify-between"
+                  style={{ backgroundColor: col.color + "18" }}
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    <div
+                      className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                      style={{ backgroundColor: col.color }}
+                    />
+                    <span
+                      className="text-sm font-semibold truncate"
+                      style={{ color: col.color }}
+                      title={col.angle}
+                    >
+                      {col.angle}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <span className="text-[10px] font-medium text-gray-500 bg-white/80 px-1.5 py-0.5 rounded-full">
+                      {uniqueIds.size}
+                    </span>
+                    {col.totalRevenue > 0 && (
+                      <span className="text-[10px] font-medium text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded-full">
+                        {formatCompact(col.totalRevenue)}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Column body */}
+                <div className="bg-[#f1f5f9] rounded-b-xl p-2 flex-1 min-h-[200px] max-h-[70vh] overflow-y-auto">
+                  {col.brands.map((brand) => (
+                    <BrandCard key={`${col.angle}-${brand.id}`} brand={brand} />
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+
+          {kanbanColumns.length === 0 && (
+            <div className="w-full text-center py-12 text-gray-400">
+              <p className="text-sm">Pazarlama açısı verisi bulunamadı</p>
+            </div>
+          )}
         </div>
       ) : (
+        /* ========== TABLE VIEW ========== */
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-sm min-w-[1400px]">
@@ -645,7 +903,7 @@ export default function SavedPage() {
           <div className="bg-white rounded-xl p-6 w-full max-w-sm shadow-xl">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold text-gray-900">
-                Klas&#246;re Ta&#351;&#305;
+                Klasöre Taşı
               </h2>
               <button
                 onClick={() => setShowMoveModal(false)}
@@ -655,7 +913,7 @@ export default function SavedPage() {
               </button>
             </div>
             <p className="text-sm text-gray-500 mb-3">
-              {selectedBrands.size} marka ta&#351;&#305;nacak
+              {selectedBrands.size} marka taşınacak
             </p>
             <div className="space-y-2">
               {folders
@@ -672,7 +930,7 @@ export default function SavedPage() {
                 ))}
               {folders.filter((f) => f !== activeFolder).length === 0 && (
                 <p className="text-sm text-gray-400 text-center py-4">
-                  Ta&#351;&#305;nacak ba&#351;ka klas&#246;r yok
+                  Taşınacak başka klasör yok
                 </p>
               )}
             </div>
