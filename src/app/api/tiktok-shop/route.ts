@@ -30,8 +30,10 @@ export async function POST(request: NextRequest) {
 
     let prompt = `"${keyword}" ile ilgili tam olarak ${batchCount} trend TikTok Shop ürünü listele. Gerçek veya gerçekçi TikTok Shop ürünleri olsun.
 
+shop_name alanında gerçek veya gerçekçi TikTok Shop mağaza ismi yaz. product_url alanında mağazanın TikTok handle'ını yaz (örn: @shopname)
+
 JSON array formatı:
-{"product_name":"X","shop_name":"Y Shop","product_url":"tiktok.com/@yshop","product_price":14.99,"estimated_gmv":85000,"total_views":2500000,"total_videos":340,"marketing_angle":"açı1, açı2","category":"Türkçe kategori","creation_date":"2025-08","country":"US","insight":"Türkçe 1 cümle, neden viral/başarılı"}
+{"product_name":"X","shop_name":"Y Shop","product_url":"@yshop","product_price":14.99,"estimated_gmv":85000,"total_views":2500000,"total_videos":340,"marketing_angle":"açı1, açı2","category":"Türkçe kategori","creation_date":"2025-08","country":"US","insight":"Türkçe 1 cümle, neden viral/başarılı"}
 
 İLK ürüne ekle: "niche_summary":"3 cümle pazar özeti","niche_pros":"avantaj1, avantaj2","niche_cons":"dezavantaj1, dezavantaj2"
 

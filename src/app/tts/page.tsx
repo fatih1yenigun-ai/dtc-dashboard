@@ -289,45 +289,45 @@ export default function TTSPage() {
       const p = results[i];
       return {
         Marka: `${p.product_name} (${p.shop_name})`,
-        "Web Sitesi": p.product_url.startsWith("http") ? p.product_url : `https://${p.product_url}`,
+        "Web Sitesi": `https://www.tiktok.com/search?q=${encodeURIComponent(p.product_name)}`,
         Kategori: p.category,
         "AOV ($)": p.product_price,
-        "Ayl\u0131k Trafik": p.total_views,
+        "Aylık Trafik": p.total_views,
         "Ciro ($)": p.estimated_gmv,
-        "\u00d6ne \u00c7\u0131kan \u00d6zellik": p.insight,
-        "B\u00fcy\u00fcme Y\u00f6ntemi": "TikTok Shop",
-        "Pazarlama A\u00e7\u0131lar\u0131": p.marketing_angle,
+        "Öne Çıkan Özellik": p.insight,
+        "Büyüme Yöntemi": "TikTok Shop",
+        "Pazarlama Açıları": p.marketing_angle,
         Kaynak: "TikTok Shop",
-        "Video Say\u0131s\u0131": p.total_videos,
-        "Olu\u015fturulma Tarihi": p.creation_date,
-        "\u00dclke": p.country,
+        "Video Sayısı": p.total_videos,
+        "Oluşturulma Tarihi": p.creation_date,
+        "Ülke": p.country,
       };
     });
 
     try {
       if (newFolderName.trim()) await createFolder(newFolderName.trim(), user?.userId);
       const added = await saveBrandsBulk(folder, brandsToSave, user?.userId);
-      setSaveMsg(`${added} \u00fcr\u00fcn kaydedildi!`);
+      setSaveMsg(`${added} ürün kaydedildi!`);
       setTimeout(() => {
         setShowSaveModal(false);
         setSaveMsg("");
       }, 1500);
     } catch {
-      setSaveMsg("Hata olu\u015ftu!");
+      setSaveMsg("Hata oluştu!");
     }
   }
 
   function exportCSV() {
     const headers = [
-      "\u00dcr\u00fcn Ad\u0131", "Ma\u011faza", "URL", "Fiyat ($)", "GMV ($)",
-      "G\u00f6r\u00fcnt\u00fclenme", "Video Say\u0131s\u0131", "Pazarlama A\u00e7\u0131lar\u0131",
-      "Kategori", "Tarih", "\u00dclke", "Insight",
+      "Ürün Adı", "Mağaza", "URL", "Fiyat ($)", "GMV ($)",
+      "Görüntülenme", "Video Sayısı", "Pazarlama Açıları",
+      "Kategori", "Tarih", "Ülke", "Insight",
     ];
     const rows = results.map((p) =>
       [
         `"${(p.product_name || "").replace(/"/g, '""')}"`,
         `"${(p.shop_name || "").replace(/"/g, '""')}"`,
-        p.product_url,
+        `https://www.tiktok.com/search?q=${encodeURIComponent(p.product_name)}`,
         p.product_price,
         p.estimated_gmv,
         p.total_views,
@@ -372,7 +372,7 @@ export default function TTSPage() {
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-gray-900">TikTok Shop</h1>
         <p className="text-gray-500 mt-1">
-          TikTok Shop&apos;ta trend \u00fcr\u00fcnleri ke\u015ffet
+          TikTok Shop&apos;ta trend ürünleri keşfet
         </p>
       </div>
 
@@ -393,7 +393,7 @@ export default function TTSPage() {
                 value={localKeyword}
                 onChange={(e) => setLocalKeyword(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                placeholder="\u00f6rne\u011fin: led lamba, cilt bak\u0131m, mutfak gadget..."
+                placeholder="örneğin: led lamba, cilt bakım, mutfak gadget..."
                 className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#667eea]/30 focus:border-[#667eea]"
               />
             </div>
@@ -401,7 +401,7 @@ export default function TTSPage() {
 
           <div className="w-32">
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              \u00dcr\u00fcn Say\u0131s\u0131
+              Ürün Sayısı
             </label>
             <select
               value={count}
@@ -425,7 +425,7 @@ export default function TTSPage() {
               ) : (
                 <Search size={16} />
               )}
-              Ara\u015ft\u0131r
+              Araştır
             </button>
           </div>
         </div>
@@ -433,26 +433,26 @@ export default function TTSPage() {
         {/* Filter dropdowns */}
         <div className="flex flex-wrap gap-4 mt-4 pt-4 border-t border-gray-100">
           <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">\u00dclke</label>
+            <label className="block text-xs font-medium text-gray-500 mb-1">Ülke</label>
             <select
               value={country}
               onChange={(e) => setCountry(e.target.value)}
               className="py-1.5 px-3 border border-gray-200 rounded-lg text-xs text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#667eea]/30 bg-gray-50"
             >
-              <option value="all">T\u00fcm\u00fc</option>
+              <option value="all">Tümü</option>
               <option value="US">ABD</option>
-              <option value="UK">\u0130ngiltere</option>
+              <option value="UK">İngiltere</option>
             </select>
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">GMV Aral\u0131\u011f\u0131</label>
+            <label className="block text-xs font-medium text-gray-500 mb-1">GMV Aralığı</label>
             <select
               value={gmvRange}
               onChange={(e) => setGmvRange(e.target.value)}
               className="py-1.5 px-3 border border-gray-200 rounded-lg text-xs text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#667eea]/30 bg-gray-50"
             >
-              <option value="all">T\u00fcm\u00fc</option>
-              <option value="below-50k">$50K Alt\u0131</option>
+              <option value="all">Tümü</option>
+              <option value="below-50k">$50K Altı</option>
               <option value="50k-300k">$50K - $300K</option>
               <option value="300k+">$300K+</option>
             </select>
@@ -464,10 +464,10 @@ export default function TTSPage() {
               onChange={(e) => setDateRange(e.target.value)}
               className="py-1.5 px-3 border border-gray-200 rounded-lg text-xs text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#667eea]/30 bg-gray-50"
             >
-              <option value="all">T\u00fcm\u00fc</option>
+              <option value="all">Tümü</option>
               <option value="3m">Son 3 Ay</option>
               <option value="6m">Son 6 Ay</option>
-              <option value="1y">Son 1 Y\u0131l</option>
+              <option value="1y">Son 1 Yıl</option>
             </select>
           </div>
         </div>
@@ -485,9 +485,9 @@ export default function TTSPage() {
         <div className="py-8">
           <div className="flex flex-col items-center mb-6">
             <Loader2 size={32} className="animate-spin text-[#667eea] mb-3" />
-            <p className="text-gray-500 font-medium">\u00dcr\u00fcnler ara\u015ft\u0131r\u0131l\u0131yor...</p>
+            <p className="text-gray-500 font-medium">Ürünler araştırılıyor...</p>
             <p className="text-gray-400 text-xs mt-1">
-              {results.length > 0 ? `${results.length} \u00fcr\u00fcn bulundu, devam ediyor...` : "Bu i\u015flem 15-30 saniye s\u00fcrebilir"}
+              {results.length > 0 ? `${results.length} ürün bulundu, devam ediyor...` : "Bu işlem 15-30 saniye sürebilir"}
             </p>
           </div>
           <LoadingInsights />
@@ -556,7 +556,7 @@ export default function TTSPage() {
               className="bg-white rounded-xl shadow-sm border border-gray-200 p-6"
               style={{ animation: "fadeSlideUp 0.6s ease-out forwards", animationDelay: "0.25s", opacity: 0 }}
             >
-              <h3 className="text-sm font-semibold text-gray-700 mb-4">Pazarlama A\u00e7\u0131lar\u0131</h3>
+              <h3 className="text-sm font-semibold text-gray-700 mb-4">Pazarlama Açıları</h3>
               {angleStats.length === 0 ? (
                 <p className="text-xs text-gray-400">Veri yok</p>
               ) : (
@@ -607,10 +607,10 @@ export default function TTSPage() {
                 ) : (
                   <Square size={16} />
                 )}
-                T\u00fcm\u00fcn\u00fc Se\u00e7
+                Tümünü Seç
               </button>
               <span className="text-sm text-gray-400">
-                {selected.size} se\u00e7ili
+                {selected.size} seçili
               </span>
             </div>
             <div className="flex gap-2">
@@ -627,7 +627,7 @@ export default function TTSPage() {
                 className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
               >
                 <Download size={14} />
-                CSV \u0130ndir
+                CSV İndir
               </button>
             </div>
           </div>
@@ -653,7 +653,7 @@ export default function TTSPage() {
                       className="sticky left-10 z-10 bg-[#0D1B2A] px-3 py-3 text-left font-semibold cursor-pointer select-none whitespace-nowrap"
                       onClick={() => handleSort("product_name")}
                     >
-                      \u00dcr\u00fcn Ad\u0131 <SortIcon col="product_name" />
+                      Ürün Adı <SortIcon col="product_name" />
                     </th>
                     {/* 3. GMV */}
                     <th
@@ -674,7 +674,7 @@ export default function TTSPage() {
                       className="px-3 py-3 text-right font-semibold cursor-pointer select-none whitespace-nowrap"
                       onClick={() => handleSort("total_views")}
                     >
-                      G\u00f6r\u00fcnt\u00fclenme <SortIcon col="total_views" />
+                      Görüntülenme <SortIcon col="total_views" />
                     </th>
                     {/* 6. Video */}
                     <th
@@ -684,7 +684,7 @@ export default function TTSPage() {
                       Video <SortIcon col="total_videos" />
                     </th>
                     {/* 7. Pazarlama Acisi */}
-                    <th className="px-3 py-3 text-left font-semibold whitespace-nowrap">Pazarlama A\u00e7\u0131s\u0131</th>
+                    <th className="px-3 py-3 text-left font-semibold whitespace-nowrap">Pazarlama Açısı</th>
                     {/* 8. Tarih */}
                     <th
                       className="px-3 py-3 text-center font-semibold cursor-pointer select-none whitespace-nowrap"
@@ -693,7 +693,7 @@ export default function TTSPage() {
                       Tarih <SortIcon col="creation_date" />
                     </th>
                     {/* 9. Ulke */}
-                    <th className="px-3 py-3 text-center font-semibold whitespace-nowrap">\u00dclke</th>
+                    <th className="px-3 py-3 text-center font-semibold whitespace-nowrap">Ülke</th>
                     {/* 10. Detay */}
                     <th className="px-3 py-3 text-center font-semibold whitespace-nowrap">Detay</th>
                   </tr>
@@ -702,9 +702,7 @@ export default function TTSPage() {
                   {sortedResults.map((product, idx) => {
                     // Find original index for selection
                     const origIdx = results.indexOf(product);
-                    const productUrl = product.product_url.startsWith("http")
-                      ? product.product_url
-                      : `https://${product.product_url}`;
+                    const tiktokSearchUrl = `https://www.tiktok.com/search?q=${encodeURIComponent(product.product_name)}`;
                     return (
                       <tr
                         key={idx}
@@ -728,7 +726,7 @@ export default function TTSPage() {
                         {/* 2. Urun Adi + Shop name */}
                         <td className="sticky left-10 z-10 px-3 py-3 whitespace-nowrap" style={{ backgroundColor: "inherit" }}>
                           <a
-                            href={productUrl}
+                            href={tiktokSearchUrl}
                             target="_blank"
                             rel="noopener noreferrer"
                             onClick={(e) => e.stopPropagation()}
@@ -802,7 +800,7 @@ export default function TTSPage() {
           {/* Nis Ozeti Section */}
           {nicheSummaryText && (
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mt-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-3">Ni\u015f \u00d6zeti</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-3">Niş Özeti</h3>
               <p className="text-sm text-gray-700 mb-4 leading-relaxed">{nicheSummaryText}</p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {nichePros && nichePros.length > 0 && (
@@ -847,12 +845,12 @@ export default function TTSPage() {
                 <h2 className="text-lg font-bold">{detailProduct.product_name}</h2>
                 <p className="text-gray-400 text-sm">{detailProduct.shop_name}</p>
                 <a
-                  href={detailProduct.product_url.startsWith("http") ? detailProduct.product_url : `https://${detailProduct.product_url}`}
+                  href={`https://www.tiktok.com/search?q=${encodeURIComponent(detailProduct.product_name)}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-[#4facfe] text-sm hover:underline inline-flex items-center gap-1"
+                  className="mt-2 inline-flex items-center gap-2 px-3 py-1.5 bg-[#4facfe]/20 text-[#4facfe] rounded-lg text-sm font-medium hover:bg-[#4facfe]/30 transition-colors"
                 >
-                  {detailProduct.product_url} <ExternalLink size={12} />
+                  TikTok&apos;ta Ara <ExternalLink size={12} />
                 </a>
               </div>
               <button onClick={() => setDetailProduct(null)} className="text-gray-400 hover:text-white transition-colors">
@@ -869,7 +867,7 @@ export default function TTSPage() {
               </div>
               {/* Views */}
               <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-                <p className="text-xs text-blue-600 font-medium mb-1">G\u00f6r\u00fcnt\u00fclenme</p>
+                <p className="text-xs text-blue-600 font-medium mb-1">Görüntülenme</p>
                 <p className="text-2xl font-bold text-[#2980B9]">{formatCompact(detailProduct.total_views)}</p>
               </div>
               {/* Price */}
@@ -879,12 +877,12 @@ export default function TTSPage() {
               </div>
               {/* Videos */}
               <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
-                <p className="text-xs text-amber-600 font-medium mb-1">Video Say\u0131s\u0131</p>
+                <p className="text-xs text-amber-600 font-medium mb-1">Video Sayısı</p>
                 <p className="text-2xl font-bold text-amber-700">{formatNumber(detailProduct.total_videos)}</p>
               </div>
               {/* Country & Date */}
               <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
-                <p className="text-xs text-gray-500 font-medium mb-1">\u00dclke &amp; Tarih</p>
+                <p className="text-xs text-gray-500 font-medium mb-1">Ülke &amp; Tarih</p>
                 <p className="text-lg font-bold text-gray-800">
                   {FLAG[detailProduct.country?.toUpperCase()] || ""} {detailProduct.country?.toUpperCase() || "-"} <span className="text-gray-400 font-normal">|</span> {detailProduct.creation_date || "-"}
                 </p>
@@ -901,14 +899,14 @@ export default function TTSPage() {
               {/* Insight */}
               {detailProduct.insight && (
                 <div className="bg-gray-50 rounded-xl p-4">
-                  <p className="text-xs text-gray-500 font-semibold mb-2 uppercase tracking-wide">\u00d6ne \u00c7\u0131kan \u00d6zellik</p>
+                  <p className="text-xs text-gray-500 font-semibold mb-2 uppercase tracking-wide">Öne Çıkan Özellik</p>
                   <p className="text-sm text-gray-700 leading-relaxed">{detailProduct.insight}</p>
                 </div>
               )}
               {/* Marketing Angles */}
               {detailProduct.marketing_angle && (
                 <div className="bg-gray-50 rounded-xl p-4">
-                  <p className="text-xs text-gray-500 font-semibold mb-2 uppercase tracking-wide">Pazarlama A\u00e7\u0131lar\u0131</p>
+                  <p className="text-xs text-gray-500 font-semibold mb-2 uppercase tracking-wide">Pazarlama Açıları</p>
                   <div className="flex flex-wrap gap-2">
                     {detailProduct.marketing_angle.split(",").filter(Boolean).map((a, i) => (
                       <span key={i} className="inline-block bg-purple-100 text-purple-700 px-2.5 py-1 rounded-lg text-xs font-medium">{a.trim()}</span>
@@ -926,7 +924,7 @@ export default function TTSPage() {
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-xl p-6 w-full max-w-md">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-semibold">Klas\u00f6re Kaydet</h2>
+              <h2 className="text-lg font-semibold">Klasöre Kaydet</h2>
               <button
                 onClick={() => setShowSaveModal(false)}
                 className="text-gray-400 hover:text-gray-600 text-xl font-bold"
@@ -947,7 +945,7 @@ export default function TTSPage() {
               <>
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Klas\u00f6r Se\u00e7
+                    Klasör Seç
                   </label>
                   <select
                     value={selectedFolder}
@@ -964,21 +962,21 @@ export default function TTSPage() {
 
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Yeni Klas\u00f6r
+                    Yeni Klasör
                   </label>
                   <div className="flex gap-2">
                     <input
                       type="text"
                       value={newFolderName}
                       onChange={(e) => setNewFolderName(e.target.value)}
-                      placeholder="Klas\u00f6r ad\u0131..."
+                      placeholder="Klasör adı..."
                       className="flex-1 py-2 px-3 border border-gray-200 rounded-lg text-sm"
                     />
                     <button
                       onClick={handleCreateFolder}
                       className="px-4 py-2 bg-[#667eea] text-white rounded-lg text-sm"
                     >
-                      Olu\u015ftur
+                      Oluştur
                     </button>
                   </div>
                 </div>
@@ -988,13 +986,13 @@ export default function TTSPage() {
                     onClick={() => setShowSaveModal(false)}
                     className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm"
                   >
-                    \u0130ptal
+                    İptal
                   </button>
                   <button
                     onClick={handleSave}
                     className="px-4 py-2 bg-[#27AE60] text-white rounded-lg text-sm"
                   >
-                    {selected.size} \u00dcr\u00fcn\u00fc Kaydet
+                    {selected.size} Ürünü Kaydet
                   </button>
                 </div>
               </>
