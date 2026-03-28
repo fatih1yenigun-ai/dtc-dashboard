@@ -719,30 +719,7 @@ export default function HomePage() {
                     >
                       Kategori <SortIcon col="category" />
                     </th>
-                    {/* 10. Öne Çıkan Özellik */}
-                    <th className="px-3 py-3 text-left font-semibold whitespace-nowrap">Öne Çıkan Özellik</th>
-                    {/* 11. Trafik */}
-                    <th
-                      className="px-3 py-3 text-right font-semibold cursor-pointer select-none whitespace-nowrap"
-                      onClick={() => handleSort("estimated_traffic")}
-                    >
-                      Trafik <SortIcon col="estimated_traffic" />
-                    </th>
-                    {/* 12. TQS */}
-                    <th
-                      className="px-3 py-3 text-center font-semibold cursor-pointer select-none whitespace-nowrap"
-                      onClick={() => handleSort("tqs")}
-                    >
-                      TQS <SortIcon col="tqs" />
-                    </th>
-                    {/* 13. Dönüşüm */}
-                    <th
-                      className="px-3 py-3 text-right font-semibold cursor-pointer select-none whitespace-nowrap"
-                      onClick={() => handleSort("conversion")}
-                    >
-                      Dönüşüm <SortIcon col="conversion" />
-                    </th>
-                    {/* 14. Ülke */}
+                    {/* 10. Ülke */}
                     <th
                       className="px-3 py-3 text-center font-semibold cursor-pointer select-none whitespace-nowrap"
                       onClick={() => handleSort("country")}
@@ -857,27 +834,7 @@ export default function HomePage() {
                             {brand.category}
                           </span>
                         </td>
-                        {/* 10. Öne Çıkan Özellik */}
-                        <td className="px-3 py-3 text-gray-600 max-w-[200px]">
-                          <span title={brand.insight}>
-                            {truncate(brand.insight, 60)}
-                          </span>
-                        </td>
-                        {/* 11. Trafik */}
-                        <td className="px-3 py-3 text-right font-medium text-[#2980B9] whitespace-nowrap">
-                          {formatNumber(brand.estimated_traffic)}
-                        </td>
-                        {/* 12. TQS */}
-                        <td className="px-3 py-3 text-center">
-                          <span className="inline-block bg-amber-100 text-amber-800 px-2 py-0.5 rounded text-xs font-semibold">
-                            {brand.tqs}
-                          </span>
-                        </td>
-                        {/* 13. Dönüşüm */}
-                        <td className="px-3 py-3 text-right font-medium text-gray-700 whitespace-nowrap">
-                          %{brand.conversion}
-                        </td>
-                        {/* 14. Ülke */}
+                        {/* 10. Ülke */}
                         <td className="px-3 py-3 whitespace-nowrap text-center">
                           {brand.country ? (
                             <span className="text-sm">
