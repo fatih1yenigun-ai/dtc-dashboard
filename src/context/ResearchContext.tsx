@@ -40,8 +40,14 @@ interface ResearchState {
   error: string;
 }
 
+interface ResearchFilters {
+  country?: string;
+  foundedAfter?: string;
+  revenueRange?: string;
+}
+
 interface ResearchContextType extends ResearchState {
-  startResearch: (keyword: string, count: number) => void;
+  startResearch: (keyword: string, count: number, filters?: ResearchFilters) => void;
   setKeyword: (k: string) => void;
 }
 
@@ -58,7 +64,7 @@ export function ResearchProvider({ children }: { children: ReactNode }) {
   });
   const abortRef = useRef<AbortController | null>(null);
 
-  const startResearch = useCallback(async (keyword: string, count: number) => {
+  const startResearch = useCallback(async (keyword: string, count: number, filters?: ResearchFilters) => {
     // Cancel any previous request
     if (abortRef.current) abortRef.current.abort();
     const controller = new AbortController();
@@ -94,7 +100,7 @@ export function ResearchProvider({ children }: { children: ReactNode }) {
         const res = await fetch("/api/research", {
           method: "POST",
           headers,
-          body: JSON.stringify({ keyword, count: batchCount, exclude }),
+          body: JSON.stringify({ keyword, count: batchCount, exclude, country: filters?.country, foundedAfter: filters?.foundedAfter, revenueRange: filters?.revenueRange }),
           signal: controller.signal,
         });
 

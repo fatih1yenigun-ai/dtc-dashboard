@@ -91,6 +91,9 @@ export default function HomePage() {
   // Local state
   const [localKeyword, setLocalKeyword] = useState("");
   const [count, setCount] = useState(50);
+  const [country, setCountry] = useState("all");
+  const [foundedAfter, setFoundedAfter] = useState("all");
+  const [revenueRange, setRevenueRange] = useState("all");
   const [selected, setSelected] = useState<Set<number>>(new Set());
   const [folders, setFolders] = useState<string[]>([]);
   const [selectedFolder, setSelectedFolder] = useState<string>("");
@@ -254,7 +257,7 @@ export default function HomePage() {
   function handleSearch() {
     if (!localKeyword.trim()) return;
     setSelected(new Set());
-    startResearch(localKeyword, count);
+    startResearch(localKeyword, count, { country, foundedAfter, revenueRange });
   }
 
   function toggleSelect(idx: number) {
@@ -450,6 +453,52 @@ export default function HomePage() {
               )}
               Arastir
             </button>
+          </div>
+        </div>
+
+        {/* Filter dropdowns */}
+        <div className="flex flex-wrap gap-4 mt-4 pt-4 border-t border-gray-100">
+          <div>
+            <label className="block text-xs font-medium text-gray-500 mb-1">Ulke</label>
+            <select
+              value={country}
+              onChange={(e) => setCountry(e.target.value)}
+              className="py-1.5 px-3 border border-gray-200 rounded-lg text-xs text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#667eea]/30 bg-gray-50"
+            >
+              <option value="all">Tumu</option>
+              <option value="US">ABD</option>
+              <option value="TR">Turkiye</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-500 mb-1">Kurulus Yili</label>
+            <select
+              value={foundedAfter}
+              onChange={(e) => setFoundedAfter(e.target.value)}
+              className="py-1.5 px-3 border border-gray-200 rounded-lg text-xs text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#667eea]/30 bg-gray-50"
+            >
+              <option value="all">Tumu</option>
+              <option value="2024">2024+</option>
+              <option value="2022">2022+</option>
+              <option value="2020">2020+</option>
+              <option value="2018">2018+</option>
+              <option value="2015">2015+</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-500 mb-1">Gelir Araligi</label>
+            <select
+              value={revenueRange}
+              onChange={(e) => setRevenueRange(e.target.value)}
+              className="py-1.5 px-3 border border-gray-200 rounded-lg text-xs text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#667eea]/30 bg-gray-50"
+            >
+              <option value="all">Tumu</option>
+              <option value="10k-50k">$10K - $50K</option>
+              <option value="50k-150k">$50K - $150K</option>
+              <option value="150k-300k">$150K - $300K</option>
+              <option value="300k-500k">$300K - $500K</option>
+              <option value="500k+">$500K+</option>
+            </select>
           </div>
         </div>
       </div>

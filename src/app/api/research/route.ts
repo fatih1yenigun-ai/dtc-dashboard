@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
       if (payload) userId = payload.userId;
     }
 
-    const { keyword, count = 20, exclude = "" } = await request.json();
+    const { keyword, count = 20, exclude = "", country = "all", foundedAfter = "all", revenueRange = "all" } = await request.json();
 
     if (!keyword) {
       return NextResponse.json({ error: "Keyword is required" }, { status: 400 });
@@ -34,7 +34,36 @@ Niş kodları: gida_icecek, kahve_cay, atistirmalik, takviye_supplement, cilt_ba
 
 İLK markaya ekle: "niche_summary":"3 cümle pazar özeti","niche_pros":"avantaj1, avantaj2, avantaj3","niche_cons":"dezavantaj1, dezavantaj2, dezavantaj3"
 
+ÖNEMLİ: Sadece GERÇEK, var olan markalar ve gerçek web siteleri yaz. Uydurma marka veya website YAZMA. Website'in gerçek olduğundan emin ol.
+
 SADECE JSON array. Markdown yok.`;
+
+    let filterInstructions = "";
+
+    if (country === "US") {
+      filterInstructions += "\nSADECE Amerikan (ABD) markalarını getir. Ülke kodu US olmalı.";
+    } else if (country === "TR") {
+      filterInstructions += "\nSADECE Türk markalarını getir. Türkiye'de kurulmuş, Türk girişimcilerin sahip olduğu markalar. Ülke kodu TR olmalı. Website'leri gerçek olmalı - uydurma .com.tr domain'leri YAZMA.";
+    }
+
+    if (foundedAfter !== "all") {
+      filterInstructions += `\nSADECE ${foundedAfter} yılı ve sonrasında kurulan markaları getir.`;
+    }
+
+    if (revenueRange !== "all") {
+      const ranges: Record<string, string> = {
+        "10k-50k": "aylık $10,000 - $50,000 arası tahmini gelire sahip",
+        "50k-150k": "aylık $50,000 - $150,000 arası tahmini gelire sahip",
+        "150k-300k": "aylık $150,000 - $300,000 arası tahmini gelire sahip",
+        "300k-500k": "aylık $300,000 - $500,000 arası tahmini gelire sahip",
+        "500k+": "aylık $500,000 üzeri tahmini gelire sahip",
+      };
+      filterInstructions += `\nSADECE ${ranges[revenueRange]} markaları getir. estimated_traffic'i buna göre ayarla.`;
+    }
+
+    if (filterInstructions) {
+      prompt += filterInstructions;
+    }
 
     if (exclude) {
       prompt += `\n\nBunları TEKRAR ETME: ${exclude}`;

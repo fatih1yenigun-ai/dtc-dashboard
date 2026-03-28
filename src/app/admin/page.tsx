@@ -11,6 +11,8 @@ import {
   ChevronDown,
   ChevronRight,
   Filter,
+  DollarSign,
+  X,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
@@ -38,6 +40,24 @@ interface UserDetail {
   lastActivity: string | null;
 }
 
+interface UserModalData {
+  user: UserRow;
+  totalTokens: number;
+  activities: ActivityRow[];
+  folders: { name: string; brandCount: number }[];
+  recentKeywords: string[];
+  dailyBreakdown: { date: string; searches: number; chats: number; tokens: number }[];
+}
+
+// Sonnet pricing: $3/M input, $15/M output. Approximate as $8/M average
+const COST_PER_TOKEN = 8 / 1_000_000; // $0.000008 per token
+
+function formatCost(tokens: number): string {
+  const cost = tokens * COST_PER_TOKEN;
+  if (cost < 0.01) return `${(cost * 100).toFixed(2)}c`;
+  return `$${cost.toFixed(2)}`;
+}
+
 export default function AdminPage() {
   const { user, token } = useAuth();
   const router = useRouter();
@@ -54,6 +74,8 @@ export default function AdminPage() {
   const [filterUser, setFilterUser] = useState("");
   const [filterAction, setFilterAction] = useState("");
   const [loading, setLoading] = useState(true);
+  const [userModal, setUserModal] = useState<UserModalData | null>(null);
+  const [modalLoading, setModalLoading] = useState(false);
 
   // Redirect non-admin
   useEffect(() => {
@@ -173,6 +195,76 @@ export default function AdminPage() {
     }
   }
 
+  async function openUserModal(u: UserRow) {
+    setModalLoading(true);
+    setUserModal(null);
+    try {
+      // Fetch all activity for this user
+      const { data: userActivities } = await supabase
+        .from("user_activity")
+        .select("id, user_id, action_type, keyword, tokens_used, created_at")
+        .eq("user_id", u.id)
+        .order("created_at", { ascending: false });
+
+      const acts = (userActivities || []) as ActivityRow[];
+
+      // Total tokens
+      const totalTokens = acts.reduce((sum, a) => sum + (a.tokens_used || 0), 0);
+
+      // Recent keywords (last 20 unique)
+      const recentKeywords: string[] = [];
+      const seenKw = new Set<string>();
+      for (const a of acts) {
+        if (a.keyword && !seenKw.has(a.keyword)) {
+          seenKw.add(a.keyword);
+          recentKeywords.push(a.keyword);
+          if (recentKeywords.length >= 20) break;
+        }
+      }
+
+      // Daily breakdown
+      const dailyMap: Record<string, { searches: number; chats: number; tokens: number }> = {};
+      for (const a of acts) {
+        const day = a.created_at.split("T")[0];
+        if (!dailyMap[day]) dailyMap[day] = { searches: 0, chats: 0, tokens: 0 };
+        if (a.action_type === "search") dailyMap[day].searches += 1;
+        if (a.action_type === "chat") dailyMap[day].chats += 1;
+        dailyMap[day].tokens += a.tokens_used || 0;
+      }
+      const dailyBreakdown = Object.entries(dailyMap)
+        .map(([date, d]) => ({ date, ...d }))
+        .sort((a, b) => b.date.localeCompare(a.date));
+
+      // Folders with brand counts
+      const { data: foldersData } = await supabase
+        .from("folders")
+        .select("id, name")
+        .eq("user_id", u.id);
+
+      const foldersWithCounts: { name: string; brandCount: number }[] = [];
+      for (const f of foldersData || []) {
+        const { count } = await supabase
+          .from("saved_brands")
+          .select("id", { count: "exact", head: true })
+          .eq("folder_id", f.id);
+        foldersWithCounts.push({ name: f.name, brandCount: count || 0 });
+      }
+
+      setUserModal({
+        user: u,
+        totalTokens,
+        activities: acts,
+        folders: foldersWithCounts,
+        recentKeywords,
+        dailyBreakdown,
+      });
+    } catch (err) {
+      console.error("Error loading user modal:", err);
+    } finally {
+      setModalLoading(false);
+    }
+  }
+
   const filteredActivities = activities.filter((a) => {
     if (filterUser && !(a.users?.username || "").toLowerCase().includes(filterUser.toLowerCase())) return false;
     if (filterAction && a.action_type !== filterAction) return false;
@@ -214,7 +306,7 @@ export default function AdminPage() {
       </div>
 
       {/* Stats cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-[#667eea]/10 flex items-center justify-center">
@@ -259,6 +351,17 @@ export default function AdminPage() {
             </div>
           </div>
         </div>
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-green-100 flex items-center justify-center">
+              <DollarSign size={20} className="text-green-600" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-gray-900">{formatCost(stats.totalTokens)}</p>
+              <p className="text-xs text-gray-500">Toplam Maliyet</p>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Users table */}
@@ -288,6 +391,12 @@ export default function AdminPage() {
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
+                    {(() => {
+                      const userTokens = activities.filter((a) => a.user_id === u.id).reduce((s, a) => s + (a.tokens_used || 0), 0);
+                      return userTokens > 0 ? (
+                        <span className="text-xs text-green-600 font-medium">{formatCost(userTokens)}</span>
+                      ) : null;
+                    })()}
                     <span
                       className={`px-2 py-0.5 rounded-full text-xs font-medium ${
                         u.role === "admin"
@@ -297,6 +406,12 @@ export default function AdminPage() {
                     >
                       {u.role}
                     </span>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); openUserModal(u); }}
+                      className="px-2 py-0.5 rounded text-xs font-medium bg-[#667eea]/10 text-[#667eea] hover:bg-[#667eea]/20 transition-colors"
+                    >
+                      Detay
+                    </button>
                     {isExpanded ? <ChevronDown size={16} className="text-gray-400" /> : <ChevronRight size={16} className="text-gray-400" />}
                   </div>
                 </button>
@@ -332,6 +447,108 @@ export default function AdminPage() {
           )}
         </div>
       </div>
+
+      {/* User Detail Modal */}
+      {(userModal || modalLoading) && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex justify-end" onClick={() => { setUserModal(null); setModalLoading(false); }}>
+          <div
+            className="bg-[#0D1B2A] w-full max-w-lg h-full overflow-y-auto shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {modalLoading ? (
+              <div className="flex items-center justify-center h-full">
+                <p className="text-gray-400">Yukleniyor...</p>
+              </div>
+            ) : userModal ? (
+              <>
+                {/* Modal Header */}
+                <div className="sticky top-0 bg-[#0D1B2A] border-b border-gray-700 px-6 py-4 flex items-center justify-between z-10">
+                  <div>
+                    <h2 className="text-lg font-bold text-white">{userModal.user.username}</h2>
+                    <p className="text-xs text-gray-400">{userModal.user.role} | Kayit: {formatDate(userModal.user.created_at)}</p>
+                  </div>
+                  <button onClick={() => setUserModal(null)} className="text-gray-400 hover:text-white transition-colors">
+                    <X size={22} />
+                  </button>
+                </div>
+
+                {/* Stats */}
+                <div className="grid grid-cols-2 gap-3 px-6 py-4">
+                  <div className="bg-[#1a2942] rounded-xl p-4">
+                    <p className="text-xs text-gray-400 mb-1">Toplam Token</p>
+                    <p className="text-xl font-bold text-white">{userModal.totalTokens.toLocaleString("tr-TR")}</p>
+                  </div>
+                  <div className="bg-[#1a2942] rounded-xl p-4">
+                    <p className="text-xs text-gray-400 mb-1">Toplam Maliyet</p>
+                    <p className="text-xl font-bold text-green-400">{formatCost(userModal.totalTokens)}</p>
+                  </div>
+                </div>
+
+                {/* Daily Breakdown */}
+                <div className="px-6 py-3">
+                  <h3 className="text-sm font-semibold text-gray-300 mb-3">Gunluk Detay</h3>
+                  <div className="bg-[#1a2942] rounded-xl overflow-hidden">
+                    <table className="w-full text-xs">
+                      <thead>
+                        <tr className="text-gray-400 border-b border-gray-700">
+                          <th className="px-3 py-2 text-left">Tarih</th>
+                          <th className="px-3 py-2 text-center">Arama</th>
+                          <th className="px-3 py-2 text-center">Chat</th>
+                          <th className="px-3 py-2 text-right">Token</th>
+                          <th className="px-3 py-2 text-right">Maliyet</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-700/50">
+                        {userModal.dailyBreakdown.slice(0, 30).map((d) => (
+                          <tr key={d.date} className="text-gray-300">
+                            <td className="px-3 py-2">{d.date}</td>
+                            <td className="px-3 py-2 text-center">{d.searches}</td>
+                            <td className="px-3 py-2 text-center">{d.chats}</td>
+                            <td className="px-3 py-2 text-right">{d.tokens.toLocaleString("tr-TR")}</td>
+                            <td className="px-3 py-2 text-right text-green-400">{formatCost(d.tokens)}</td>
+                          </tr>
+                        ))}
+                        {userModal.dailyBreakdown.length === 0 && (
+                          <tr>
+                            <td colSpan={5} className="px-3 py-4 text-center text-gray-500">Veri yok</td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                {/* Folders */}
+                <div className="px-6 py-3">
+                  <h3 className="text-sm font-semibold text-gray-300 mb-3">Klasorler</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {userModal.folders.length > 0 ? userModal.folders.map((f) => (
+                      <span key={f.name} className="inline-flex items-center gap-1.5 bg-[#1a2942] px-3 py-1.5 rounded-lg text-xs text-gray-300">
+                        {f.name}
+                        <span className="bg-[#667eea]/20 text-[#667eea] px-1.5 py-0.5 rounded text-[10px] font-bold">{f.brandCount}</span>
+                      </span>
+                    )) : (
+                      <span className="text-xs text-gray-500">Klasor yok</span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Recent Keywords */}
+                <div className="px-6 py-3 pb-6">
+                  <h3 className="text-sm font-semibold text-gray-300 mb-3">Son Aramalar</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {userModal.recentKeywords.length > 0 ? userModal.recentKeywords.map((kw) => (
+                      <span key={kw} className="inline-block bg-[#1a2942] px-3 py-1.5 rounded-lg text-xs text-gray-300">{kw}</span>
+                    )) : (
+                      <span className="text-xs text-gray-500">Arama yok</span>
+                    )}
+                  </div>
+                </div>
+              </>
+            ) : null}
+          </div>
+        </div>
+      )}
 
       {/* Activity log */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200">
