@@ -67,6 +67,19 @@ function truncate(str: string, max: number): string {
   return str.length > max ? str.slice(0, max) + "..." : str;
 }
 
+const CHART_STYLE_TAG = `
+@keyframes fadeSlideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes donutGrow {
+  from { stroke-dasharray: 0 1000; }
+}
+@keyframes barGrow {
+  from { width: 0%; }
+}
+`;
+
 export default function HomePage() {
   const [keyword, setKeyword] = useState("");
   const [count, setCount] = useState(10);
@@ -138,21 +151,25 @@ export default function HomePage() {
     return sorted;
   }, [results, sortKey, sortAsc]);
 
-  // Category distribution for pie chart
+  // Category distribution weighted by revenue (talep/demand)
   const categoryDist = useMemo(() => {
-    const counts: Record<string, number> = {};
+    const revenueByCategory: Record<string, number> = {};
     results.forEach((b) => {
       const cat = b.category || "Diger";
-      counts[cat] = (counts[cat] || 0) + 1;
+      revenueByCategory[cat] = (revenueByCategory[cat] || 0) + (b.estimated_revenue ?? 0);
     });
-    const total = results.length || 1;
-    return Object.entries(counts)
-      .map(([name, count]) => ({
+    const totalRevenue = Object.values(revenueByCategory).reduce((s, v) => s + v, 0) || 1;
+    return Object.entries(revenueByCategory)
+      .map(([name, revenue]) => ({
         name,
-        count,
-        pct: Math.round((count / total) * 100),
+        revenue,
+        pct: Math.round((revenue / totalRevenue) * 100),
       }))
-      .sort((a, b) => b.count - a.count);
+      .sort((a, b) => b.revenue - a.revenue);
+  }, [results]);
+
+  const totalRevenue = useMemo(() => {
+    return results.reduce((s, b) => s + (b.estimated_revenue ?? 0), 0);
   }, [results]);
 
   // Marketing angles frequency + avg AOV
@@ -179,11 +196,10 @@ export default function HomePage() {
 
   const maxAngleCount = angleStats.length > 0 ? angleStats[0].count : 1;
 
-  // Colors for pie chart
-  const PIE_COLORS = [
-    "#667eea", "#764ba2", "#27AE60", "#E67E22", "#2980B9",
-    "#E74C3C", "#1ABC9C", "#9B59B6", "#F39C12", "#34495E",
-    "#16A085", "#C0392B",
+  // Vibrant neon colors for donut chart
+  const DONUT_COLORS = [
+    "#667eea", "#764ba2", "#f093fb", "#4facfe", "#00f2fe",
+    "#43e97b", "#fa709a", "#fee140", "#a18cd1", "#fbc2eb",
   ];
 
   function handleSort(key: SortKey) {
@@ -290,7 +306,7 @@ export default function HomePage() {
         "Ayl\u0131k Trafik": b.estimated_traffic,
         TQS: b.tqs,
         "D\u00f6n\u00fc\u015f\u00fcm %": b.conversion,
-        "Tahmini Ayl\u0131k Gelir ($)": b.estimated_revenue,
+        "Ciro ($)": b.estimated_revenue,
         "B\u00fcy\u00fcme Y\u00f6ntemi": b.growth_method,
         "Pazarlama A\u00e7\u0131lar\u0131": b.marketing_angles,
         "\u00d6ne \u00c7\u0131kan \u00d6zellik": b.insight,
@@ -316,28 +332,28 @@ export default function HomePage() {
 
   function exportCSV() {
     const headers = [
-      "Marka", "Website", "Ulke", "Kategori", "Nis", "AOV ($)",
-      "Aylik Trafik", "TQS", "Donusum %", "Tahmini Aylik Gelir ($)",
-      "Buyume Yontemi", "Pazarlama Acilari",
-      "One Cikan Ozellik", "Marka Hikayesi", "Kurulus Yili", "Meta Ads",
+      "Marka", "Website", "Kategori", "Ulke", "AOV ($)",
+      "Ciro ($)", "Buyume Yontemi", "Pazarlama Acilari",
+      "Kurulus Yili", "Aylik Trafik", "TQS", "Donusum %",
+      "One Cikan Ozellik", "Nis", "Marka Hikayesi", "Meta Ads",
     ];
     const rows = results.map((b) =>
       [
         b.brand_name,
         b.website,
-        b.country,
         b.category,
-        b.niche,
+        b.country,
         b.aov,
-        b.estimated_traffic,
-        b.tqs ?? 5.5,
-        b.conversion ?? 0,
         b.estimated_revenue ?? 0,
         `"${(b.growth_method || "").replace(/"/g, '""')}"`,
         `"${(b.marketing_angles || "").replace(/"/g, '""')}"`,
-        `"${(b.insight || "").replace(/"/g, '""')}"`,
-        `"${(b.history || "").replace(/"/g, '""')}"`,
         b.founded,
+        b.estimated_traffic,
+        b.tqs ?? 5.5,
+        b.conversion ?? 0,
+        `"${(b.insight || "").replace(/"/g, '""')}"`,
+        b.niche,
+        `"${(b.history || "").replace(/"/g, '""')}"`,
         b.meta_ads_url,
       ].join(",")
     );
@@ -350,20 +366,28 @@ export default function HomePage() {
     a.click();
   }
 
-  // Build CSS pie chart conic-gradient
-  const pieGradient = useMemo(() => {
+  // Build SVG donut chart data
+  const donutSegments = useMemo(() => {
+    const total = categoryDist.reduce((s, c) => s + c.pct, 0) || 100;
     let cumulative = 0;
-    const stops: string[] = [];
-    categoryDist.forEach((cat, i) => {
-      const color = PIE_COLORS[i % PIE_COLORS.length];
-      stops.push(`${color} ${cumulative}% ${cumulative + cat.pct}%`);
-      cumulative += cat.pct;
+    return categoryDist.map((cat, i) => {
+      const pct = cat.pct || 0;
+      const offset = cumulative;
+      cumulative += pct;
+      return {
+        ...cat,
+        color: DONUT_COLORS[i % DONUT_COLORS.length],
+        dashArray: `${(pct / 100) * 283} ${283 - (pct / 100) * 283}`,
+        dashOffset: -((offset / 100) * 283),
+        total,
+      };
     });
-    return `conic-gradient(${stops.join(", ")})`;
   }, [categoryDist]);
 
   return (
     <div>
+      <style dangerouslySetInnerHTML={{ __html: CHART_STYLE_TAG }} />
+
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-gray-900">Canli Arastirma</h1>
@@ -444,23 +468,52 @@ export default function HomePage() {
         <div>
           {/* Analysis Section */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-            {/* Left: Pie chart - Category distribution */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <h3 className="text-sm font-semibold text-gray-700 mb-4">Kategori Dagilimi</h3>
+            {/* Left: Donut chart - Category & Demand weighted by revenue */}
+            <div
+              className="bg-white rounded-xl shadow-sm border border-gray-200 p-6"
+              style={{ animation: "fadeSlideUp 0.6s ease-out forwards", animationDelay: "0.1s", opacity: 0 }}
+            >
+              <h3 className="text-sm font-semibold text-gray-700 mb-4">Kategori &amp; Talep</h3>
               <div className="flex items-center gap-6">
-                <div
-                  className="w-32 h-32 rounded-full flex-shrink-0"
-                  style={{ background: pieGradient }}
-                />
-                <div className="flex flex-col gap-1.5 text-xs">
-                  {categoryDist.map((cat, i) => (
-                    <div key={cat.name} className="flex items-center gap-2">
-                      <span
-                        className="w-3 h-3 rounded-sm flex-shrink-0"
-                        style={{ backgroundColor: PIE_COLORS[i % PIE_COLORS.length] }}
+                {/* SVG Donut */}
+                <div className="relative w-36 h-36 flex-shrink-0">
+                  <svg viewBox="0 0 100 100" className="w-full h-full" style={{ filter: "drop-shadow(0 0 8px rgba(102,126,234,0.3))" }}>
+                    {donutSegments.map((seg, i) => (
+                      <circle
+                        key={seg.name}
+                        cx="50"
+                        cy="50"
+                        r="45"
+                        fill="none"
+                        stroke={seg.color}
+                        strokeWidth="10"
+                        strokeDasharray={seg.dashArray}
+                        strokeDashoffset={seg.dashOffset}
+                        transform="rotate(-90 50 50)"
+                        style={{
+                          filter: `drop-shadow(0 0 4px ${seg.color}60)`,
+                          animation: `donutGrow 1s ease-out forwards`,
+                          animationDelay: `${i * 0.1}s`,
+                        }}
                       />
-                      <span className="text-gray-700">{cat.name}</span>
-                      <span className="text-gray-400">({cat.count} - %{cat.pct})</span>
+                    ))}
+                  </svg>
+                  {/* Center total */}
+                  <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    <span className="text-[10px] text-gray-400 uppercase tracking-wide">Toplam</span>
+                    <span className="text-sm font-bold text-gray-900">${formatNumber(totalRevenue)}</span>
+                  </div>
+                </div>
+                {/* Legend */}
+                <div className="flex flex-col gap-1.5 text-xs">
+                  {donutSegments.map((seg) => (
+                    <div key={seg.name} className="flex items-center gap-2">
+                      <span
+                        className="w-3 h-3 rounded-full flex-shrink-0"
+                        style={{ backgroundColor: seg.color, boxShadow: `0 0 6px ${seg.color}80` }}
+                      />
+                      <span className="text-gray-700">{seg.name}</span>
+                      <span className="text-gray-400">(%{seg.pct})</span>
                     </div>
                   ))}
                 </div>
@@ -468,28 +521,40 @@ export default function HomePage() {
             </div>
 
             {/* Right: Marketing angles bar chart */}
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <h3 className="text-sm font-semibold text-gray-700 mb-4">Pazarlama Acilari &amp; Talep</h3>
+            <div
+              className="bg-white rounded-xl shadow-sm border border-gray-200 p-6"
+              style={{ animation: "fadeSlideUp 0.6s ease-out forwards", animationDelay: "0.25s", opacity: 0 }}
+            >
+              <h3 className="text-sm font-semibold text-gray-700 mb-4">Pazarlama Acilari</h3>
               {angleStats.length === 0 ? (
                 <p className="text-xs text-gray-400">Veri yok</p>
               ) : (
-                <div className="flex flex-col gap-2">
-                  {angleStats.slice(0, 8).map((angle) => (
+                <div className="flex flex-col gap-2.5">
+                  {angleStats.slice(0, 8).map((angle, i) => (
                     <div key={angle.name} className="flex items-center gap-3">
                       <span className="text-xs text-gray-600 w-32 flex-shrink-0 truncate" title={angle.name}>
                         {angle.name}
                       </span>
-                      <div className="flex-1 bg-gray-100 rounded-full h-5 relative overflow-hidden">
+                      <div className="flex-1 bg-gray-100 rounded-full h-6 relative overflow-hidden" style={{ filter: "drop-shadow(0 0 3px rgba(102,126,234,0.2))" }}>
                         <div
-                          className="h-full rounded-full bg-gradient-to-r from-[#667eea] to-[#764ba2]"
-                          style={{ width: `${Math.max(10, (angle.count / maxAngleCount) * 100)}%` }}
+                          className="h-full rounded-full"
+                          style={{
+                            background: "linear-gradient(90deg, #667eea, #4facfe)",
+                            width: `${Math.max(10, (angle.count / maxAngleCount) * 100)}%`,
+                            animation: `barGrow 0.8s ease-out forwards`,
+                            animationDelay: `${0.3 + i * 0.08}s`,
+                            boxShadow: "0 0 8px rgba(79,172,254,0.4)",
+                          }}
                         />
-                        <span className="absolute inset-0 flex items-center justify-center text-[10px] font-semibold text-white mix-blend-difference">
+                        <span className="absolute left-3 inset-y-0 flex items-center text-xs font-semibold text-white drop-shadow-sm">
                           {angle.count}x
                         </span>
                       </div>
-                      <span className="text-[10px] text-gray-400 flex-shrink-0 w-16 text-right">
-                        Ort. ${angle.avgAov}
+                      <span
+                        className="text-sm font-semibold text-white flex-shrink-0 px-2 py-0.5 rounded"
+                        style={{ backgroundColor: "#1e293b" }}
+                      >
+                        ${angle.avgAov}
                       </span>
                     </div>
                   ))}
@@ -537,10 +602,11 @@ export default function HomePage() {
 
           {/* Results Table */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm min-w-[1600px]">
+            <div className="overflow-x-auto" style={{ scrollBehavior: "smooth" }}>
+              <table className="w-full text-sm min-w-[1800px]">
                 <thead>
                   <tr className="bg-[#0D1B2A] text-white">
+                    {/* 1. Checkbox */}
                     <th className="sticky left-0 z-10 bg-[#0D1B2A] px-3 py-3 text-left w-10">
                       <button onClick={toggleAll}>
                         {selected.size === results.length ? (
@@ -550,71 +616,86 @@ export default function HomePage() {
                         )}
                       </button>
                     </th>
+                    {/* 2. Marka (clickable link) */}
                     <th
                       className="sticky left-10 z-10 bg-[#0D1B2A] px-3 py-3 text-left font-semibold cursor-pointer select-none whitespace-nowrap"
                       onClick={() => handleSort("brand_name")}
                     >
                       Marka <SortIcon col="brand_name" />
                     </th>
-                    <th className="px-3 py-3 text-left font-semibold whitespace-nowrap">Web Sitesi</th>
-                    <th
-                      className="px-3 py-3 text-left font-semibold cursor-pointer select-none whitespace-nowrap"
-                      onClick={() => handleSort("country")}
-                    >
-                      Ulke <SortIcon col="country" />
-                    </th>
-                    <th
-                      className="px-3 py-3 text-left font-semibold cursor-pointer select-none whitespace-nowrap"
-                      onClick={() => handleSort("category")}
-                    >
-                      Kategori <SortIcon col="category" />
-                    </th>
-                    <th
-                      className="px-3 py-3 text-right font-semibold cursor-pointer select-none whitespace-nowrap"
-                      onClick={() => handleSort("aov")}
-                    >
-                      AOV <SortIcon col="aov" />
-                    </th>
-                    <th
-                      className="px-3 py-3 text-right font-semibold cursor-pointer select-none whitespace-nowrap"
-                      onClick={() => handleSort("estimated_traffic")}
-                    >
-                      Aylik Trafik <SortIcon col="estimated_traffic" />
-                    </th>
-                    <th
-                      className="px-3 py-3 text-center font-semibold cursor-pointer select-none whitespace-nowrap"
-                      onClick={() => handleSort("tqs")}
-                    >
-                      TQS <SortIcon col="tqs" />
-                    </th>
-                    <th
-                      className="px-3 py-3 text-right font-semibold cursor-pointer select-none whitespace-nowrap"
-                      onClick={() => handleSort("conversion")}
-                    >
-                      Donusum % <SortIcon col="conversion" />
-                    </th>
+                    {/* 3. Meta Ads */}
+                    <th className="px-3 py-3 text-left font-semibold whitespace-nowrap">Meta Ads</th>
+                    {/* 4. Ciro */}
                     <th
                       className="px-3 py-3 text-right font-semibold cursor-pointer select-none whitespace-nowrap"
                       onClick={() => handleSort("estimated_revenue")}
                     >
-                      Tahmini Gelir <SortIcon col="estimated_revenue" />
+                      Ciro <SortIcon col="estimated_revenue" />
                     </th>
+                    {/* 5. Buyume Yontemi */}
                     <th className="px-3 py-3 text-left font-semibold whitespace-nowrap">Buyume Yontemi</th>
+                    {/* 6. Pazarlama Acisi */}
+                    <th className="px-3 py-3 text-left font-semibold whitespace-nowrap">Pazarlama Acisi</th>
+                    {/* 7. Kurulus */}
                     <th
                       className="px-3 py-3 text-center font-semibold cursor-pointer select-none whitespace-nowrap"
                       onClick={() => handleSort("founded")}
                     >
                       Kurulus <SortIcon col="founded" />
                     </th>
+                    {/* 8. AOV */}
+                    <th
+                      className="px-3 py-3 text-right font-semibold cursor-pointer select-none whitespace-nowrap"
+                      onClick={() => handleSort("aov")}
+                    >
+                      AOV <SortIcon col="aov" />
+                    </th>
+                    {/* 9. Kategori */}
+                    <th
+                      className="px-3 py-3 text-left font-semibold cursor-pointer select-none whitespace-nowrap"
+                      onClick={() => handleSort("category")}
+                    >
+                      Kategori <SortIcon col="category" />
+                    </th>
+                    {/* 10. One Cikan Ozellik */}
                     <th className="px-3 py-3 text-left font-semibold whitespace-nowrap">One Cikan Ozellik</th>
-                    <th className="px-3 py-3 text-left font-semibold whitespace-nowrap">Pazarlama Acilari</th>
-                    <th className="px-3 py-3 text-left font-semibold whitespace-nowrap">Meta Ads</th>
+                    {/* 11. Trafik */}
+                    <th
+                      className="px-3 py-3 text-right font-semibold cursor-pointer select-none whitespace-nowrap"
+                      onClick={() => handleSort("estimated_traffic")}
+                    >
+                      Trafik <SortIcon col="estimated_traffic" />
+                    </th>
+                    {/* 12. TQS */}
+                    <th
+                      className="px-3 py-3 text-center font-semibold cursor-pointer select-none whitespace-nowrap"
+                      onClick={() => handleSort("tqs")}
+                    >
+                      TQS <SortIcon col="tqs" />
+                    </th>
+                    {/* 13. Donusum */}
+                    <th
+                      className="px-3 py-3 text-right font-semibold cursor-pointer select-none whitespace-nowrap"
+                      onClick={() => handleSort("conversion")}
+                    >
+                      Donusum <SortIcon col="conversion" />
+                    </th>
+                    {/* 14. Ulke */}
+                    <th
+                      className="px-3 py-3 text-center font-semibold cursor-pointer select-none whitespace-nowrap"
+                      onClick={() => handleSort("country")}
+                    >
+                      Ulke <SortIcon col="country" />
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
                   {sortedResults.map((brand, idx) => {
                     // Find original index for selection
                     const origIdx = results.indexOf(brand);
+                    const websiteUrl = brand.website.startsWith("http")
+                      ? brand.website
+                      : `https://${brand.website}`;
                     return (
                       <tr
                         key={idx}
@@ -627,6 +708,7 @@ export default function HomePage() {
                             : "bg-gray-50"
                         } hover:bg-[#667eea]/10`}
                       >
+                        {/* 1. Checkbox */}
                         <td className="sticky left-0 z-10 px-3 py-3" style={{ backgroundColor: "inherit" }}>
                           {selected.has(origIdx) ? (
                             <CheckSquare size={16} className="text-[#667eea]" />
@@ -634,56 +716,44 @@ export default function HomePage() {
                             <Square size={16} className="text-gray-300" />
                           )}
                         </td>
-                        <td className="sticky left-10 z-10 px-3 py-3 font-bold text-gray-900 whitespace-nowrap" style={{ backgroundColor: "inherit" }}>
-                          {brand.brand_name}
-                        </td>
-                        <td className="px-3 py-3 whitespace-nowrap">
+                        {/* 2. Marka (clickable link to website) */}
+                        <td className="sticky left-10 z-10 px-3 py-3 whitespace-nowrap" style={{ backgroundColor: "inherit" }}>
                           <a
-                            href={
-                              brand.website.startsWith("http")
-                                ? brand.website
-                                : `https://${brand.website}`
-                            }
+                            href={websiteUrl}
                             target="_blank"
                             rel="noopener noreferrer"
                             onClick={(e) => e.stopPropagation()}
-                            className="text-[#2980B9] hover:underline inline-flex items-center gap-1"
+                            className="font-bold text-gray-900 hover:text-[#667eea] inline-flex items-center gap-1.5 transition-colors"
                           >
-                            {brand.website}
-                            <ExternalLink size={12} />
+                            {brand.brand_name}
+                            <ExternalLink size={12} className="text-gray-400" />
                           </a>
                         </td>
-                        <td className="px-3 py-3 whitespace-nowrap text-center">
-                          {brand.country ? (
-                            <span className="text-sm">
-                              {FLAG[brand.country.toUpperCase()] || ""} {brand.country.toUpperCase()}
-                            </span>
+                        {/* 3. Meta Ads */}
+                        <td className="px-3 py-3 whitespace-nowrap">
+                          {brand.meta_ads_url ? (
+                            <a
+                              href={
+                                brand.meta_ads_url.startsWith("http")
+                                  ? brand.meta_ads_url
+                                  : `https://${brand.meta_ads_url}`
+                              }
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={(e) => e.stopPropagation()}
+                              className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-50 text-blue-600 rounded-md text-xs font-medium hover:bg-blue-100 transition-colors"
+                            >
+                              Gor <ExternalLink size={10} />
+                            </a>
                           ) : (
                             <span className="text-gray-300">-</span>
                           )}
                         </td>
-                        <td className="px-3 py-3">
-                          <span className="inline-block bg-[#667eea]/10 text-[#667eea] px-2 py-0.5 rounded-full text-xs font-medium whitespace-nowrap">
-                            {brand.category}
-                          </span>
-                        </td>
-                        <td className="px-3 py-3 text-right font-medium text-gray-900 whitespace-nowrap">
-                          ${brand.aov}
-                        </td>
-                        <td className="px-3 py-3 text-right font-medium text-[#2980B9] whitespace-nowrap">
-                          {formatNumber(brand.estimated_traffic)}
-                        </td>
-                        <td className="px-3 py-3 text-center">
-                          <span className="inline-block bg-amber-100 text-amber-800 px-2 py-0.5 rounded text-xs font-semibold">
-                            {brand.tqs}
-                          </span>
-                        </td>
-                        <td className="px-3 py-3 text-right font-medium text-gray-700 whitespace-nowrap">
-                          %{brand.conversion}
-                        </td>
+                        {/* 4. Ciro */}
                         <td className="px-3 py-3 text-right font-bold text-[#27AE60] whitespace-nowrap">
                           ${formatNumber(brand.estimated_revenue ?? 0)}
                         </td>
+                        {/* 5. Buyume Yontemi */}
                         <td className="px-3 py-3">
                           <div className="flex flex-wrap gap-1">
                             {(brand.growth_method || "").split(",").filter(Boolean).map((g, gi) => (
@@ -696,14 +766,7 @@ export default function HomePage() {
                             ))}
                           </div>
                         </td>
-                        <td className="px-3 py-3 text-center text-gray-600 whitespace-nowrap">
-                          {brand.founded || "-"}
-                        </td>
-                        <td className="px-3 py-3 text-gray-600 max-w-[200px]">
-                          <span title={brand.insight}>
-                            {truncate(brand.insight, 60)}
-                          </span>
-                        </td>
+                        {/* 6. Pazarlama Acisi */}
                         <td className="px-3 py-3">
                           <div className="flex flex-wrap gap-1">
                             {(brand.marketing_angles || "").split(",").filter(Boolean).map((a, ai) => (
@@ -716,21 +779,46 @@ export default function HomePage() {
                             ))}
                           </div>
                         </td>
-                        <td className="px-3 py-3 whitespace-nowrap">
-                          {brand.meta_ads_url ? (
-                            <a
-                              href={
-                                brand.meta_ads_url.startsWith("http")
-                                  ? brand.meta_ads_url
-                                  : `https://${brand.meta_ads_url}`
-                              }
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              onClick={(e) => e.stopPropagation()}
-                              className="text-blue-600 hover:underline text-xs inline-flex items-center gap-1"
-                            >
-                              Gor <ExternalLink size={10} />
-                            </a>
+                        {/* 7. Kurulus */}
+                        <td className="px-3 py-3 text-center text-gray-600 whitespace-nowrap">
+                          {brand.founded || "-"}
+                        </td>
+                        {/* 8. AOV */}
+                        <td className="px-3 py-3 text-right font-medium text-gray-900 whitespace-nowrap">
+                          ${brand.aov}
+                        </td>
+                        {/* 9. Kategori */}
+                        <td className="px-3 py-3">
+                          <span className="inline-block bg-[#667eea]/10 text-[#667eea] px-2 py-0.5 rounded-full text-xs font-medium whitespace-nowrap">
+                            {brand.category}
+                          </span>
+                        </td>
+                        {/* 10. One Cikan Ozellik */}
+                        <td className="px-3 py-3 text-gray-600 max-w-[200px]">
+                          <span title={brand.insight}>
+                            {truncate(brand.insight, 60)}
+                          </span>
+                        </td>
+                        {/* 11. Trafik */}
+                        <td className="px-3 py-3 text-right font-medium text-[#2980B9] whitespace-nowrap">
+                          {formatNumber(brand.estimated_traffic)}
+                        </td>
+                        {/* 12. TQS */}
+                        <td className="px-3 py-3 text-center">
+                          <span className="inline-block bg-amber-100 text-amber-800 px-2 py-0.5 rounded text-xs font-semibold">
+                            {brand.tqs}
+                          </span>
+                        </td>
+                        {/* 13. Donusum */}
+                        <td className="px-3 py-3 text-right font-medium text-gray-700 whitespace-nowrap">
+                          %{brand.conversion}
+                        </td>
+                        {/* 14. Ulke */}
+                        <td className="px-3 py-3 whitespace-nowrap text-center">
+                          {brand.country ? (
+                            <span className="text-sm">
+                              {FLAG[brand.country.toUpperCase()] || ""} {brand.country.toUpperCase()}
+                            </span>
                           ) : (
                             <span className="text-gray-300">-</span>
                           )}

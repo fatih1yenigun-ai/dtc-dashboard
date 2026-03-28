@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import Sidebar from "@/components/Sidebar";
+import FloatingChat from "@/components/FloatingChat";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -25,6 +26,7 @@ export default function RootLayout({
         <main className="flex-1 min-h-screen bg-[#f8f9fa]">
           <div className="p-6 md:p-8 max-w-7xl mx-auto">{children}</div>
         </main>
+        <FloatingChat />
       </body>
     </html>
   );
