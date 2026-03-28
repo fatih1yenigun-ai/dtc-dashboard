@@ -71,69 +71,103 @@ export function ResearchProvider({ children }: { children: ReactNode }) {
       nicheSummary: null,
     }));
 
+    const BATCH_SIZE = 30;
+    const totalBatches = Math.ceil(count / BATCH_SIZE);
+    const allBrands: BrandResult[] = [];
+    const seenNames = new Set<string>();
+    let nicheSummaryResult: NicheSummary | null = null;
+
     try {
-      const res = await fetch("/api/research", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ keyword, count }),
-        signal: controller.signal,
-      });
+      for (let batch = 0; batch < totalBatches; batch++) {
+        if (controller.signal.aborted) return;
 
-      if (!res.ok) throw new Error("API error");
-      const data = await res.json();
+        const batchCount = Math.min(BATCH_SIZE, count - allBrands.length);
+        if (batchCount <= 0) break;
 
-      if (data.error) {
-        setState((prev) => ({ ...prev, loading: false, error: data.error }));
-        return;
+        // Build exclude list from existing results
+        const exclude = allBrands.slice(-20).map((b) => b.brand_name).join(", ");
+
+        const res = await fetch("/api/research", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ keyword, count: batchCount, exclude }),
+          signal: controller.signal,
+        });
+
+        if (!res.ok) throw new Error("API error");
+        const data = await res.json();
+        if (data.error) {
+          setState((prev) => ({ ...prev, loading: false, error: data.error }));
+          return;
+        }
+
+        // Enrich batch with TQS/conversion/revenue
+        const batchBrands: BrandResult[] = (data.brands || [])
+          .filter((b: BrandResult) => {
+            const name = (b.brand_name || "").toLowerCase();
+            if (!name || seenNames.has(name)) return false;
+            seenNames.add(name);
+            return true;
+          })
+          .map((b: BrandResult) => {
+            const tqs = 5.5;
+            const conversion = tqsToConversion(tqs, b.niche);
+            const aov = typeof b.aov === "number" ? b.aov : parseFloat(String(b.aov)) || 0;
+            const traffic = typeof b.estimated_traffic === "number" ? b.estimated_traffic : 0;
+            const revenue = estimateRevenue(traffic, aov, conversion);
+            return { ...b, aov, estimated_traffic: traffic, tqs, conversion, estimated_revenue: revenue };
+          });
+
+        // Extract niche summary from first batch
+        if (batch === 0 && batchBrands.length > 0) {
+          const first = batchBrands[0];
+          if (first?.niche_summary) {
+            nicheSummaryResult = {
+              summary: first.niche_summary,
+              pros: (first.niche_pros || "").split(",").map((s: string) => s.trim()).filter(Boolean),
+              cons: (first.niche_cons || "").split(",").map((s: string) => s.trim()).filter(Boolean),
+            };
+          }
+        }
+
+        allBrands.push(...batchBrands);
+
+        // Progressive update — show results as they come in
+        const sorted = [...allBrands].sort((a, b) => (b.estimated_revenue || 0) - (a.estimated_revenue || 0));
+        setState((prev) => ({
+          ...prev,
+          results: sorted,
+          nicheSummary: nicheSummaryResult,
+        }));
       }
 
-      // Enrich with TQS/conversion/revenue
-      const enriched: BrandResult[] = (data.brands || []).map((b: BrandResult) => {
-        const tqs = 5.5;
-        const conversion = tqsToConversion(tqs, b.niche);
-        const aov = typeof b.aov === "number" ? b.aov : parseFloat(String(b.aov)) || 0;
-        const traffic = typeof b.estimated_traffic === "number" ? b.estimated_traffic : 0;
-        const revenue = estimateRevenue(traffic, aov, conversion);
-        return { ...b, aov, estimated_traffic: traffic, tqs, conversion, estimated_revenue: revenue };
-      });
-
-      // Extract niche summary from first brand
-      let nicheSummary: NicheSummary | null = null;
-      const first = enriched[0];
-      if (first?.niche_summary) {
-        nicheSummary = {
-          summary: first.niche_summary,
-          pros: (first.niche_pros || "").split(",").map((s: string) => s.trim()).filter(Boolean),
-          cons: (first.niche_cons || "").split(",").map((s: string) => s.trim()).filter(Boolean),
-        };
-      }
-
-      // Sort by revenue desc
-      enriched.sort((a, b) => (b.estimated_revenue || 0) - (a.estimated_revenue || 0));
-
+      // Final sort and save
+      allBrands.sort((a, b) => (b.estimated_revenue || 0) - (a.estimated_revenue || 0));
       setState((prev) => ({
         ...prev,
-        results: enriched,
-        nicheSummary,
+        results: allBrands,
+        nicheSummary: nicheSummaryResult,
         loading: false,
       }));
 
-      // Save to sessionStorage
       try {
         sessionStorage.setItem(
           "lastResearch",
-          JSON.stringify({ keyword, results: enriched, nicheSummary })
+          JSON.stringify({ keyword, results: allBrands, nicheSummary: nicheSummaryResult })
         );
-      } catch {
-        // sessionStorage full or unavailable
-      }
+      } catch { /* ignore */ }
     } catch (err) {
       if ((err as Error).name === "AbortError") return;
-      setState((prev) => ({
-        ...prev,
-        loading: false,
-        error: "Araştırma sırasında hata oluştu",
-      }));
+      // If we have partial results, keep them
+      if (allBrands.length > 0) {
+        setState((prev) => ({ ...prev, loading: false }));
+      } else {
+        setState((prev) => ({
+          ...prev,
+          loading: false,
+          error: "Araştırma sırasında hata oluştu",
+        }));
+      }
     }
   }, []);
 

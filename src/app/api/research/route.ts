@@ -53,7 +53,7 @@ Niş kategorileri ve dönüşüm çarpanları:
 
 export async function POST(request: NextRequest) {
   try {
-    const { keyword, count = 10 } = await request.json();
+    const { keyword, count = 30, exclude = "" } = await request.json();
 
     if (!keyword) {
       return NextResponse.json(
@@ -92,62 +92,39 @@ SADECE geçerli JSON array döndür. Markdown yok, açıklama yok. Ham JSON arra
 Örnek:
 [{"brand_name":"Bearaby","website":"bearaby.com","category":"Ağırlıklı Battaniye","niche":"ev_tekstil","aov":249,"estimated_traffic":210000,"insight":"Dolgu malzemesiz örgü ağırlıklı battaniye ile kategoride devrim yarattı; cam boncuk yerine organik pamuk kullanımı","marketing_angles":"sürdürülebilirlik, premium tasarım, anksiyete çözümü, Instagram estetik","growth_method":"Kickstarter, Instagram Ads, Influencer Marketing","history":"2018'de Kickstarter ile kuruldu, Inc. 5000'de 82. sıra, $1.9M aylık gelir","founded":2018,"country":"US","meta_ads_url":"https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=ALL&q=Bearaby","niche_summary":"Ağırlıklı battaniye pazarı 2018'den beri hızla büyüyor. Anksiyete ve uyku sorunlarına çözüm olarak konumlandırılıyor.","niche_pros":"Yüksek AOV, düşük iade oranı, duygusal satın alma, tekrarlı müşteri potansiyeli","niche_cons":"Mevsimsel talep dalgalanması, yüksek kargo maliyeti, sınırlı SKU çeşitliliği, büyük markalarla rekabet"}]`;
 
-    // Batch requests: Claude can handle ~40 brands per call
-    const BATCH_SIZE = 40;
-    const totalBatches = Math.ceil(count / BATCH_SIZE);
-    const allBrands: Record<string, unknown>[] = [];
-    const seenNames = new Set<string>();
+    // Single call — max 30 brands per request. Client handles batching for larger counts.
+    const batchCount = Math.min(count, 30);
 
-    for (let batch = 0; batch < totalBatches; batch++) {
-      const batchCount = Math.min(BATCH_SIZE, count - allBrands.length);
-      if (batchCount <= 0) break;
+    let finalPrompt = prompt.replace(
+      `${count} gerçek DTC markası bul`,
+      `${batchCount} gerçek DTC markası bul`
+    );
+    if (exclude) {
+      finalPrompt += `\n\nBu markaları TEKRAR ETME: ${exclude}`;
+    }
 
-      // For subsequent batches, tell Claude to avoid duplicates
-      let batchPrompt = prompt;
-      if (allBrands.length > 0) {
-        const existingNames = allBrands.slice(-30).map((b) => b.brand_name).join(", ");
-        batchPrompt = prompt.replace(
-          `${count} gerçek DTC markası bul`,
-          `${batchCount} gerçek DTC markası bul (bu markaları TEKRAR ETME: ${existingNames})`
-        );
+    const message = await anthropic.messages.create({
+      model: "claude-sonnet-4-20250514",
+      max_tokens: 8000,
+      messages: [{ role: "user", content: finalPrompt }],
+    });
+
+    const text =
+      message.content[0].type === "text" ? message.content[0].text : "";
+
+    let brands;
+    try {
+      brands = JSON.parse(text);
+    } catch {
+      const match = text.match(/\[[\s\S]*\]/);
+      if (match) {
+        brands = JSON.parse(match[0]);
       } else {
-        batchPrompt = prompt.replace(
-          `${count} gerçek DTC markası bul`,
-          `${batchCount} gerçek DTC markası bul`
-        );
-      }
-
-      const message = await anthropic.messages.create({
-        model: "claude-sonnet-4-20250514",
-        max_tokens: 8000,
-        messages: [{ role: "user", content: batchPrompt }],
-      });
-
-      const text =
-        message.content[0].type === "text" ? message.content[0].text : "";
-
-      let batchBrands;
-      try {
-        batchBrands = JSON.parse(text);
-      } catch {
-        const match = text.match(/\[[\s\S]*\]/);
-        if (match) {
-          batchBrands = JSON.parse(match[0]);
-        } else {
-          continue; // Skip failed batch
-        }
-      }
-
-      for (const brand of batchBrands) {
-        const name = (brand.brand_name || "").toLowerCase();
-        if (name && !seenNames.has(name)) {
-          allBrands.push(brand);
-          seenNames.add(name);
-        }
+        throw new Error("Could not parse brands from response");
       }
     }
 
-    return NextResponse.json({ brands: allBrands });
+    return NextResponse.json({ brands });
   } catch (error) {
     console.error("Research API error:", error);
     return NextResponse.json(
