@@ -391,6 +391,8 @@ export default function TTSPage() {
               results={results}
               onSave={openSaveModal}
               onDetail={setDetailProduct}
+              sortKey={sortKey}
+              onSort={(key: string) => { setSortKey(key); doSearch(key); }}
             />
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -530,10 +532,14 @@ function ProductTable({
   results,
   onSave,
   onDetail,
+  sortKey,
+  onSort,
 }: {
   results: TTSProduct[];
   onSave: (p: TTSProduct) => void;
   onDetail: (p: TTSProduct) => void;
+  sortKey: string;
+  onSort: (key: string) => void;
 }) {
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
@@ -544,12 +550,12 @@ function ProductTable({
               <th className="text-left py-3 px-4 font-medium text-gray-500 w-12">#</th>
               <th className="text-left py-3 px-4 font-medium text-gray-500">Ürün</th>
               <th className="text-left py-3 px-4 font-medium text-gray-500">Mağaza</th>
-              <th className="text-right py-3 px-4 font-medium text-gray-500 cursor-pointer hover:text-[#667eea] select-none" onClick={() => { sortByColumn("sales_volume"); }}>Satışlar {sortKey === "sales_volume" && "↓"}</th>
-              <th className="text-right py-3 px-4 font-medium text-gray-500 cursor-pointer hover:text-[#667eea] select-none" onClick={() => { sortByColumn("gmv"); }}>GMV {sortKey === "gmv" && "↓"}</th>
-              <th className="text-right py-3 px-4 font-medium text-gray-500 cursor-pointer hover:text-[#667eea] select-none" onClick={() => { sortByColumn("price"); }}>Fiyat {sortKey === "price" && "↓"}</th>
+              <th className="text-right py-3 px-4 font-medium text-gray-500 cursor-pointer hover:text-[#667eea] select-none" onClick={() => { onSort("sales_volume"); }}>Satışlar {sortKey === "sales_volume" ? "↓" : ""}</th>
+              <th className="text-right py-3 px-4 font-medium text-gray-500 cursor-pointer hover:text-[#667eea] select-none" onClick={() => { onSort("gmv"); }}>GMV {sortKey === "gmv" ? "↓" : ""}</th>
+              <th className="text-right py-3 px-4 font-medium text-gray-500 cursor-pointer hover:text-[#667eea] select-none" onClick={() => { onSort("price"); }}>Fiyat {sortKey === "price" ? "↓" : ""}</th>
               <th className="text-center py-3 px-4 font-medium text-gray-500">Puan</th>
-              <th className="text-right py-3 px-4 font-medium text-gray-500 cursor-pointer hover:text-[#667eea] select-none" onClick={() => { sortByColumn("video_count"); }}>Video {sortKey === "video_count" && "↓"}</th>
-              <th className="text-right py-3 px-4 font-medium text-gray-500 cursor-pointer hover:text-[#667eea] select-none" onClick={() => { sortByColumn("play_count"); }}>Görüntülenme {sortKey === "play_count" && "↓"}</th>
+              <th className="text-right py-3 px-4 font-medium text-gray-500 cursor-pointer hover:text-[#667eea] select-none" onClick={() => { onSort("video_count"); }}>Video {sortKey === "video_count" ? "↓" : ""}</th>
+              <th className="text-right py-3 px-4 font-medium text-gray-500 cursor-pointer hover:text-[#667eea] select-none" onClick={() => { onSort("play_count"); }}>Görüntülenme {sortKey === "play_count" ? "↓" : ""}</th>
               <th className="text-center py-3 px-4 font-medium text-gray-500">Ülke</th>
               <th className="text-center py-3 px-4 font-medium text-gray-500 w-20">Detay</th>
               <th className="text-center py-3 px-4 font-medium text-gray-500 w-20">Kaydet</th>
