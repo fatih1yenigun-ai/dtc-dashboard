@@ -47,9 +47,10 @@ const TAG_COLORS = [
 
 const PRODUCT_SORT_OPTIONS = [
   { value: "gmv", label: "GMV" },
-  { value: "sales_volume", label: "Satislar" },
-  { value: "video_count", label: "Video Sayisi" },
+  { value: "sales_volume", label: "Satışlar" },
+  { value: "video_count", label: "Video Sayısı" },
   { value: "price", label: "Fiyat" },
+  { value: "play_count", label: "Görüntülenme" },
 ];
 
 const VIDEO_SORT_OPTIONS = [
@@ -168,14 +169,15 @@ export default function TTSPage() {
     setLocalMode(searchMode);
   }, [searchMode]);
 
-  function handleSearch() {
+  function handleSearch(overrideSortKey?: string) {
     if (!localKeyword.trim()) return;
+    const sk = overrideSortKey || sortKey;
     setKeyword(localKeyword);
     setSearchMode(localMode);
     if (localMode === "product") {
-      search(localKeyword, "product", pageSize, 1, sortBy, sortKey);
+      search(localKeyword, "product", pageSize, 1, sortBy, sk);
     } else {
-      search(localKeyword, "video", pageSize, 1, sortBy, sortKey);
+      search(localKeyword, "video", pageSize, 1, sortBy, sk);
     }
   }
 
@@ -531,15 +533,15 @@ function ProductTable({
           <thead>
             <tr className="bg-gray-50 border-b border-gray-200">
               <th className="text-left py-3 px-4 font-medium text-gray-500 w-12">#</th>
-              <th className="text-left py-3 px-4 font-medium text-gray-500">Urun</th>
-              <th className="text-left py-3 px-4 font-medium text-gray-500">Magaza</th>
-              <th className="text-right py-3 px-4 font-medium text-gray-500">Satislar</th>
-              <th className="text-right py-3 px-4 font-medium text-gray-500">GMV</th>
-              <th className="text-right py-3 px-4 font-medium text-gray-500">Fiyat</th>
+              <th className="text-left py-3 px-4 font-medium text-gray-500">Ürün</th>
+              <th className="text-left py-3 px-4 font-medium text-gray-500">Mağaza</th>
+              <th className="text-right py-3 px-4 font-medium text-gray-500 cursor-pointer hover:text-[#667eea] select-none" onClick={() => { setSortKey("sales_volume"); handleSearch("sales_volume"); }}>Satışlar {sortKey === "sales_volume" && "↓"}</th>
+              <th className="text-right py-3 px-4 font-medium text-gray-500 cursor-pointer hover:text-[#667eea] select-none" onClick={() => { setSortKey("gmv"); handleSearch("gmv"); }}>GMV {sortKey === "gmv" && "↓"}</th>
+              <th className="text-right py-3 px-4 font-medium text-gray-500 cursor-pointer hover:text-[#667eea] select-none" onClick={() => { setSortKey("price"); handleSearch("price"); }}>Fiyat {sortKey === "price" && "↓"}</th>
               <th className="text-center py-3 px-4 font-medium text-gray-500">Puan</th>
-              <th className="text-right py-3 px-4 font-medium text-gray-500">Video</th>
-              <th className="text-right py-3 px-4 font-medium text-gray-500">Goruntulenme</th>
-              <th className="text-center py-3 px-4 font-medium text-gray-500">Ulke</th>
+              <th className="text-right py-3 px-4 font-medium text-gray-500 cursor-pointer hover:text-[#667eea] select-none" onClick={() => { setSortKey("video_count"); handleSearch("video_count"); }}>Video {sortKey === "video_count" && "↓"}</th>
+              <th className="text-right py-3 px-4 font-medium text-gray-500 cursor-pointer hover:text-[#667eea] select-none" onClick={() => { setSortKey("play_count"); handleSearch("play_count"); }}>Görüntülenme {sortKey === "play_count" && "↓"}</th>
+              <th className="text-center py-3 px-4 font-medium text-gray-500">Ülke</th>
               <th className="text-center py-3 px-4 font-medium text-gray-500 w-20">Detay</th>
               <th className="text-center py-3 px-4 font-medium text-gray-500 w-20">Kaydet</th>
             </tr>
