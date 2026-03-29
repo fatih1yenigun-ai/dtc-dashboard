@@ -1,6 +1,7 @@
 "use client";
 
 import { useAuth } from "@/context/AuthContext";
+import { usePathname } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import LoginPage from "@/app/login/page";
 import Sidebar from "@/components/Sidebar";
@@ -10,6 +11,12 @@ import { TikTokShopProvider } from "@/context/TikTokShopContext";
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
+  const pathname = usePathname();
+
+  // Landing page: render without auth wrapper
+  if (pathname === "/") {
+    return <>{children}</>;
+  }
 
   // Loading state — full screen
   if (loading) {

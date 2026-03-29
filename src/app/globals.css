@@ -17,6 +17,8 @@
   --color-green: var(--green);
   --color-blue: var(--blue);
   --font-sans: "Inter", sans-serif;
+  --font-display: var(--font-display), serif;
+  --font-body: var(--font-body), sans-serif;
 }
 
 html {
@@ -96,4 +98,62 @@ body {
 .break-words {
   word-break: break-word;
   overflow-wrap: break-word;
+}
+
+/* Landing page — ticker scroll */
+@keyframes ticker-scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-ticker {
+  animation: ticker-scroll 35s linear infinite;
+}
+
+/* Landing page — floating cards */
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-12px); }
+}
+
+.animate-float {
+  animation: float-slow 6s ease-in-out infinite;
+}
+
+.animate-float-delay-1 {
+  animation: float-slow 7s ease-in-out 1s infinite;
+}
+
+.animate-float-delay-2 {
+  animation: float-slow 5.5s ease-in-out 2s infinite;
+}
+
+.animate-float-delay-3 {
+  animation: float-slow 6.5s ease-in-out 0.5s infinite;
+}
+
+/* Landing page — floating card hover */
+.landing-card {
+  opacity: 0.82;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.landing-card:hover {
+  opacity: 1;
+  transform: translateY(-4px);
+  border-color: rgba(124, 111, 247, 0.35);
+  box-shadow:
+    0 8px 32px rgba(124, 111, 247, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .animate-ticker,
+  .animate-float,
+  .animate-float-delay-1,
+  .animate-float-delay-2,
+  .animate-float-delay-3 {
+    animation: none;
+  }
 }

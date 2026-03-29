@@ -19,7 +19,7 @@ import { loadFolders, getAllSavedCount } from "@/lib/supabase";
 import { useAuth } from "@/context/AuthContext";
 
 const navItems = [
-  { href: "/", label: "Canlı Araştırma", icon: Search },
+  { href: "/research", label: "Canlı Araştırma", icon: Search },
   { href: "/tts", label: "TikTok Shop", icon: ShoppingBag },
   { href: "/saved", label: "Kaydedilenler", icon: Bookmark },
   { href: "/brands", label: "Marka Tarayıcı", icon: Globe },
