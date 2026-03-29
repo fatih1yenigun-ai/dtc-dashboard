@@ -169,9 +169,9 @@ export default function TTSPage() {
     setLocalMode(searchMode);
   }, [searchMode]);
 
-  function handleSearch(overrideSortKey?: string) {
+  function handleSearch(overrideSortKey?: string | React.MouseEvent) {
     if (!localKeyword.trim()) return;
-    const sk = overrideSortKey || sortKey;
+    const sk = (typeof overrideSortKey === "string") ? overrideSortKey : sortKey;
     setKeyword(localKeyword);
     setSearchMode(localMode);
     if (localMode === "product") {
