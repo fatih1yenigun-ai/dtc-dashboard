@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import {
   Search,
   Loader2,
@@ -15,9 +16,6 @@ import {
   Eye,
   Star,
   ShoppingBag,
-  Users,
-  TrendingUp,
-  MapPin,
 } from "lucide-react";
 import { loadFolders, createFolder, saveBrandsBulk, type BrandData } from "@/lib/supabase";
 import { useTikTokShop, type TTSProduct, type SearchMode } from "@/context/TikTokShopContext";
@@ -130,6 +128,7 @@ function toBrandDataVideo(product: TTSProduct): BrandData {
 }
 
 export default function TTSPage() {
+  const router = useRouter();
   const { user } = useAuth();
   const {
     keyword,
@@ -149,6 +148,7 @@ export default function TTSPage() {
     setSortBy,
     setSortKey,
     setSearchMode,
+    setSelectedProduct,
   } = useTikTokShop();
 
   const [localKeyword, setLocalKeyword] = useState("");
@@ -159,7 +159,6 @@ export default function TTSPage() {
   const [selectedFolder, setSelectedFolder] = useState("");
   const [newFolderName, setNewFolderName] = useState("");
   const [saveMsg, setSaveMsg] = useState("");
-  const [detailProduct, setDetailProduct] = useState<TTSProduct | null>(null);
 
   useEffect(() => {
     if (keyword) setLocalKeyword(keyword);
@@ -183,11 +182,6 @@ export default function TTSPage() {
     } else {
       search(localKeyword, "video", pageSize, 1, sortBy, sk);
     }
-  }
-
-  function sortByColumn(key: string) {
-    setSortKey(key);
-    doSearch(key);
   }
 
   async function openSaveModal(product: TTSProduct) {
@@ -390,7 +384,11 @@ export default function TTSPage() {
             <ProductTable
               results={results}
               onSave={openSaveModal}
-              onDetail={setDetailProduct}
+              onDetail={(p: TTSProduct) => {
+                setSelectedProduct(p);
+                try { sessionStorage.setItem(`tts_product_${p.id}`, JSON.stringify(p)); } catch { /* ignore */ }
+                router.push(`/tts/${p.id}`);
+              }}
               sortKey={sortKey}
               onSort={(key: string) => { setSortKey(key); doSearch(key); }}
             />
@@ -437,15 +435,6 @@ export default function TTSPage() {
           <p className="text-lg">Sonuc bulunamadi</p>
           <p className="text-sm mt-1">Farkli bir anahtar kelime deneyin</p>
         </div>
-      )}
-
-      {/* Detail Modal */}
-      {detailProduct && (
-        <ProductDetailModal
-          product={detailProduct}
-          onClose={() => setDetailProduct(null)}
-          onSave={() => openSaveModal(detailProduct)}
-        />
       )}
 
       {/* Save Modal */}
@@ -585,17 +574,15 @@ function ProductTable({
                         <ShoppingBag size={16} className="text-gray-300" />
                       </div>
                     )}
-                    <a
-                      href={product.landing_page || "#"}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-sm font-medium text-gray-900 hover:text-[#667eea] line-clamp-2 transition-colors"
+                    <button
+                      onClick={() => onDetail(product)}
+                      className="text-sm font-medium text-gray-900 hover:text-[#667eea] line-clamp-2 transition-colors text-left cursor-pointer"
                       title={product.title}
                     >
                       {product.title?.length > 60
                         ? product.title.substring(0, 60) + "..."
                         : product.title || "Bilinmeyen"}
-                    </a>
+                    </button>
                   </div>
                 </td>
 
@@ -687,282 +674,6 @@ function ProductTable({
           </tbody>
         </table>
       </div>
-    </div>
-  );
-}
-
-/* ---- Product Detail Modal ---- */
-function ProductDetailModal({
-  product,
-  onClose,
-  onSave,
-}: {
-  product: TTSProduct;
-  onClose: () => void;
-  onSave: () => void;
-}) {
-  const heroImage = product.image_list?.[0] || product.image;
-
-  return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto shadow-2xl">
-        {/* Header */}
-        <div className="sticky top-0 bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between rounded-t-2xl z-10">
-          <h2 className="font-bold text-gray-900 text-lg">Urun Detayi</h2>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
-          >
-            <X size={24} />
-          </button>
-        </div>
-
-        <div className="p-6">
-          {/* Top: Image + Info */}
-          <div className="flex flex-col md:flex-row gap-6 mb-6">
-            {/* Image */}
-            <div className="w-full md:w-64 flex-shrink-0">
-              {heroImage ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={heroImage}
-                  alt={product.title}
-                  className="w-full rounded-xl object-cover border border-gray-100"
-                />
-              ) : (
-                <div className="w-full aspect-square rounded-xl bg-gray-100 flex items-center justify-center">
-                  <ShoppingBag size={48} className="text-gray-300" />
-                </div>
-              )}
-            </div>
-
-            {/* Info */}
-            <div className="flex-1">
-              <h3 className="text-lg font-semibold text-gray-900 mb-3 leading-snug">
-                {product.title}
-              </h3>
-
-              {/* Shop */}
-              <div className="flex items-center gap-2 mb-4">
-                {product.shop_image ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={product.shop_image}
-                    alt={product.shop_name}
-                    className="w-8 h-8 rounded-full object-cover"
-                  />
-                ) : (
-                  <div className="w-8 h-8 rounded-full bg-gray-200" />
-                )}
-                <span className="text-sm font-medium text-gray-700">
-                  {product.shop_name}
-                </span>
-              </div>
-
-              {/* Links */}
-              <div className="flex flex-wrap gap-2 mb-4">
-                {product.landing_page && (
-                  <a
-                    href={product.landing_page}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gray-100 text-gray-700 text-xs font-medium hover:bg-gray-200 transition-colors"
-                  >
-                    <ExternalLink size={12} />
-                    TikTok Shop
-                  </a>
-                )}
-                <a
-                  href={`https://www.pipiads.com/tr/tiktok-shop-product/${product.id}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#667eea]/10 text-[#667eea] text-xs font-medium hover:bg-[#667eea]/20 transition-colors"
-                >
-                  <ExternalLink size={12} />
-                  PiPiAds
-                </a>
-              </div>
-
-              {/* Save button */}
-              <button
-                onClick={onSave}
-                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg gradient-accent text-white text-sm font-medium hover:opacity-90 transition-opacity"
-              >
-                <Save size={14} />
-                Klasore Kaydet
-              </button>
-            </div>
-          </div>
-
-          {/* Metrics Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-            <MetricCard
-              label="GMV"
-              value={formatMoney(product.gmv_usd)}
-              color="emerald"
-              icon={<TrendingUp size={14} />}
-            />
-            <MetricCard
-              label="Satislar"
-              value={formatCompact(product.sales_volume)}
-              color="blue"
-              icon={<ShoppingBag size={14} />}
-            />
-            <MetricCard
-              label="Fiyat"
-              value={`$${product.price_usd.toFixed(2)}`}
-              color="purple"
-            />
-            <MetricCard
-              label="Puan"
-              value={product.score > 0 ? `${product.score.toFixed(1)}/5` : "-"}
-              color="amber"
-              icon={<Star size={14} />}
-            />
-            <MetricCard
-              label="Video"
-              value={formatCompact(product.video_count)}
-              color="rose"
-              icon={<Play size={14} />}
-            />
-            <MetricCard
-              label="Goruntulenme"
-              value={formatCompact(product.play_count)}
-              color="cyan"
-              icon={<Eye size={14} />}
-            />
-            <MetricCard
-              label="Begenme"
-              value={formatCompact(product.like_count)}
-              color="pink"
-            />
-            <MetricCard
-              label="Paylasim"
-              value={formatCompact(product.share_count)}
-              color="indigo"
-              icon={<Share2 size={14} />}
-            />
-          </div>
-
-          {/* Trends: 7-day and 30-day */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-            <div className="bg-gray-50 rounded-xl p-4">
-              <h4 className="text-sm font-semibold text-gray-700 mb-3">Son 7 Gun</h4>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <p className="text-xs text-gray-500">GMV</p>
-                  <p className="text-lg font-bold text-emerald-600">
-                    {formatMoney(product.day7_gmv_usd)}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-500">Satislar</p>
-                  <p className="text-lg font-bold text-blue-600">
-                    {formatCompact(product.day7_sales)}
-                  </p>
-                </div>
-              </div>
-            </div>
-            <div className="bg-gray-50 rounded-xl p-4">
-              <h4 className="text-sm font-semibold text-gray-700 mb-3">Son 30 Gun</h4>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <p className="text-xs text-gray-500">GMV</p>
-                  <p className="text-lg font-bold text-emerald-600">
-                    {formatMoney(product.day30_gmv_usd)}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-500">Satislar</p>
-                  <p className="text-lg font-bold text-blue-600">
-                    {formatCompact(product.day30_sales)}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Extra info */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <div className="bg-gray-50 rounded-lg p-3">
-              <p className="text-xs text-gray-500 mb-1">Komisyon Orani</p>
-              <p className="text-sm font-semibold text-gray-700">
-                {product.commission_rate > 0
-                  ? `%${(product.commission_rate * 100).toFixed(0)}`
-                  : "-"}
-              </p>
-            </div>
-            <div className="bg-gray-50 rounded-lg p-3">
-              <p className="text-xs text-gray-500 mb-1 flex items-center gap-1">
-                <MapPin size={10} /> Satici Konumu
-              </p>
-              <p className="text-sm font-semibold text-gray-700">
-                {product.seller_location || "-"}
-              </p>
-            </div>
-            <div className="bg-gray-50 rounded-lg p-3">
-              <p className="text-xs text-gray-500 mb-1 flex items-center gap-1">
-                <Users size={10} /> Icerik Uretici
-              </p>
-              <p className="text-sm font-semibold text-gray-700">
-                {product.person_count || "-"}
-              </p>
-            </div>
-            <div className="bg-gray-50 rounded-lg p-3">
-              <p className="text-xs text-gray-500 mb-1 flex items-center gap-1">
-                <Clock size={10} /> Aktif Gun
-              </p>
-              <p className="text-sm font-semibold text-gray-700">
-                {product.put_days > 0 ? product.put_days : "-"}
-              </p>
-            </div>
-          </div>
-
-          {/* Comments */}
-          {product.comment_count > 0 && (
-            <div className="mt-4 bg-gray-50 rounded-lg p-3">
-              <p className="text-xs text-gray-500 mb-1">Yorumlar</p>
-              <p className="text-sm font-semibold text-gray-700">
-                {formatCompact(product.comment_count)}
-              </p>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* ---- Metric Card ---- */
-function MetricCard({
-  label,
-  value,
-  color,
-  icon,
-}: {
-  label: string;
-  value: string;
-  color: string;
-  icon?: React.ReactNode;
-}) {
-  const colorMap: Record<string, string> = {
-    emerald: "bg-emerald-50 text-emerald-700 border-emerald-100",
-    blue: "bg-blue-50 text-blue-700 border-blue-100",
-    purple: "bg-purple-50 text-purple-700 border-purple-100",
-    amber: "bg-amber-50 text-amber-700 border-amber-100",
-    rose: "bg-rose-50 text-rose-700 border-rose-100",
-    cyan: "bg-cyan-50 text-cyan-700 border-cyan-100",
-    pink: "bg-pink-50 text-pink-700 border-pink-100",
-    indigo: "bg-indigo-50 text-indigo-700 border-indigo-100",
-  };
-
-  return (
-    <div className={`rounded-xl p-3 border ${colorMap[color] || colorMap.blue}`}>
-      <div className="flex items-center gap-1.5 mb-1">
-        {icon}
-        <span className="text-xs font-medium opacity-80">{label}</span>
-      </div>
-      <p className="text-lg font-bold">{value}</p>
     </div>
   );
 }

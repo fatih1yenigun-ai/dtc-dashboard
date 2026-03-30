@@ -84,7 +84,7 @@ export default function HeroSection() {
       </nav>
 
       {/* Hero content */}
-      <div className="relative pt-24 pb-0 md:pt-28 md:pb-0 px-6">
+      <div className="relative mt-28 md:mt-36 px-6">
         {/* Purple radial glow behind text */}
         <div
           className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] pointer-events-none"

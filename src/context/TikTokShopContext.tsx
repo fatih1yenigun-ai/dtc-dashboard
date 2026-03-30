@@ -80,6 +80,8 @@ interface TikTokShopContextType extends TTSState {
   setPageSize: (size: number) => void;
   setSortBy: (sortBy: number) => void;
   setSortKey: (sortKey: string) => void;
+  selectedProduct: TTSProduct | null;
+  setSelectedProduct: (p: TTSProduct | null) => void;
 }
 
 const TikTokShopContext = createContext<TikTokShopContextType | null>(null);
@@ -174,6 +176,7 @@ export function TikTokShopProvider({ children }: { children: ReactNode }) {
     sortBy: 999,
     sortKey: "gmv",
   });
+  const [selectedProduct, setSelectedProduct] = useState<TTSProduct | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const lastSearchRef = useRef<{
     keyword: string;
@@ -311,6 +314,8 @@ export function TikTokShopProvider({ children }: { children: ReactNode }) {
         setPageSize,
         setSortBy,
         setSortKey,
+        selectedProduct,
+        setSelectedProduct,
       }}
     >
       {children}
