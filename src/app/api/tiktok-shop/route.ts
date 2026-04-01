@@ -48,16 +48,26 @@ function buildHeaders(token: string): Record<string, string> {
   };
 }
 
+interface VideoFilters {
+  country?: string[];
+  language?: string[];
+  ad_time?: number;
+  audience_age?: number[];
+  audience_gender?: number[];
+  interest?: string;
+}
+
 async function searchVideos(
   token: string,
   keyword: string,
   page: number,
   pageSize: number,
-  sortBy: number = 999
+  sortBy: number = 999,
+  filters?: VideoFilters
 ) {
   const url =
     "https://www.pipiads.com/v3/api/search4/at/video/search-tiktok-shop";
-  const body = {
+  const body: Record<string, unknown> = {
     is_participle: false,
     search_type: 1,
     extend_keywords: [{ type: 1, keyword }],
@@ -66,6 +76,22 @@ async function searchVideos(
     current_page: page,
     page_size: pageSize,
   };
+
+  if (filters?.country?.length) body.fetch_region = filters.country;
+  if (filters?.language?.length) body.language = filters.language;
+  // ad_time: number of days to look back — convert to timestamp range
+  if (filters?.ad_time && filters.ad_time > 0) {
+    const now = Math.floor(Date.now() / 1000);
+    const start = now - filters.ad_time * 86400;
+    body.ad_time = filters.ad_time;
+    body.ad_create_time_start = start;
+    body.ad_create_time_end = now;
+  }
+  if (filters?.audience_age?.length) body.audience_age = filters.audience_age;
+  if (filters?.audience_gender?.length) body.audience_gender = filters.audience_gender;
+  if (filters?.interest) body.interest = filters.interest;
+
+  console.log("[TTS Video Search] Request body:", JSON.stringify(body));
 
   const res = await fetch(url, {
     method: "POST",
@@ -86,7 +112,13 @@ async function searchVideos(
     return retryRes.json();
   }
 
-  return res.json();
+  const json = await res.json();
+  const firstItem = json?.result?.data?.[0];
+  if (firstItem) {
+    console.log("[TTS Video Search] First result digg_count:", firstItem.digg_count, "play_count:", firstItem.play_count);
+  }
+  console.log("[TTS Video Search] Total results:", json?.result?.total || json?.data?.total || "unknown");
+  return json;
 }
 
 async function searchProducts(
@@ -141,6 +173,7 @@ export async function POST(request: NextRequest) {
       searchMode = "video",
       sortBy = 999,
       sortKey = "gmv",
+      filters,
     } = await request.json();
 
     if (!keyword) {
@@ -158,7 +191,7 @@ export async function POST(request: NextRequest) {
     if (searchMode === "product") {
       data = await searchProducts(token, keyword, page, pageSize, sortKey);
     } else {
-      data = await searchVideos(token, keyword, page, pageSize, sortBy);
+      data = await searchVideos(token, keyword, page, pageSize, sortBy, filters);
     }
 
     // Debug: log if no results

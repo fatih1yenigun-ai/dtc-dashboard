@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Search,
@@ -8,8 +8,6 @@ import {
   ExternalLink,
   Play,
   Save,
-  ChevronLeft,
-  ChevronRight,
   X,
   Clock,
   Share2,
@@ -18,8 +16,10 @@ import {
   ShoppingBag,
 } from "lucide-react";
 import { loadFolders, createFolder, saveBrandsBulk, type BrandData } from "@/lib/supabase";
-import { useTikTokShop, type TTSProduct, type SearchMode } from "@/context/TikTokShopContext";
+import { useTikTokShop } from "@/context/TikTokShopContext";
 import { useAuth } from "@/context/AuthContext";
+import { useVideoSearch, type VideoResult } from "@/hooks/useVideoSearch";
+import { useProductSearch, type ProductResult } from "@/hooks/useProductSearch";
 
 const FLAG: Record<string, string> = {
   US: "\u{1F1FA}\u{1F1F8}", UK: "\u{1F1EC}\u{1F1E7}", GB: "\u{1F1EC}\u{1F1E7}",
@@ -45,17 +45,17 @@ const TAG_COLORS = [
 
 const PRODUCT_SORT_OPTIONS = [
   { value: "gmv", label: "GMV" },
-  { value: "sales_volume", label: "Satışlar" },
-  { value: "video_count", label: "Video Sayısı" },
+  { value: "sales_volume", label: "Satislar" },
+  { value: "video_count", label: "Video Sayisi" },
   { value: "price", label: "Fiyat" },
-  { value: "play_count", label: "Görüntülenme" },
+  { value: "play_count", label: "Goruntulenme" },
 ];
 
 const VIDEO_SORT_OPTIONS = [
+  { value: 6, label: "Begeni" },
   { value: 999, label: "En Populer" },
   { value: 1, label: "En Yeni" },
-  { value: 2, label: "En Cok Izlenen" },
-  { value: 3, label: "En Cok Begenilen" },
+  { value: 4, label: "En Cok Izlenen" },
 ];
 
 function formatCompact(n: number): string {
@@ -74,127 +74,102 @@ function formatDuration(seconds: number): string {
   if (!seconds) return "";
   const m = Math.floor(seconds / 60);
   const s = seconds % 60;
-  return `${m}:${String(s).padStart(2, "0")}`;
+  return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+}
+
+function formatDateRange(adCreateTime: number, putDays: number): string {
+  if (!adCreateTime) return "";
+  const start = new Date(adCreateTime * 1000);
+  const end = putDays > 0 ? new Date(start.getTime() + putDays * 86400000) : new Date();
+  const fmt = (d: Date) => {
+    const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    return `${months[d.getMonth()]} ${String(d.getDate()).padStart(2, "0")} ${d.getFullYear()}`;
+  };
+  return `${fmt(start)}-${fmt(end)}`;
 }
 
 function HotBadge({ value }: { value: number }) {
   if (!value) return null;
-  const colors =
-    value >= 7
-      ? "bg-red-100 text-red-700"
-      : value >= 4
-      ? "bg-orange-100 text-orange-700"
-      : "bg-yellow-100 text-yellow-700";
-  return (
-    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${colors}`}>
-      {"\uD83D\uDD25"} {value}/10
-    </span>
-  );
+  const colors = value >= 7 ? "bg-red-100 text-red-700" : value >= 4 ? "bg-orange-100 text-orange-700" : "bg-yellow-100 text-yellow-700";
+  return <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${colors}`}>{"\uD83D\uDD25"} {value}/10</span>;
 }
 
-function toBrandDataProduct(product: TTSProduct): BrandData {
+function toBrandDataProduct(p: ProductResult): BrandData {
   return {
-    Marka: product.shop_name,
-    "Web Sitesi": product.landing_page,
-    Kategori: product.seller_location,
-    "AOV ($)": product.price_usd,
-    "Ciro ($)": product.gmv_usd,
-    "\u00D6ne \u00C7\u0131kan \u00D6zellik": product.title,
-    "B\u00FCy\u00FCme Y\u00F6ntemi": "TikTok Shop",
-    "Ayl\u0131k Trafik": product.play_count,
-    Kaynak: "PiPiAds",
-    "Video Say\u0131s\u0131": product.video_count,
-    Sat\u0131slar: product.sales_volume,
-    Cover: product.image,
-    "\u00DClke": product.region,
-    "PiPiAds Link": `https://www.pipiads.com/tr/tiktok-shop-product/${product.id}`,
+    Marka: p.shop_name, "Web Sitesi": p.landing_page, Kategori: p.seller_location,
+    "AOV ($)": p.price_usd, "Ciro ($)": p.gmv_usd,
+    "\u00D6ne \u00C7\u0131kan \u00D6zellik": p.title, "B\u00FCy\u00FCme Y\u00F6ntemi": "TikTok Shop",
+    "Ayl\u0131k Trafik": p.play_count, Kaynak: "PiPiAds", "Video Say\u0131s\u0131": p.video_count,
+    Sat\u0131slar: p.sales_volume, Cover: p.image, "\u00DClke": p.region,
+    "PiPiAds Link": `https://www.pipiads.com/tr/tiktok-shop-product/${p.id}`,
   } as BrandData;
 }
 
-function toBrandDataVideo(product: TTSProduct): BrandData {
+function toBrandDataVideo(v: VideoResult): BrandData {
   return {
-    Marka: product.shop_name,
-    "Web Sitesi": product.shop_handle
-      ? `https://www.tiktok.com/@${product.shop_handle}`
-      : "",
-    Kategori: product.category || product.tags?.[0] || "",
-    "\u00D6ne \u00C7\u0131kan \u00D6zellik": product.hook || "",
-    "B\u00FCy\u00FCme Y\u00F6ntemi": "TikTok Shop",
-    "Pazarlama A\u00E7\u0131lar\u0131": product.tags?.join(", ") || "",
-    Kaynak: "PiPiAds",
-    "G\u00F6r\u00FCnt\u00FClenme": product.play_count,
-    Cover: product.cover_image || product.image,
+    Marka: v.shop_name, "Web Sitesi": v.shop_handle ? `https://www.tiktok.com/@${v.shop_handle}` : "",
+    Kategori: v.tags?.[0] || "", "One Cikan Ozellik": v.hook || "",
+    "Buyume Yontemi": "TikTok Shop", "Pazarlama Acilari": v.tags?.join(", ") || "",
+    Kaynak: "PiPiAds", Goruntulenme: v.play_count, Cover: v.cover_image || v.image,
   } as BrandData;
 }
+
+type Mode = "product" | "video";
 
 export default function TTSPage() {
   const router = useRouter();
   const { user } = useAuth();
+  const { setSelectedProduct } = useTikTokShop();
+
+  // Product search
   const {
-    keyword,
-    results,
-    loading,
-    error,
-    page,
-    totalPages,
-    pageSize,
-    sortBy,
-    sortKey,
-    searchMode,
-    search,
-    setKeyword,
-    goToPage,
-    setPageSize,
-    setSortBy,
-    setSortKey,
-    setSearchMode,
-    setSelectedProduct,
-  } = useTikTokShop();
+    products, allCount: productAllCount, loading: productLoading, loadingMore: productLoadingMore,
+    error: productError, hasMore: productHasMore, search: productSearch, resort: productResort,
+    sentinelRef: productSentinelRef,
+  } = useProductSearch();
+
+  // Video search
+  const {
+    videos: videoResults, allCount: videoAllCount, loading: videoLoading, error: videoError,
+    hasMore: videoHasMore, search: videoSearch, sentinelRef: videoSentinelRef, tagAnalytics,
+  } = useVideoSearch();
 
   const [localKeyword, setLocalKeyword] = useState("");
-  const [localMode, setLocalMode] = useState<SearchMode>("product");
+  const [mode, setMode] = useState<Mode>("product");
+  const [productSortKey, setProductSortKey] = useState("gmv");
+  const [videoSortBy, setVideoSortBy] = useState(6);
+
+  // Save modal
   const [showSaveModal, setShowSaveModal] = useState(false);
-  const [saveProduct, setSaveProduct] = useState<TTSProduct | null>(null);
+  const [saveProduct, setSaveProduct] = useState<ProductResult | null>(null);
+  const [saveVideo, setSaveVideo] = useState<VideoResult | null>(null);
   const [folders, setFolders] = useState<string[]>([]);
   const [selectedFolder, setSelectedFolder] = useState("");
   const [newFolderName, setNewFolderName] = useState("");
   const [saveMsg, setSaveMsg] = useState("");
 
-  useEffect(() => {
-    if (keyword) setLocalKeyword(keyword);
-  }, [keyword]);
-
-  useEffect(() => {
-    setLocalMode(searchMode);
-  }, [searchMode]);
+  const loading = mode === "product" ? productLoading : videoLoading;
+  const error = mode === "product" ? productError : videoError;
 
   function handleSearch() {
     if (!localKeyword.trim()) return;
-    doSearch(sortKey);
-  }
-
-  function doSearch(sk: string) {
-    if (!localKeyword.trim()) return;
-    setKeyword(localKeyword);
-    setSearchMode(localMode);
-    if (localMode === "product") {
-      search(localKeyword, "product", pageSize, 1, sortBy, sk);
+    if (mode === "product") {
+      productSearch(localKeyword.trim(), productSortKey);
     } else {
-      search(localKeyword, "video", pageSize, 1, sortBy, sk);
+      videoSearch(localKeyword.trim(), videoSortBy, {});
     }
   }
 
-  async function openSaveModal(product: TTSProduct) {
-    setSaveProduct(product);
+  async function openSaveModal(product?: ProductResult, video?: VideoResult) {
+    setSaveProduct(product || null);
+    setSaveVideo(video || null);
     setShowSaveModal(true);
     setSaveMsg("");
     try {
       const f = await loadFolders(user?.userId);
       setFolders(f);
       if (f.length > 0 && !selectedFolder) setSelectedFolder(f[0]);
-    } catch {
-      setFolders(["Genel"]);
-    }
+    } catch { setFolders(["Genel"]); }
   }
 
   async function handleCreateFolder() {
@@ -210,23 +185,15 @@ export default function TTSPage() {
 
   async function handleSave() {
     const folder = newFolderName.trim() || selectedFolder;
-    if (!folder || !saveProduct) return;
-
+    if (!folder) return;
     try {
       if (newFolderName.trim()) await createFolder(newFolderName.trim(), user?.userId);
-      const brandData = searchMode === "product"
-        ? toBrandDataProduct(saveProduct)
-        : toBrandDataVideo(saveProduct);
+      const brandData = saveProduct ? toBrandDataProduct(saveProduct) : saveVideo ? toBrandDataVideo(saveVideo) : null;
+      if (!brandData) return;
       const added = await saveBrandsBulk(folder, [brandData], user?.userId);
       setSaveMsg(`${added} marka kaydedildi!`);
-      setTimeout(() => {
-        setShowSaveModal(false);
-        setSaveMsg("");
-        setSaveProduct(null);
-      }, 1200);
-    } catch {
-      setSaveMsg("Hata olustu!");
-    }
+      setTimeout(() => { setShowSaveModal(false); setSaveMsg(""); setSaveProduct(null); setSaveVideo(null); }, 1200);
+    } catch { setSaveMsg("Hata olustu!"); }
   }
 
   return (
@@ -234,9 +201,7 @@ export default function TTSPage() {
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-gray-900">TikTok Shop</h1>
-        <p className="text-gray-500 mt-1">
-          PiPiAds ile TikTok Shop&apos;ta trend urunleri kesfet
-        </p>
+        <p className="text-gray-500 mt-1">PiPiAds ile TikTok Shop&apos;ta trend urunleri kesfet</p>
       </div>
 
       {/* Search Bar */}
@@ -244,17 +209,11 @@ export default function TTSPage() {
         <div className="flex flex-col md:flex-row gap-4">
           {/* Keyword */}
           <div className="flex-1">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Anahtar Kelime
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Anahtar Kelime</label>
             <div className="relative">
-              <Search
-                size={18}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-              />
+              <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
               <input
-                type="text"
-                value={localKeyword}
+                type="text" value={localKeyword}
                 onChange={(e) => setLocalKeyword(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleSearch()}
                 placeholder="ornegin: led lamba, cilt bakim, kitchen gadget..."
@@ -263,30 +222,14 @@ export default function TTSPage() {
             </div>
           </div>
 
-          {/* Search Mode Toggle */}
+          {/* Mode Toggle */}
           <div className="w-48">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Arama Modu
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Arama Modu</label>
             <div className="flex rounded-lg border border-gray-200 overflow-hidden">
-              <button
-                onClick={() => setLocalMode("product")}
-                className={`flex-1 py-2.5 text-sm font-medium transition-colors ${
-                  localMode === "product"
-                    ? "bg-[#667eea] text-white"
-                    : "bg-white text-gray-600 hover:bg-gray-50"
-                }`}
-              >
+              <button onClick={() => setMode("product")} className={`flex-1 py-2.5 text-sm font-medium transition-colors ${mode === "product" ? "bg-[#667eea] text-white" : "bg-white text-gray-600 hover:bg-gray-50"}`}>
                 Urunler
               </button>
-              <button
-                onClick={() => setLocalMode("video")}
-                className={`flex-1 py-2.5 text-sm font-medium transition-colors ${
-                  localMode === "video"
-                    ? "bg-[#667eea] text-white"
-                    : "bg-white text-gray-600 hover:bg-gray-50"
-                }`}
-              >
+              <button onClick={() => setMode("video")} className={`flex-1 py-2.5 text-sm font-medium transition-colors ${mode === "video" ? "bg-[#667eea] text-white" : "bg-white text-gray-600 hover:bg-gray-50"}`}>
                 Videolar
               </button>
             </div>
@@ -294,62 +237,37 @@ export default function TTSPage() {
 
           {/* Sort */}
           <div className="w-44">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Siralama
-            </label>
-            {localMode === "product" ? (
+            <label className="block text-sm font-medium text-gray-700 mb-1">Siralama</label>
+            {mode === "product" ? (
               <select
-                value={sortKey}
-                onChange={(e) => setSortKey(e.target.value)}
+                value={productSortKey}
+                onChange={(e) => {
+                  setProductSortKey(e.target.value);
+                  productResort(e.target.value);
+                }}
                 className="w-full py-2.5 px-3 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#667eea]/30"
               >
                 {PRODUCT_SORT_OPTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
                 ))}
               </select>
             ) : (
               <select
-                value={sortBy}
-                onChange={(e) => setSortBy(Number(e.target.value))}
+                value={videoSortBy}
+                onChange={(e) => setVideoSortBy(Number(e.target.value))}
                 className="w-full py-2.5 px-3 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#667eea]/30"
               >
                 {VIDEO_SORT_OPTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
                 ))}
               </select>
             )}
           </div>
 
-          {/* Page Size */}
-          <div className="w-24">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Sayfa
-            </label>
-            <select
-              value={pageSize}
-              onChange={(e) => setPageSize(Number(e.target.value))}
-              className="w-full py-2.5 px-3 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#667eea]/30"
-            >
-              <option value={20}>20</option>
-              <option value={50}>50</option>
-            </select>
-          </div>
-
           <div className="flex items-end">
-            <button
-              onClick={handleSearch}
-              disabled={loading || !localKeyword.trim()}
-              className="gradient-accent text-white px-6 py-2.5 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center gap-2"
-            >
-              {loading ? (
-                <Loader2 size={16} className="animate-spin" />
-              ) : (
-                <Search size={16} />
-              )}
+            <button onClick={handleSearch} disabled={loading || !localKeyword.trim()}
+              className="gradient-accent text-white px-6 py-2.5 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center gap-2">
+              {loading ? <Loader2 size={16} className="animate-spin" /> : <Search size={16} />}
               Ara
             </button>
           </div>
@@ -357,80 +275,112 @@ export default function TTSPage() {
       </div>
 
       {/* Error */}
-      {error && (
-        <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-6 text-red-700 text-sm">
-          {error}
-        </div>
-      )}
+      {error && <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-6 text-red-700 text-sm">{error}</div>}
 
       {/* Loading */}
       {loading && (
         <div className="py-16 flex flex-col items-center">
           <Loader2 size={32} className="animate-spin text-[#667eea] mb-3" />
-          <p className="text-gray-500 font-medium">PiPiAds&apos;ten sonuclar aliniyor...</p>
+          <p className="text-gray-500 font-medium">
+            {mode === "video" ? "500 video yukleniyor..." : "PiPiAds'ten urunler aliniyor..."}
+          </p>
         </div>
       )}
 
-      {/* Results */}
-      {results.length > 0 && !loading && (
+      {/* ===== PRODUCT RESULTS ===== */}
+      {mode === "product" && !productLoading && products.length > 0 && (
         <div>
-          <div className="flex items-center justify-between mb-4">
-            <p className="text-sm text-gray-500">
-              {results.length} sonuc bulundu (Sayfa {page}/{totalPages})
-            </p>
-          </div>
+          <p className="text-sm text-gray-500 mb-4">{productAllCount} urun yuklendi{productHasMore ? " (devam ediyor...)" : ""}</p>
 
-          {searchMode === "product" ? (
-            <ProductTable
-              results={results}
-              onSave={openSaveModal}
-              onDetail={(p: TTSProduct) => {
-                setSelectedProduct(p);
-                try { sessionStorage.setItem(`tts_product_${p.id}`, JSON.stringify(p)); } catch { /* ignore */ }
-                router.push(`/tts/${p.id}`);
-              }}
-              sortKey={sortKey}
-              onSort={(key: string) => { setSortKey(key); doSearch(key); }}
-            />
-          ) : (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {results.map((product, i) => (
-                <VideoCard
-                  key={i}
-                  product={product}
-                  onSave={() => openSaveModal(product)}
-                />
-              ))}
+          <ProductTable
+            results={products}
+            onSave={(p) => openSaveModal(p)}
+            onDetail={(p) => {
+              // Bridge to context for detail page
+              setSelectedProduct({
+                ...p, image_list: p.image_list || [], like_count: p.like_count || 0,
+                share_count: p.share_count || 0, comment_count: p.comment_count || 0,
+                person_count: p.person_count || 0, commission_rate: p.commission_rate || 0,
+                found_time: p.found_time || 0, put_days: p.put_days || 0,
+              });
+              try { sessionStorage.setItem(`tts_product_${p.id}`, JSON.stringify(p)); } catch { /* ignore */ }
+              router.push(`/tts/${p.id}`);
+            }}
+            sortKey={productSortKey}
+            onSort={(key) => { setProductSortKey(key); productResort(key); }}
+          />
+
+          {productHasMore && !productLoadingMore && <div key={products.length} ref={productSentinelRef} className="py-8" />}
+          {productLoadingMore && (
+            <div className="py-8 flex justify-center">
+              <div className="flex items-center gap-2 text-gray-400">
+                <Loader2 size={20} className="animate-spin" />
+                <span className="text-sm">Daha fazla urun yukleniyor...</span>
+              </div>
+            </div>
+          )}
+          {!productHasMore && products.length > 0 && <p className="text-center text-sm text-gray-400 py-8">Tum urunler yuklendi ({productAllCount} urun)</p>}
+        </div>
+      )}
+
+      {/* ===== VIDEO RESULTS ===== */}
+      {mode === "video" && !videoLoading && (
+        <>
+          {/* Tag Analytics */}
+          {videoAllCount > 0 && tagAnalytics.length > 0 && (
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 mb-6">
+              <h3 className="text-sm font-semibold text-gray-900 mb-1">Pazarlama Acilari &rarr; Goruntulenme</h3>
+              <p className="text-[11px] text-gray-400 mb-3">{videoAllCount} video analiz edildi</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2 max-h-[320px] overflow-y-auto">
+                {tagAnalytics.slice(0, 20).map((t, i) => {
+                  const maxViews = tagAnalytics[0]?.avgViews || 1;
+                  const pct = Math.round((t.avgViews / maxViews) * 100);
+                  return (
+                    <div key={t.tag} className="flex items-center gap-3">
+                      <span className="text-xs text-gray-400 w-5 text-right">{i + 1}</span>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between mb-0.5">
+                          <span className="text-xs font-medium text-gray-700 truncate">#{t.tag}</span>
+                          <span className="text-xs text-gray-500 ml-2 flex-shrink-0">{formatCompact(t.avgViews)} ort.</span>
+                        </div>
+                        <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                          <div className="h-full rounded-full bg-gradient-to-r from-[#667eea] to-[#764ba2]" style={{ width: `${pct}%` }} />
+                        </div>
+                        <div className="flex justify-between mt-0.5">
+                          <span className="text-[10px] text-gray-400">{t.count} video</span>
+                          <span className="text-[10px] text-gray-400">{formatCompact(t.totalViews)} toplam</span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           )}
 
-          {/* Pagination */}
-          <div className="flex items-center justify-center gap-4 mt-8">
-            <button
-              onClick={() => goToPage(page - 1)}
-              disabled={page <= 1}
-              className="flex items-center gap-1 px-4 py-2 rounded-lg border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              <ChevronLeft size={16} />
-              Onceki
-            </button>
-            <span className="text-sm text-gray-500">
-              {page} / {totalPages}
-            </span>
-            <button
-              onClick={() => goToPage(page + 1)}
-              disabled={page >= totalPages}
-              className="flex items-center gap-1 px-4 py-2 rounded-lg border border-gray-200 text-sm font-medium text-gray-600 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              Sonraki
-              <ChevronRight size={16} />
-            </button>
-          </div>
-        </div>
+          {/* Video Grid */}
+          {videoResults.length > 0 && (
+            <div>
+              <p className="text-sm text-gray-500 mb-4">{videoResults.length} / {videoAllCount} video gosteriliyor</p>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {videoResults.map((video) => (
+                  <VideoCard key={video.id} video={video} onSave={() => openSaveModal(undefined, video)} />
+                ))}
+              </div>
+              {videoHasMore && <div key={videoResults.length} ref={videoSentinelRef} className="py-8" />}
+              {!videoHasMore && videoResults.length > 0 && (
+                <p className="text-center text-sm text-gray-400 py-8">Tum sonuclar yuklendi ({videoAllCount} video)</p>
+              )}
+            </div>
+          )}
+        </>
       )}
 
       {/* Empty state */}
-      {!loading && results.length === 0 && !error && keyword && (
+      {!loading && (
+        (mode === "product" && products.length === 0 && !productError && productAllCount === 0 && localKeyword && !productLoading) ||
+        (mode === "video" && videoResults.length === 0 && !videoError && videoAllCount === 0 && localKeyword && !videoLoading)
+      ) && (
         <div className="text-center py-16 text-gray-400">
           <p className="text-lg">Sonuc bulunamadi</p>
           <p className="text-sm mt-1">Farkli bir anahtar kelime deneyin</p>
@@ -438,77 +388,31 @@ export default function TTSPage() {
       )}
 
       {/* Save Modal */}
-      {showSaveModal && saveProduct && (
+      {showSaveModal && (saveProduct || saveVideo) && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl p-6 w-full max-w-md mx-4 shadow-2xl">
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-semibold text-gray-900">Klasore Kaydet</h3>
-              <button
-                onClick={() => {
-                  setShowSaveModal(false);
-                  setSaveProduct(null);
-                }}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <X size={20} />
-              </button>
+              <button onClick={() => { setShowSaveModal(false); setSaveProduct(null); setSaveVideo(null); }} className="text-gray-400 hover:text-gray-600"><X size={20} /></button>
             </div>
-
-            <p className="text-sm text-gray-500 mb-4">
-              &quot;{saveProduct.title || saveProduct.product_name || saveProduct.shop_name}&quot;
-            </p>
-
-            {/* Existing folders */}
+            <p className="text-sm text-gray-500 mb-4">&quot;{saveProduct?.title || saveProduct?.shop_name || saveVideo?.hook || saveVideo?.title || saveVideo?.shop_name}&quot;</p>
             {folders.length > 0 && (
               <div className="mb-4">
-                <label className="block text-xs font-medium text-gray-500 mb-1">
-                  Mevcut Klasor
-                </label>
-                <select
-                  value={selectedFolder}
-                  onChange={(e) => setSelectedFolder(e.target.value)}
-                  className="w-full py-2 px-3 border border-gray-200 rounded-lg text-sm"
-                >
-                  {folders.map((f) => (
-                    <option key={f} value={f}>
-                      {f}
-                    </option>
-                  ))}
+                <label className="block text-xs font-medium text-gray-500 mb-1">Mevcut Klasor</label>
+                <select value={selectedFolder} onChange={(e) => setSelectedFolder(e.target.value)} className="w-full py-2 px-3 border border-gray-200 rounded-lg text-sm">
+                  {folders.map((f) => <option key={f} value={f}>{f}</option>)}
                 </select>
               </div>
             )}
-
-            {/* New folder */}
             <div className="mb-4">
-              <label className="block text-xs font-medium text-gray-500 mb-1">
-                veya Yeni Klasor
-              </label>
+              <label className="block text-xs font-medium text-gray-500 mb-1">veya Yeni Klasor</label>
               <div className="flex gap-2">
-                <input
-                  value={newFolderName}
-                  onChange={(e) => setNewFolderName(e.target.value)}
-                  placeholder="Yeni klasor adi..."
-                  className="flex-1 py-2 px-3 border border-gray-200 rounded-lg text-sm"
-                />
-                <button
-                  onClick={handleCreateFolder}
-                  className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm hover:bg-gray-200"
-                >
-                  Olustur
-                </button>
+                <input value={newFolderName} onChange={(e) => setNewFolderName(e.target.value)} placeholder="Yeni klasor adi..." className="flex-1 py-2 px-3 border border-gray-200 rounded-lg text-sm" />
+                <button onClick={handleCreateFolder} className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm hover:bg-gray-200">Olustur</button>
               </div>
             </div>
-
-            {saveMsg && (
-              <p className="text-sm text-green-600 mb-3">{saveMsg}</p>
-            )}
-
-            <button
-              onClick={handleSave}
-              className="w-full gradient-accent text-white py-2.5 rounded-lg text-sm font-medium hover:opacity-90"
-            >
-              Kaydet
-            </button>
+            {saveMsg && <p className="text-sm text-green-600 mb-3">{saveMsg}</p>}
+            <button onClick={handleSave} className="w-full gradient-accent text-white py-2.5 rounded-lg text-sm font-medium hover:opacity-90">Kaydet</button>
           </div>
         </div>
       )}
@@ -516,19 +420,10 @@ export default function TTSPage() {
   );
 }
 
-/* ---- Product Table Component ---- */
-function ProductTable({
-  results,
-  onSave,
-  onDetail,
-  sortKey,
-  onSort,
-}: {
-  results: TTSProduct[];
-  onSave: (p: TTSProduct) => void;
-  onDetail: (p: TTSProduct) => void;
-  sortKey: string;
-  onSort: (key: string) => void;
+/* ---- Product Table ---- */
+function ProductTable({ results, onSave, onDetail, sortKey, onSort }: {
+  results: ProductResult[]; onSave: (p: ProductResult) => void; onDetail: (p: ProductResult) => void;
+  sortKey: string; onSort: (key: string) => void;
 }) {
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
@@ -537,137 +432,70 @@ function ProductTable({
           <thead>
             <tr className="bg-gray-50 border-b border-gray-200">
               <th className="text-left py-3 px-4 font-medium text-gray-500 w-12">#</th>
-              <th className="text-left py-3 px-4 font-medium text-gray-500">Ürün</th>
-              <th className="text-left py-3 px-4 font-medium text-gray-500">Mağaza</th>
-              <th className="text-right py-3 px-4 font-medium text-gray-500 cursor-pointer hover:text-[#667eea] select-none" onClick={() => { onSort("sales_volume"); }}>Satışlar {sortKey === "sales_volume" ? "↓" : ""}</th>
-              <th className="text-right py-3 px-4 font-medium text-gray-500 cursor-pointer hover:text-[#667eea] select-none" onClick={() => { onSort("gmv"); }}>GMV {sortKey === "gmv" ? "↓" : ""}</th>
-              <th className="text-right py-3 px-4 font-medium text-gray-500 cursor-pointer hover:text-[#667eea] select-none" onClick={() => { onSort("price"); }}>Fiyat {sortKey === "price" ? "↓" : ""}</th>
+              <th className="text-left py-3 px-4 font-medium text-gray-500">Urun</th>
+              <th className="text-left py-3 px-4 font-medium text-gray-500">Magaza</th>
+              <th className="text-right py-3 px-4 font-medium text-gray-500 cursor-pointer hover:text-[#667eea] select-none" onClick={() => onSort("sales_volume")}>Satislar {sortKey === "sales_volume" ? "\u2193" : ""}</th>
+              <th className="text-right py-3 px-4 font-medium text-gray-500 cursor-pointer hover:text-[#667eea] select-none" onClick={() => onSort("gmv")}>GMV {sortKey === "gmv" ? "\u2193" : ""}</th>
+              <th className="text-right py-3 px-4 font-medium text-gray-500 cursor-pointer hover:text-[#667eea] select-none" onClick={() => onSort("price")}>Fiyat {sortKey === "price" ? "\u2193" : ""}</th>
               <th className="text-center py-3 px-4 font-medium text-gray-500">Puan</th>
-              <th className="text-right py-3 px-4 font-medium text-gray-500 cursor-pointer hover:text-[#667eea] select-none" onClick={() => { onSort("video_count"); }}>Video {sortKey === "video_count" ? "↓" : ""}</th>
-              <th className="text-right py-3 px-4 font-medium text-gray-500 cursor-pointer hover:text-[#667eea] select-none" onClick={() => { onSort("play_count"); }}>Görüntülenme {sortKey === "play_count" ? "↓" : ""}</th>
-              <th className="text-center py-3 px-4 font-medium text-gray-500">Ülke</th>
+              <th className="text-right py-3 px-4 font-medium text-gray-500 cursor-pointer hover:text-[#667eea] select-none" onClick={() => onSort("video_count")}>Video {sortKey === "video_count" ? "\u2193" : ""}</th>
+              <th className="text-right py-3 px-4 font-medium text-gray-500 cursor-pointer hover:text-[#667eea] select-none" onClick={() => onSort("play_count")}>Goruntulenme {sortKey === "play_count" ? "\u2193" : ""}</th>
+              <th className="text-center py-3 px-4 font-medium text-gray-500">Ulke</th>
               <th className="text-center py-3 px-4 font-medium text-gray-500 w-20">Detay</th>
               <th className="text-center py-3 px-4 font-medium text-gray-500 w-20">Kaydet</th>
             </tr>
           </thead>
           <tbody>
-            {results.map((product, i) => (
-              <tr
-                key={product.id || i}
-                className="border-b border-gray-100 hover:bg-gray-50/50 transition-colors"
-              >
-                {/* Index */}
+            {results.map((p, i) => (
+              <tr key={p.id || i} className="border-b border-gray-100 hover:bg-gray-50/50 transition-colors">
                 <td className="py-3 px-4 text-gray-400 text-xs">{i + 1}</td>
-
-                {/* Product: image + title */}
                 <td className="py-3 px-4">
                   <div className="flex items-center gap-3 min-w-[200px]">
-                    {product.image ? (
+                    {p.image ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={product.image}
-                        alt={product.title}
-                        className="w-12 h-12 rounded-lg object-cover flex-shrink-0 border border-gray-100"
-                      />
+                      <img src={p.image} alt={p.title} className="w-12 h-12 rounded-lg object-cover flex-shrink-0 border border-gray-100" />
                     ) : (
-                      <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0">
-                        <ShoppingBag size={16} className="text-gray-300" />
-                      </div>
+                      <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0"><ShoppingBag size={16} className="text-gray-300" /></div>
                     )}
-                    <button
-                      onClick={() => onDetail(product)}
-                      className="text-sm font-medium text-gray-900 hover:text-[#667eea] line-clamp-2 transition-colors text-left cursor-pointer"
-                      title={product.title}
-                    >
-                      {product.title?.length > 60
-                        ? product.title.substring(0, 60) + "..."
-                        : product.title || "Bilinmeyen"}
-                    </button>
+                    <div className="min-w-0">
+                      <button onClick={() => onDetail(p)} className="text-sm font-medium text-gray-900 hover:text-[#667eea] line-clamp-2 transition-colors text-left cursor-pointer" title={p.title}>
+                        {p.title?.length > 60 ? p.title.substring(0, 60) + "..." : p.title || "Bilinmeyen"}
+                      </button>
+                      {p.titleTr && p.titleTr !== p.title && (
+                        <p className="text-[11px] text-gray-400 line-clamp-1 mt-0.5">{p.titleTr.length > 65 ? p.titleTr.substring(0, 65) + "..." : p.titleTr}</p>
+                      )}
+                      {p.marketingAngle && (
+                        <p className="text-[10px] text-[#667eea] font-medium mt-0.5">{p.marketingAngle}</p>
+                      )}
+                    </div>
                   </div>
                 </td>
-
-                {/* Shop */}
                 <td className="py-3 px-4">
-                  <a
-                    href={`https://www.pipiads.com/tr/tiktok-shop-product/${product.id}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-2 min-w-[120px] hover:text-[#667eea] transition-colors"
-                  >
-                    {product.shop_image ? (
+                  <a href={`https://www.pipiads.com/tr/tiktok-shop-product/${p.id}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 min-w-[120px] hover:text-[#667eea] transition-colors">
+                    {p.shop_image ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={product.shop_image}
-                        alt={product.shop_name}
-                        className="w-6 h-6 rounded-full object-cover flex-shrink-0"
-                      />
-                    ) : (
-                      <div className="w-6 h-6 rounded-full bg-gray-200 flex-shrink-0" />
-                    )}
-                    <span className="text-xs text-gray-600 truncate max-w-[100px]">
-                      {product.shop_name || "-"}
-                    </span>
+                      <img src={p.shop_image} alt={p.shop_name} className="w-6 h-6 rounded-full object-cover flex-shrink-0" />
+                    ) : <div className="w-6 h-6 rounded-full bg-gray-200 flex-shrink-0" />}
+                    <span className="text-xs text-gray-600 truncate max-w-[100px]">{p.shop_name || "-"}</span>
                   </a>
                 </td>
-
-                {/* Sales */}
-                <td className="py-3 px-4 text-right font-medium text-gray-700">
-                  {formatCompact(product.sales_volume)}
-                </td>
-
-                {/* GMV */}
-                <td className="py-3 px-4 text-right font-bold text-emerald-600">
-                  {formatMoney(product.gmv_usd)}
-                </td>
-
-                {/* Price */}
-                <td className="py-3 px-4 text-right text-gray-700">
-                  ${product.price_usd.toFixed(2)}
-                </td>
-
-                {/* Score */}
+                <td className="py-3 px-4 text-right font-medium text-gray-700">{formatCompact(p.sales_volume)}</td>
+                <td className="py-3 px-4 text-right font-bold text-emerald-600">{formatMoney(p.gmv_usd)}</td>
+                <td className="py-3 px-4 text-right text-gray-700">${p.price_usd.toFixed(2)}</td>
                 <td className="py-3 px-4 text-center">
                   <span className="inline-flex items-center gap-0.5 text-xs">
                     <Star size={12} className="text-amber-400 fill-amber-400" />
-                    <span className="text-gray-700">{product.score > 0 ? product.score.toFixed(1) : "-"}</span>
+                    <span className="text-gray-700">{p.score > 0 ? p.score.toFixed(1) : "-"}</span>
                   </span>
                 </td>
-
-                {/* Video count */}
-                <td className="py-3 px-4 text-right text-gray-600">
-                  {formatCompact(product.video_count)}
-                </td>
-
-                {/* Play count */}
-                <td className="py-3 px-4 text-right text-gray-600">
-                  {formatCompact(product.play_count)}
-                </td>
-
-                {/* Region */}
-                <td className="py-3 px-4 text-center text-lg">
-                  {FLAG[product.region?.toUpperCase()] || product.region || "-"}
-                </td>
-
-                {/* Detail button */}
+                <td className="py-3 px-4 text-right text-gray-600">{formatCompact(p.video_count)}</td>
+                <td className="py-3 px-4 text-right text-gray-600">{formatCompact(p.play_count)}</td>
+                <td className="py-3 px-4 text-center text-lg">{FLAG[p.region?.toUpperCase()] || p.region || "-"}</td>
                 <td className="py-3 px-4 text-center">
-                  <button
-                    onClick={() => onDetail(product)}
-                    className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-50 text-gray-500 hover:text-[#667eea] transition-colors"
-                    title="Detay"
-                  >
-                    <Eye size={14} />
-                  </button>
+                  <button onClick={() => onDetail(p)} className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-50 text-gray-500 hover:text-[#667eea] transition-colors" title="Detay"><Eye size={14} /></button>
                 </td>
-
-                {/* Save button */}
                 <td className="py-3 px-4 text-center">
-                  <button
-                    onClick={() => onSave(product)}
-                    className="p-1.5 rounded-lg border border-[#667eea]/30 text-[#667eea] hover:bg-[#667eea]/5 transition-colors"
-                    title="Kaydet"
-                  >
-                    <Save size={14} />
-                  </button>
+                  <button onClick={() => onSave(p)} className="p-1.5 rounded-lg border border-[#667eea]/30 text-[#667eea] hover:bg-[#667eea]/5 transition-colors" title="Kaydet"><Save size={14} /></button>
                 </td>
               </tr>
             ))}
@@ -678,123 +506,62 @@ function ProductTable({
   );
 }
 
-/* ---- Video Card Component (for video mode) ---- */
-function VideoCard({
-  product,
-  onSave,
-}: {
-  product: TTSProduct;
-  onSave: () => void;
-}) {
+/* ---- Video Card ---- */
+function VideoCard({ video, onSave }: { video: VideoResult; onSave: () => void }) {
+  const dateRange = formatDateRange(video.ad_create_time, video.put_days);
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow flex flex-col">
-      {/* Cover Image */}
       <div className="relative aspect-[9/16] bg-gray-100 flex-shrink-0">
-        {(product.cover_image || product.image) ? (
+        {video.cover_image || video.image ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={product.cover_image || product.image}
-            alt={product.hook || product.product_name || product.title}
-            className="w-full h-full object-cover"
-          />
+          <img src={video.cover_image || video.image} alt={video.hook || video.title} className="w-full h-full object-cover" loading="lazy" />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-gray-300">
-            <Play size={48} />
-          </div>
+          <div className="w-full h-full flex items-center justify-center text-gray-300"><Play size={48} /></div>
         )}
-        {/* Play overlay */}
-        {product.video_url && (
-          <a
-            href={product.video_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 hover:opacity-100 transition-opacity"
-          >
-            <div className="w-14 h-14 rounded-full bg-white/90 flex items-center justify-center">
-              <Play size={24} className="text-gray-900 ml-1" />
-            </div>
+        {video.video_url && (
+          <a href={video.video_url} target="_blank" rel="noopener noreferrer" className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 hover:opacity-100 transition-opacity">
+            <div className="w-14 h-14 rounded-full bg-white/90 flex items-center justify-center"><Play size={24} className="text-gray-900 ml-1" /></div>
           </a>
         )}
-        {/* Top left: Region flag */}
-        {product.region && (
-          <div className="absolute top-2 left-2 text-lg drop-shadow">
-            {FLAG[product.region.toUpperCase()] || product.region}
-          </div>
-        )}
-        {/* Top right: Hot badge */}
-        {(product.hot_value || 0) > 0 && (
-          <div className="absolute top-2 right-2">
-            <HotBadge value={product.hot_value || 0} />
-          </div>
-        )}
-        {/* Bottom left: Duration badge */}
-        {(product.duration || 0) > 0 && (
+        {video.duration > 0 && (
           <div className="absolute bottom-2 left-2">
-            <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-black/60 text-white flex items-center gap-1">
-              <Clock size={10} />
-              {formatDuration(product.duration || 0)}
-            </span>
+            <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-black/60 text-white flex items-center gap-1"><Clock size={10} />{formatDuration(video.duration)}</span>
           </div>
         )}
+        {video.region && <div className="absolute top-2 left-2 text-lg drop-shadow">{FLAG[video.region.toUpperCase()] || video.region}</div>}
+        {video.hot_value > 0 && <div className="absolute top-2 right-2"><HotBadge value={video.hot_value} /></div>}
       </div>
-
-      {/* Content */}
       <div className="p-3 flex flex-col flex-1">
-        {/* Hook / Product name */}
-        <p className="text-sm font-semibold text-gray-900 line-clamp-2 mb-1.5 leading-snug">
-          {product.hook || product.product_name || product.title || "Bilinmeyen"}
-        </p>
-
-        {/* Shop info */}
-        <div className="mb-2">
-          <p className="text-xs text-gray-500 truncate">
-            {product.shop_name || "Bilinmeyen"}
-          </p>
-          {product.shop_handle && (
-            <a
-              href={`https://www.tiktok.com/@${product.shop_handle}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-xs text-[#667eea] hover:underline flex items-center gap-1 mt-0.5"
-            >
-              @{product.shop_handle}
-              <ExternalLink size={10} />
-            </a>
-          )}
+        {dateRange && <p className="text-[10px] text-gray-400 mb-1">{dateRange}</p>}
+        <div className="grid grid-cols-3 gap-1 mb-2">
+          <div className="text-center"><p className="text-sm font-bold text-gray-900">{formatCompact(video.play_count)}</p><p className="text-[10px] text-gray-400">Gosterim</p></div>
+          <div className="text-center"><p className="text-sm font-bold text-gray-900">{video.put_days || 0}</p><p className="text-[10px] text-gray-400">Sure</p></div>
+          <div className="text-center"><p className="text-sm font-bold text-gray-900">{formatCompact(video.like_count)}</p><p className="text-[10px] text-gray-400">Begen</p></div>
         </div>
-
-        {/* Stats row */}
-        <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-[11px] text-gray-500 mb-2">
-          <span>{"\u25B6\uFE0F"} {formatCompact(product.play_count)}</span>
-          <span>{"\u2764\uFE0F"} {formatCompact(product.like_count)}</span>
-          <span>{"\uD83D\uDCAC"} {formatCompact(product.comment_count)}</span>
-          <span className="flex items-center gap-0.5"><Share2 size={10} /> {formatCompact(product.share_count)}</span>
-        </div>
-
-        {/* Tags as colorful pills */}
-        {product.tags && product.tags.length > 0 && (
+        <p className="text-xs text-gray-700 line-clamp-2 mb-1.5 leading-snug">{video.hook || video.title || ""}</p>
+        {video.tags && video.tags.length > 0 && (
           <div className="flex flex-wrap gap-1 mb-2">
-            {product.tags.slice(0, 4).map((tag, i) => (
-              <span
-                key={i}
-                className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${TAG_COLORS[i % TAG_COLORS.length]}`}
-              >
-                {tag}
-              </span>
+            {video.tags.slice(0, 3).map((tag, i) => (
+              <span key={i} className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${TAG_COLORS[i % TAG_COLORS.length]}`}>{tag}</span>
             ))}
           </div>
         )}
-
-        {/* Spacer */}
         <div className="flex-1" />
-
-        {/* Save button */}
-        <button
-          onClick={onSave}
-          className="w-full mt-2 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border border-[#667eea]/30 text-[#667eea] text-xs font-medium hover:bg-[#667eea]/5 transition-colors"
-        >
-          <Save size={12} />
-          Kaydet
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-1.5 min-w-0">
+            <span className="text-xs font-medium text-gray-700 truncate">{video.shop_name || "Bilinmeyen"}</span>
+            {video.shop_handle && (
+              <a href={`https://www.tiktok.com/@${video.shop_handle}`} target="_blank" rel="noopener noreferrer" className="text-[10px] text-[#667eea] hover:underline flex items-center gap-0.5 flex-shrink-0"><ExternalLink size={8} /></a>
+            )}
+          </div>
+          {video.region && <span className="text-xs">{FLAG[video.region.toUpperCase()] || ""}</span>}
+        </div>
+        <div className="grid grid-cols-2 gap-x-3 text-[10px] text-gray-400 mb-2">
+          <span>{"\uD83D\uDCAC"} {formatCompact(video.comment_count)}</span>
+          <span className="flex items-center gap-0.5"><Share2 size={9} /> {formatCompact(video.share_count)}</span>
+        </div>
+        <button onClick={onSave} className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border border-[#667eea]/30 text-[#667eea] text-xs font-medium hover:bg-[#667eea]/5 transition-colors">
+          <Save size={12} />Kaydet
         </button>
       </div>
     </div>
