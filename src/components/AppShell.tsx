@@ -9,6 +9,7 @@ import FloatingChat from "@/components/FloatingChat";
 import { ResearchProvider } from "@/context/ResearchContext";
 import { TikTokShopProvider } from "@/context/TikTokShopContext";
 import { AmazonProvider } from "@/context/AmazonContext";
+import { MetaAdsProvider } from "@/context/MetaAdsContext";
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -41,6 +42,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     <ResearchProvider>
       <TikTokShopProvider>
         <AmazonProvider>
+          <MetaAdsProvider>
           <div className="flex min-h-screen">
             <Sidebar />
             <main className="flex-1 min-h-screen bg-[#f8f9fa] w-0">
@@ -48,6 +50,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             </main>
             <FloatingChat />
           </div>
+        </MetaAdsProvider>
         </AmazonProvider>
       </TikTokShopProvider>
     </ResearchProvider>

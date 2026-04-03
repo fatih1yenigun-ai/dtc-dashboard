@@ -17,6 +17,7 @@ import {
   LogOut,
   Store,
   Layers,
+  Megaphone,
 } from "lucide-react";
 import { loadFolders, getAllSavedCount } from "@/lib/supabase";
 import { useAuth } from "@/context/AuthContext";
@@ -24,6 +25,7 @@ import { useAuth } from "@/context/AuthContext";
 const navItems = [
   { href: "/storeleads", label: "Website", icon: Store },
   { href: "/tts", label: "TikTok Shop", icon: ShoppingBag },
+  { href: "/meta-ads", label: "Meta Ad Library", icon: Megaphone },
   { href: "/amazon", label: "Amazon Arastirma", icon: ShoppingCart },
   { href: "/kombine", label: "Kombine Aratıcı", icon: Layers },
   { href: "/saved", label: "Kaydedilenler", icon: Bookmark },
