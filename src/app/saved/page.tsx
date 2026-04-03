@@ -14,6 +14,9 @@ import {
   Eye,
   Link,
   Loader2,
+  ShoppingCart,
+  ShoppingBag,
+  Search,
 } from "lucide-react";
 import {
   loadFolders,
@@ -117,6 +120,39 @@ function getBrandConversion(brand: SavedBrand): number | null {
 
 function getBrandMarketingAngles(brand: SavedBrand): string {
   return (brand.brand_data?.["Pazarlama A\u00e7\u0131lar\u0131"] as string) || "";
+}
+
+function getBrandSource(brand: SavedBrand): string {
+  const d = brand.brand_data;
+  const kaynak = (d?.Kaynak as string) || "";
+  if (kaynak === "Amazon") return "Amazon";
+  if (kaynak === "PiPiAds" || (d?.["Büyüme Yöntemi"] as string)?.includes("TikTok")) return "TikTok";
+  return "Research";
+}
+
+function SourceBadge({ source }: { source: string }) {
+  if (source === "Amazon") {
+    return (
+      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-[#FF9900]/10 text-[#FF9900] text-[10px] font-bold">
+        <ShoppingCart size={10} />
+        Amazon
+      </span>
+    );
+  }
+  if (source === "TikTok") {
+    return (
+      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-black/5 text-gray-800 text-[10px] font-bold">
+        <ShoppingBag size={10} />
+        TikTok
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-[#667eea]/10 text-[#667eea] text-[10px] font-bold">
+      <Search size={10} />
+      Research
+    </span>
+  );
 }
 
 type SortKey = "revenue" | "traffic" | "tqs" | "aov" | "founded";
@@ -554,6 +590,7 @@ export default function SavedPage() {
             const angles = getBrandMarketingAngles(brand);
             const isSelected = selectedBrands.has(brand.id);
             const websiteClean = website.replace(/^https?:\/\//, "");
+            const source = getBrandSource(brand);
 
             return (
               <div
@@ -564,7 +601,7 @@ export default function SavedPage() {
                     : "border-gray-200"
                 }`}
               >
-                {/* Top: checkbox + name + flag */}
+                {/* Top: checkbox + name + source + flag */}
                 <div className="flex items-start justify-between mb-1">
                   <div className="flex items-center gap-2 min-w-0">
                     <button
@@ -580,6 +617,7 @@ export default function SavedPage() {
                     <span className="text-lg font-bold text-gray-900 truncate">
                       {name}
                     </span>
+                    <SourceBadge source={source} />
                   </div>
                   {country && (
                     <span className="text-base flex-shrink-0 ml-2">

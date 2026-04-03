@@ -100,13 +100,20 @@ function StatCard({ icon: Icon, label, value, sub }: {
   );
 }
 
-function ProductRow({ product, rank }: { product: AmazonProduct; rank: number }) {
+function ProductRow({ product, rank, selected, onToggle }: { product: AmazonProduct; rank: number; selected?: boolean; onToggle?: () => void }) {
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm hover:shadow-md transition-shadow">
+    <div className={`bg-white rounded-xl border p-4 shadow-sm hover:shadow-md transition-shadow ${selected ? "ring-2 ring-[#667eea] border-[#667eea]/30 bg-[#667eea]/5" : "border-gray-200"}`}>
       <div className="flex gap-4">
-        {/* Rank */}
-        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
-          <span className="text-xs font-bold text-gray-500">#{rank}</span>
+        {/* Select + Rank */}
+        <div className="flex flex-col items-center gap-1 flex-shrink-0">
+          {onToggle && (
+            <button onClick={onToggle} className="text-gray-400 hover:text-gray-600">
+              {selected ? <CheckSquare size={16} className="text-[#667eea]" /> : <Square size={16} />}
+            </button>
+          )}
+          <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
+            <span className="text-xs font-bold text-gray-500">#{rank}</span>
+          </div>
         </div>
 
         {/* Image */}
@@ -503,33 +510,57 @@ export default function AmazonPage() {
                 <StatCard icon={BarChart3} label="Toplam Pazar" value={formatMoney(totalRevenue)} sub="aylik tahmini" />
               </div>
 
-              {/* Sort + export */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-gray-500">Sirala:</span>
-                  <select
-                    value={sortKey}
-                    onChange={(e) => setSortKey(e.target.value as SortKey)}
-                    className="px-3 py-1.5 rounded-lg border border-gray-300 text-xs focus:outline-none focus:ring-2 focus:ring-[#667eea]/30"
+              {/* Sort + select + export + save */}
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={toggleAll}
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
                   >
-                    {SORT_OPTIONS.map((o) => (
-                      <option key={o.value} value={o.value}>{o.label}</option>
-                    ))}
-                  </select>
+                    {selectedProducts.size === results.length ? <CheckSquare size={14} className="text-[#667eea]" /> : <Square size={14} />}
+                    {selectedProducts.size > 0 ? `${selectedProducts.size} secili` : "Tumunu Sec"}
+                  </button>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-gray-500">Sirala:</span>
+                    <select
+                      value={sortKey}
+                      onChange={(e) => setSortKey(e.target.value as SortKey)}
+                      className="px-3 py-1.5 rounded-lg border border-gray-300 text-xs focus:outline-none focus:ring-2 focus:ring-[#667eea]/30"
+                    >
+                      {SORT_OPTIONS.map((o) => (
+                        <option key={o.value} value={o.value}>{o.label}</option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
-                <button
-                  onClick={() => downloadCSV(sortedResults, keyword)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                >
-                  <Download size={14} />
-                  CSV Indir
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={openSaveModal}
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-[#667eea] rounded-lg hover:bg-[#5a6fd6] transition-colors"
+                  >
+                    <Save size={14} />
+                    {selectedProducts.size > 0 ? `${selectedProducts.size} Urun Kaydet` : "Tumunu Kaydet"}
+                  </button>
+                  <button
+                    onClick={() => downloadCSV(sortedResults, keyword)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                  >
+                    <Download size={14} />
+                    CSV
+                  </button>
+                </div>
               </div>
 
               {/* Product list */}
               <div className="space-y-3">
                 {sortedResults.map((product, i) => (
-                  <ProductRow key={product.asin || i} product={product} rank={i + 1} />
+                  <ProductRow
+                    key={product.asin || i}
+                    product={product}
+                    rank={i + 1}
+                    selected={selectedProducts.has(product.asin || product.title)}
+                    onToggle={() => toggleProduct(product.asin || product.title)}
+                  />
                 ))}
               </div>
             </>
@@ -543,6 +574,42 @@ export default function AmazonPage() {
             </div>
           )}
         </>
+      )}
+
+      {/* Save Modal */}
+      {showSaveModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 w-full max-w-md mx-4 shadow-2xl">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-semibold text-gray-900 flex items-center gap-2">
+                <ShoppingCart size={18} className="text-[#FF9900]" />
+                Amazon Urunlerini Kaydet
+              </h3>
+              <button onClick={() => setShowSaveModal(false)} className="text-gray-400 hover:text-gray-600"><X size={20} /></button>
+            </div>
+            <p className="text-sm text-gray-500 mb-4">
+              {selectedProducts.size > 0 ? `${selectedProducts.size} urun secildi` : `${results.length} urun kaydedilecek`}
+            </p>
+            {folders.length > 0 && (
+              <div className="mb-4">
+                <label className="block text-xs font-medium text-gray-500 mb-1">Mevcut Klasor</label>
+                <select value={selectedFolder} onChange={(e) => setSelectedFolder(e.target.value)} className="w-full py-2 px-3 border border-gray-200 rounded-lg text-sm">
+                  {folders.map((f) => <option key={f} value={f}>{f}</option>)}
+                </select>
+              </div>
+            )}
+            <div className="mb-4">
+              <label className="block text-xs font-medium text-gray-500 mb-1">veya Yeni Klasor</label>
+              <div className="flex gap-2">
+                <input value={newFolderName} onChange={(e) => setNewFolderName(e.target.value)} placeholder="Yeni klasor adi..." className="flex-1 py-2 px-3 border border-gray-200 rounded-lg text-sm" />
+              </div>
+            </div>
+            {saveMsg && <p className="text-sm text-green-600 mb-3">{saveMsg}</p>}
+            <button onClick={handleSave} className="w-full bg-[#667eea] text-white py-2.5 rounded-lg text-sm font-medium hover:bg-[#5a6fd6] transition-colors">
+              Kaydet
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );
