@@ -186,7 +186,7 @@ IMPORTANT RULES:
         category: String(p.category || ""),
         isPrime: Boolean(p.isPrime),
         image: "",
-        url: String(p.url || (p.asin ? `https://amazon.com/dp/${p.asin}` : "")),
+        url: `https://www.amazon.com/s?k=${encodeURIComponent(String(p.title || keyword))}`,
         keyword,
       }));
 
