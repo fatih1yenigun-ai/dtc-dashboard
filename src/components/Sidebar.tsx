@@ -12,6 +12,7 @@ import {
   X,
   FolderOpen,
   ShoppingBag,
+  ShoppingCart,
   Shield,
   LogOut,
 } from "lucide-react";
@@ -21,6 +22,7 @@ import { useAuth } from "@/context/AuthContext";
 const navItems = [
   { href: "/research", label: "Canlı Araştırma", icon: Search },
   { href: "/tts", label: "TikTok Shop", icon: ShoppingBag },
+  { href: "/amazon", label: "Amazon Arastirma", icon: ShoppingCart },
   { href: "/saved", label: "Kaydedilenler", icon: Bookmark },
   { href: "/brands", label: "Marka Tarayıcı", icon: Globe },
   { href: "/tools", label: "Teknik Araçlar", icon: Wrench },

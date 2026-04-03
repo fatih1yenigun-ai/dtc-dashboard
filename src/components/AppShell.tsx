@@ -8,6 +8,7 @@ import Sidebar from "@/components/Sidebar";
 import FloatingChat from "@/components/FloatingChat";
 import { ResearchProvider } from "@/context/ResearchContext";
 import { TikTokShopProvider } from "@/context/TikTokShopContext";
+import { AmazonProvider } from "@/context/AmazonContext";
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -39,13 +40,15 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <ResearchProvider>
       <TikTokShopProvider>
-        <div className="flex min-h-screen">
-          <Sidebar />
-          <main className="flex-1 min-h-screen bg-[#f8f9fa] w-0">
-            <div className="p-3 pt-14 md:pt-8 md:p-8 max-w-7xl mx-auto">{children}</div>
-          </main>
-          <FloatingChat />
-        </div>
+        <AmazonProvider>
+          <div className="flex min-h-screen">
+            <Sidebar />
+            <main className="flex-1 min-h-screen bg-[#f8f9fa] w-0">
+              <div className="p-3 pt-14 md:pt-8 md:p-8 max-w-7xl mx-auto">{children}</div>
+            </main>
+            <FloatingChat />
+          </div>
+        </AmazonProvider>
       </TikTokShopProvider>
     </ResearchProvider>
   );
