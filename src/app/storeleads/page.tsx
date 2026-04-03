@@ -14,6 +14,7 @@ import {
   FolderPlus,
 } from "lucide-react";
 import { loadFolders, createFolder, saveBrandsBulk, type BrandData } from "@/lib/supabase";
+/* eslint-disable @next/next/no-img-element */
 import { useAuth } from "@/context/AuthContext";
 
 interface StoreData {
@@ -90,12 +91,11 @@ export default function StoreleadsPage() {
   const [minTraffic, setMinTraffic] = useState("");
 
   // Save to folder
-  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [folders, setFolders] = useState<string[]>([]);
-  const [targetFolder, setTargetFolder] = useState("");
   const [newFolder, setNewFolder] = useState("");
-  const [saving, setSaving] = useState(false);
+  const [saving, setSaving] = useState<number | null>(null); // store id being saved
   const [saveMsg, setSaveMsg] = useState("");
+  const [saveDropdownId, setSaveDropdownId] = useState<number | null>(null);
   const [sortBy, setSortBy] = useState("estimated_sales_usd");
   const [sortAsc, setSortAsc] = useState(false);
   const [page, setPage] = useState(1);
@@ -113,76 +113,43 @@ export default function StoreleadsPage() {
 
   useEffect(() => {
     if (!user) return;
-    loadFolders(user.userId).then((f) => {
-      setFolders(f);
-      if (f.length > 0 && !targetFolder) setTargetFolder(f[0]);
-    });
+    loadFolders(user.userId).then((f) => setFolders(f));
   }, [user]);
 
-  const toggleSelect = (id: number) => {
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
+  const handleSaveToFolder = async (store: StoreData, folderName: string) => {
+    setSaving(store.id);
+    const brand: BrandData = {
+      Marka: store.name || store.domain,
+      brand: store.name || store.domain,
+      "Web Sitesi": store.domain_url || `https://${store.domain}`,
+      website: store.domain_url || `https://${store.domain}`,
+      Kategori: extractTopCategory(store.categories),
+      category: extractTopCategory(store.categories),
+      "Alt Niş": store.categories || "",
+      sub_niche: store.categories || "",
+      "Öne Çıkan Özellik": [
+        store.estimated_sales_usd ? `Satis: ${formatMoney(store.estimated_sales_usd)}/ay` : "",
+        store.estimated_page_views ? `Trafik: ${formatNumber(store.estimated_page_views)}` : "",
+        store.platform || "",
+      ].filter(Boolean).join(" | "),
+      favicon_url: store.favicon_url || "",
+      source: "storeleads",
+    };
+
+    await saveBrandsBulk(folderName, [brand], user?.userId);
+    setSaving(null);
+    setSaveDropdownId(null);
+    setSaveMsg(`'${store.name || store.domain}' kaydedildi`);
+    setTimeout(() => setSaveMsg(""), 2000);
   };
 
-  const selectAll = () => {
-    if (selectedIds.size === stores.length) {
-      setSelectedIds(new Set());
-    } else {
-      setSelectedIds(new Set(stores.map((s) => s.id)));
-    }
-  };
-
-  const handleSave = async () => {
-    const folder = newFolder.trim() || targetFolder;
-    if (!folder || selectedIds.size === 0) return;
-    setSaving(true);
-    setSaveMsg("");
-
-    const brandsToSave: BrandData[] = stores
-      .filter((s) => selectedIds.has(s.id))
-      .map((s) => ({
-        Marka: s.name || s.domain,
-        brand: s.name || s.domain,
-        "Web Sitesi": s.domain_url || `https://${s.domain}`,
-        website: s.domain_url || `https://${s.domain}`,
-        Kategori: extractTopCategory(s.categories),
-        category: extractTopCategory(s.categories),
-        "Alt Niş": s.categories || "",
-        sub_niche: s.categories || "",
-        insight: [
-          s.estimated_sales_usd ? `$${formatMoney(s.estimated_sales_usd)}/ay` : "",
-          s.estimated_page_views ? `${formatNumber(s.estimated_page_views)} trafik` : "",
-          s.platform || "",
-          s.instagram ? `IG: ${s.instagram}` : "",
-        ].filter(Boolean).join(" | "),
-        "Öne Çıkan Özellik": [
-          s.estimated_sales_usd ? `Satis: ${formatMoney(s.estimated_sales_usd)}/ay` : "",
-          s.estimated_page_views ? `Trafik: ${formatNumber(s.estimated_page_views)}` : "",
-          s.platform || "",
-        ].filter(Boolean).join(" | "),
-        favicon_url: s.favicon_url || "",
-        source: "storeleads",
-      }));
-
-    if (newFolder.trim()) {
-      await createFolder(newFolder.trim(), user?.userId);
-    }
-    const added = await saveBrandsBulk(folder, brandsToSave, user?.userId);
-    setSaveMsg(`${added} magaza '${folder}' klasorune kaydedildi`);
-    setSelectedIds(new Set());
-    setSaving(false);
-
-    // Refresh folders
-    if (user) {
-      const f = await loadFolders(user.userId);
-      setFolders(f);
-    }
-
-    setTimeout(() => setSaveMsg(""), 3000);
+  const handleCreateAndSave = async (store: StoreData) => {
+    if (!newFolder.trim()) return;
+    await createFolder(newFolder.trim(), user?.userId);
+    const f = await loadFolders(user?.userId);
+    setFolders(f);
+    await handleSaveToFolder(store, newFolder.trim());
+    setNewFolder("");
   };
 
   // Search function
@@ -355,14 +322,7 @@ export default function StoreleadsPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-gray-100 bg-gray-50/50">
-                <th className="px-3 py-3 w-10">
-                  <input
-                    type="checkbox"
-                    checked={selectedIds.size === stores.length && stores.length > 0}
-                    onChange={selectAll}
-                    className="rounded border-gray-300 text-[#667eea] focus:ring-[#667eea]/30"
-                  />
-                </th>
+                <th className="w-10 px-2 py-3"></th>
                 <th className="text-left px-4 py-3 font-medium text-gray-500">Magaza</th>
                 <th className="text-left px-3 py-3 font-medium text-gray-500">Platform</th>
                 <th className="text-left px-3 py-3 font-medium text-gray-500">Kategori</th>
@@ -414,16 +374,59 @@ export default function StoreleadsPage() {
                 stores.map((s) => (
                   <tr
                     key={s.id}
-                    className={`border-b border-gray-50 hover:bg-gray-50/50 cursor-pointer transition-colors ${selectedIds.has(s.id) ? "bg-[#667eea]/5" : ""}`}
+                    className="border-b border-gray-50 hover:bg-gray-50/50 cursor-pointer transition-colors"
                     onClick={() => setSelectedStore(s)}
                   >
-                    <td className="px-3 py-3" onClick={(e) => e.stopPropagation()}>
-                      <input
-                        type="checkbox"
-                        checked={selectedIds.has(s.id)}
-                        onChange={() => toggleSelect(s.id)}
-                        className="rounded border-gray-300 text-[#667eea] focus:ring-[#667eea]/30"
-                      />
+                    <td className="px-2 py-3 relative" onClick={(e) => e.stopPropagation()}>
+                      <button
+                        onClick={() => setSaveDropdownId(saveDropdownId === s.id ? null : s.id)}
+                        className={`p-1.5 rounded-lg transition-colors ${
+                          saving === s.id
+                            ? "text-[#667eea]"
+                            : "text-gray-300 hover:text-[#667eea] hover:bg-[#667eea]/10"
+                        }`}
+                        title="Kaydet"
+                      >
+                        {saving === s.id ? (
+                          <Loader2 size={16} className="animate-spin" />
+                        ) : (
+                          <Bookmark size={16} />
+                        )}
+                      </button>
+                      {saveDropdownId === s.id && (
+                        <div className="absolute left-0 top-full z-50 mt-1 w-48 bg-white border border-gray-200 rounded-xl shadow-lg py-1">
+                          {folders.map((f) => (
+                            <button
+                              key={f}
+                              onClick={() => handleSaveToFolder(s, f)}
+                              className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 flex items-center gap-2"
+                            >
+                              <Bookmark size={13} className="text-gray-400" />
+                              {f}
+                            </button>
+                          ))}
+                          <div className="border-t border-gray-100 mt-1 pt-1 px-2 pb-1">
+                            <div className="flex gap-1">
+                              <input
+                                type="text"
+                                value={newFolder}
+                                onChange={(e) => setNewFolder(e.target.value)}
+                                onKeyDown={(e) => e.key === "Enter" && handleCreateAndSave(s)}
+                                placeholder="Yeni klasor..."
+                                className="flex-1 px-2 py-1 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#667eea]/30"
+                              />
+                              {newFolder.trim() && (
+                                <button
+                                  onClick={() => handleCreateAndSave(s)}
+                                  className="p-1 text-[#667eea] hover:bg-[#667eea]/10 rounded"
+                                >
+                                  <FolderPlus size={14} />
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2.5">
@@ -440,9 +443,15 @@ export default function StoreleadsPage() {
                           <Store size={16} className="text-gray-300" />
                         )}
                         <div>
-                          <p className="font-medium text-gray-900 truncate max-w-[200px]">
+                          <a
+                            href={s.domain_url || `https://${s.domain}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            className="font-medium text-gray-900 hover:text-[#667eea] truncate max-w-[200px] block"
+                          >
                             {s.name || s.domain}
-                          </p>
+                          </a>
                           <p className="text-xs text-gray-400">{s.domain}</p>
                         </div>
                       </div>
@@ -519,50 +528,6 @@ export default function StoreleadsPage() {
           </table>
         </div>
 
-        {/* Save bar — shows when items selected */}
-        {selectedIds.size > 0 && (
-          <div className="flex items-center gap-3 px-4 py-3 border-t border-[#667eea]/20 bg-[#667eea]/5">
-            <Bookmark size={16} className="text-[#667eea]" />
-            <span className="text-sm font-medium text-[#667eea]">
-              {selectedIds.size} secili
-            </span>
-            <select
-              value={targetFolder}
-              onChange={(e) => setTargetFolder(e.target.value)}
-              className="px-2 py-1 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#667eea]/30"
-            >
-              {folders.map((f) => (
-                <option key={f} value={f}>{f}</option>
-              ))}
-            </select>
-            <div className="flex items-center gap-1">
-              <input
-                type="text"
-                value={newFolder}
-                onChange={(e) => setNewFolder(e.target.value)}
-                placeholder="veya yeni klasor..."
-                className="px-2 py-1 text-sm border border-gray-200 rounded-lg w-36 focus:outline-none focus:ring-2 focus:ring-[#667eea]/30"
-              />
-              {newFolder.trim() && (
-                <FolderPlus size={14} className="text-[#667eea]" />
-              )}
-            </div>
-            <button
-              onClick={handleSave}
-              disabled={saving}
-              className="gradient-accent text-white px-4 py-1.5 rounded-lg text-sm font-medium hover:opacity-90 disabled:opacity-50 flex items-center gap-1.5"
-            >
-              {saving ? <Loader2 size={14} className="animate-spin" /> : <Bookmark size={14} />}
-              Kaydet
-            </button>
-            {saveMsg && (
-              <span className="text-sm text-green-600 flex items-center gap-1">
-                <Check size={14} /> {saveMsg}
-              </span>
-            )}
-          </div>
-        )}
-
         {/* Pagination */}
         {totalPages > 1 && (
           <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100">
@@ -586,6 +551,19 @@ export default function StoreleadsPage() {
           </div>
         )}
       </div>
+
+      {/* Save toast */}
+      {saveMsg && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-gray-900 text-white px-4 py-2.5 rounded-xl shadow-lg flex items-center gap-2 text-sm animate-in fade-in">
+          <Check size={15} className="text-green-400" />
+          {saveMsg}
+        </div>
+      )}
+
+      {/* Close dropdown on outside click */}
+      {saveDropdownId !== null && (
+        <div className="fixed inset-0 z-40" onClick={() => setSaveDropdownId(null)} />
+      )}
 
       {/* Detail Panel (slide-over) */}
       {selectedStore && (
