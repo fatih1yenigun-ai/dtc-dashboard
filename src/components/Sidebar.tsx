@@ -16,17 +16,19 @@ import {
   Shield,
   LogOut,
   Store,
+  Layers,
 } from "lucide-react";
 import { loadFolders, getAllSavedCount } from "@/lib/supabase";
 import { useAuth } from "@/context/AuthContext";
 
 const navItems = [
-  { href: "/research", label: "Canlı Araştırma", icon: Search },
+  { href: "/storeleads", label: "Website", icon: Store },
   { href: "/tts", label: "TikTok Shop", icon: ShoppingBag },
   { href: "/amazon", label: "Amazon Arastirma", icon: ShoppingCart },
-  { href: "/storeleads", label: "Storeleads", icon: Store },
+  { href: "/kombine", label: "Kombine Aratıcı", icon: Layers },
   { href: "/saved", label: "Kaydedilenler", icon: Bookmark },
-  { href: "/brands", label: "Marka Tarayıcı", icon: Globe },
+  { href: "/research", label: "AI Marka Aratıcı (beta)", icon: Search },
+  { href: "/brands", label: "Marka Tarayıcı (beta)", icon: Globe },
   { href: "/tools", label: "Teknik Araçlar", icon: Wrench },
 ];
 
