@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
       pageSize = 50,
     } = body;
 
-    let q = supabase.from("storeleads_stores").select("*", { count: "exact" });
+    let q = supabase.from("storeleads_stores").select("*", { count: "estimated" });
 
     // Region filter
     if (region === "turkey") {
@@ -129,15 +129,16 @@ export async function GET() {
       }))
       .sort((a, b) => b.count - a.count);
 
-    // Get total count by country
-    const { count: trCount } = await supabase
-      .from("storeleads_stores")
-      .select("id", { count: "exact", head: true })
-      .eq("country", "TR");
-
+    // Get total count (estimated is fast, no timeout)
     const { count: totalCount } = await supabase
       .from("storeleads_stores")
-      .select("id", { count: "exact", head: true });
+      .select("id", { count: "estimated", head: true });
+
+    // Get TR count by fetching a tiny result
+    const { count: trCount } = await supabase
+      .from("storeleads_stores")
+      .select("id", { count: "estimated", head: true })
+      .eq("country", "TR");
 
     return NextResponse.json({
       categories,

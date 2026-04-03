@@ -13,8 +13,14 @@ import {
   BarChart3,
   Calculator,
   ShoppingCart,
+  Save,
+  X,
+  CheckSquare,
+  Square,
 } from "lucide-react";
 import { useAmazon, type AmazonProduct } from "@/context/AmazonContext";
+import { useAuth } from "@/context/AuthContext";
+import { loadFolders, createFolder, saveBrandsBulk, type BrandData } from "@/lib/supabase";
 import {
   estimateMonthlySales,
   estimateRevenue,
@@ -22,6 +28,26 @@ import {
   salesTierColor,
   getCategories,
 } from "@/lib/bsr";
+
+function toBrandDataAmazon(p: AmazonProduct): BrandData {
+  return {
+    Marka: p.brand || p.title.split(" ").slice(0, 3).join(" "),
+    "Web Sitesi": p.url,
+    Kategori: p.category,
+    "AOV ($)": p.price,
+    "Öne Çıkan Özellik": p.title,
+    "Büyüme Yöntemi": "Amazon",
+    Kaynak: "Amazon",
+    BSR: p.bsr,
+    "Aylik Satis": p.monthlySales,
+    "Ciro ($)": p.monthlyRevenue,
+    Puan: p.rating,
+    "Yorum Sayisi": p.reviewCount,
+    ASIN: p.asin,
+    Prime: p.isPrime,
+    Cover: p.image,
+  } as BrandData;
+}
 
 function formatCompact(n: number): string {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
@@ -294,10 +320,62 @@ function downloadCSV(products: AmazonProduct[], keyword: string) {
 
 export default function AmazonPage() {
   const { keyword, results, loading, error, search, setKeyword } = useAmazon();
+  const { user } = useAuth();
   const [tab, setTab] = useState<Tab>("product");
   const [localKeyword, setLocalKeyword] = useState("");
   const [maxItems, setMaxItems] = useState(30);
   const [sortKey, setSortKey] = useState<SortKey>("monthlyRevenue");
+
+  // Selection
+  const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set());
+
+  // Save modal
+  const [showSaveModal, setShowSaveModal] = useState(false);
+  const [folders, setFolders] = useState<string[]>([]);
+  const [selectedFolder, setSelectedFolder] = useState("");
+  const [newFolderName, setNewFolderName] = useState("");
+  const [saveMsg, setSaveMsg] = useState("");
+
+  const toggleProduct = (id: string) => {
+    setSelectedProducts((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleAll = () => {
+    if (selectedProducts.size === results.length) {
+      setSelectedProducts(new Set());
+    } else {
+      setSelectedProducts(new Set(results.map((p) => p.asin || p.title)));
+    }
+  };
+
+  async function openSaveModal() {
+    setShowSaveModal(true);
+    setSaveMsg("");
+    try {
+      const f = await loadFolders(user?.userId);
+      setFolders(f);
+      if (f.length > 0 && !selectedFolder) setSelectedFolder(f[0]);
+    } catch { setFolders(["Genel"]); }
+  }
+
+  async function handleSave() {
+    const folder = newFolderName.trim() || selectedFolder;
+    if (!folder) return;
+    try {
+      if (newFolderName.trim()) await createFolder(newFolderName.trim(), user?.userId);
+      const productsToSave = selectedProducts.size > 0
+        ? results.filter((p) => selectedProducts.has(p.asin || p.title))
+        : results;
+      const brandData = productsToSave.map(toBrandDataAmazon);
+      const added = await saveBrandsBulk(folder, brandData, user?.userId);
+      setSaveMsg(`${added} urun kaydedildi!`);
+      setTimeout(() => { setShowSaveModal(false); setSaveMsg(""); setSelectedProducts(new Set()); }, 1200);
+    } catch { setSaveMsg("Hata olustu!"); }
+  }
 
   const handleSearch = () => {
     if (!localKeyword.trim()) return;
