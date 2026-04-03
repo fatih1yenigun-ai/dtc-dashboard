@@ -104,7 +104,8 @@ export function AmazonProvider({ children }: { children: ReactNode }) {
         const data = await res.json();
 
         if (data.error) {
-          setState((prev) => ({ ...prev, loading: false, error: data.error }));
+          const debugInfo = data.debug ? ` | Debug: ${data.debug}` : "";
+          setState((prev) => ({ ...prev, loading: false, error: data.error + debugInfo }));
           return;
         }
 

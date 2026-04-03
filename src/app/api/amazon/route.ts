@@ -95,55 +95,55 @@ IMPORTANT RULES:
 - Return ONLY the JSON array. No markdown, no explanation.`;
     }
 
-    // Use streaming to avoid Vercel timeout
-    const stream = await anthropic.messages.stream({
+    // Non-streaming call - simpler and more reliable on Vercel
+    const message = await anthropic.messages.create({
       model: "claude-sonnet-4-20250514",
       max_tokens: 4000,
       messages: [{ role: "user", content: prompt }],
     });
 
-    let fullText = "";
-    let tokensUsed = 0;
+    const tokensUsed = message.usage?.output_tokens || 0;
+    const fullText = message.content
+      .filter((b) => b.type === "text")
+      .map((b) => ("text" in b ? b.text : ""))
+      .join("");
 
-    for await (const event of stream) {
-      if (event.type === "content_block_delta" && event.delta.type === "text_delta") {
-        fullText += event.delta.text;
-      }
-      if (event.type === "message_delta") {
-        const usage = (event as unknown as { usage?: { output_tokens?: number } }).usage;
-        if (usage?.output_tokens) tokensUsed = usage.output_tokens;
-      }
+    console.log("[Amazon] Response length:", fullText.length, "First 300 chars:", fullText.substring(0, 300));
+
+    if (!fullText) {
+      console.error("[Amazon] Empty response from Claude");
+      return Response.json(
+        { error: "Claude bos yanit dondurdu", products: [], total: 0 },
+        { status: 200 }
+      );
     }
 
     // Parse JSON - handle markdown wrapping, extra text, etc.
     let products;
     let textToParse = fullText.trim();
 
-    // Strip markdown code blocks if present
+    // Strip markdown code blocks if present (```json ... ```)
     textToParse = textToParse.replace(/^```(?:json)?\s*/i, "").replace(/\s*```\s*$/, "");
-
-    console.log("[Amazon] Raw response (first 200 chars):", fullText.substring(0, 200));
 
     try {
       products = JSON.parse(textToParse.trim());
     } catch {
-      // Try to extract JSON array from text
+      // Try to extract JSON array from anywhere in the text
       const match = textToParse.match(/\[[\s\S]*\]/);
       if (match) {
         try {
           products = JSON.parse(match[0]);
         } catch (e2) {
-          console.error("[Amazon] JSON parse failed even after extraction:", e2);
-          console.error("[Amazon] Full text:", fullText.substring(0, 500));
+          console.error("[Amazon] JSON parse failed:", e2, "Text:", textToParse.substring(0, 500));
           return Response.json(
-            { error: "Sonuc ayristirilamadi - Claude yaniti JSON olarak ayristirilamadi", products: [], total: 0 },
+            { error: "Sonuc ayristirilamadi", products: [], total: 0, debug: textToParse.substring(0, 200) },
             { status: 200 }
           );
         }
       } else {
-        console.error("[Amazon] No JSON array found in response:", fullText.substring(0, 500));
+        console.error("[Amazon] No JSON array found:", textToParse.substring(0, 500));
         return Response.json(
-          { error: "Sonuc ayristirilamadi - JSON bulunamadi", products: [], total: 0 },
+          { error: "JSON bulunamadi", products: [], total: 0, debug: textToParse.substring(0, 200) },
           { status: 200 }
         );
       }
