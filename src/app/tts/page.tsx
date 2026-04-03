@@ -7,7 +7,7 @@ import {
   Loader2,
   ExternalLink,
   Play,
-  Save,
+  Bookmark,
   X,
   Clock,
   Share2,
@@ -523,7 +523,7 @@ function ProductTable({ results, onSave, onDetail, sortNum, sortType, onSort }: 
                 <td className="py-3 px-4 text-center">
                   <div className="flex items-center justify-center gap-1">
                     <button onClick={() => onDetail(p)} className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-50 text-gray-500 hover:text-[#667eea] transition-colors" title="Detay"><Eye size={14} /></button>
-                    <button onClick={() => onSave(p)} className="p-1.5 rounded-lg border border-[#667eea]/30 text-[#667eea] hover:bg-[#667eea]/5 transition-colors" title="Kaydet"><Save size={14} /></button>
+                    <button onClick={() => onSave(p)} className="p-1.5 rounded-lg border border-[#667eea]/30 text-[#667eea] hover:bg-[#667eea]/5 transition-colors" title="Kaydet"><Bookmark size={14} /></button>
                   </div>
                 </td>
               </tr>
@@ -590,7 +590,7 @@ function VideoCard({ video, onSave }: { video: VideoResult; onSave: () => void }
           <span className="flex items-center gap-0.5"><Share2 size={9} /> {formatCompact(video.share_count)}</span>
         </div>
         <button onClick={onSave} className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border border-[#667eea]/30 text-[#667eea] text-xs font-medium hover:bg-[#667eea]/5 transition-colors">
-          <Save size={12} />Kaydet
+          <Bookmark size={12} />Kaydet
         </button>
       </div>
     </div>

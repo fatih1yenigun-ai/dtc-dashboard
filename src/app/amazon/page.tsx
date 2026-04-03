@@ -13,7 +13,7 @@ import {
   BarChart3,
   Calculator,
   ShoppingCart,
-  Save,
+  Bookmark,
   X,
   CheckSquare,
   Square,
@@ -538,7 +538,7 @@ export default function AmazonPage() {
                     onClick={openSaveModal}
                     className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-[#667eea] rounded-lg hover:bg-[#5a6fd6] transition-colors"
                   >
-                    <Save size={14} />
+                    <Bookmark size={14} />
                     {selectedProducts.size > 0 ? `${selectedProducts.size} Urun Kaydet` : "Tumunu Kaydet"}
                   </button>
                   <button

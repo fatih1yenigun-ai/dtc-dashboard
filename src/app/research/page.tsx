@@ -7,7 +7,7 @@ import {
   Loader2,
   ExternalLink,
   Download,
-  Save,
+  Bookmark,
   ChevronUp,
   ChevronDown,
   CheckSquare,
@@ -650,7 +650,7 @@ export default function HomePage() {
                 disabled={selected.size === 0}
                 className="flex items-center gap-2 px-4 py-2 bg-[#27AE60] text-white rounded-lg text-sm font-medium hover:bg-[#219a52] transition-colors disabled:opacity-50"
               >
-                <Save size={14} />
+                <Bookmark size={14} />
                 Kaydet
               </button>
               <button
