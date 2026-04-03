@@ -115,17 +115,35 @@ IMPORTANT RULES:
       }
     }
 
-    // Parse JSON
+    // Parse JSON - handle markdown wrapping, extra text, etc.
     let products;
+    let textToParse = fullText.trim();
+
+    // Strip markdown code blocks if present
+    textToParse = textToParse.replace(/^```(?:json)?\s*/i, "").replace(/\s*```\s*$/, "");
+
+    console.log("[Amazon] Raw response (first 200 chars):", fullText.substring(0, 200));
+
     try {
-      products = JSON.parse(fullText.trim());
+      products = JSON.parse(textToParse.trim());
     } catch {
-      const match = fullText.match(/\[[\s\S]*\]/);
+      // Try to extract JSON array from text
+      const match = textToParse.match(/\[[\s\S]*\]/);
       if (match) {
-        products = JSON.parse(match[0]);
+        try {
+          products = JSON.parse(match[0]);
+        } catch (e2) {
+          console.error("[Amazon] JSON parse failed even after extraction:", e2);
+          console.error("[Amazon] Full text:", fullText.substring(0, 500));
+          return Response.json(
+            { error: "Sonuc ayristirilamadi - Claude yaniti JSON olarak ayristirilamadi", products: [], total: 0 },
+            { status: 200 }
+          );
+        }
       } else {
+        console.error("[Amazon] No JSON array found in response:", fullText.substring(0, 500));
         return Response.json(
-          { error: "Sonuc ayristirilamadi", products: [], total: 0 },
+          { error: "Sonuc ayristirilamadi - JSON bulunamadi", products: [], total: 0 },
           { status: 200 }
         );
       }
