@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
       return Response.json({ error: "Keyword is required" }, { status: 400 });
     }
 
-    const count = Math.min(maxItems, 30);
+    const count = Math.min(maxItems, 20);
 
     let prompt: string;
 
@@ -92,13 +92,14 @@ IMPORTANT RULES:
 - Ratings typically 3.5-4.8
 - Category must be a real Amazon top-level category (e.g. "Home & Kitchen", "Sports & Outdoors", "Beauty & Personal Care")
 - isPrime: true for most FBA products
-- Return ONLY the JSON array. No markdown, no explanation.`;
+- Keep titles SHORT (max 60 chars) - just the product name, not full Amazon listing title
+- Return ONLY the JSON array. No markdown, no explanation, no text before or after.`;
     }
 
-    // Non-streaming call - simpler and more reliable on Vercel
+    // Non-streaming call
     const message = await anthropic.messages.create({
       model: "claude-sonnet-4-20250514",
-      max_tokens: 4000,
+      max_tokens: 8000,
       messages: [{ role: "user", content: prompt }],
     });
 
@@ -118,12 +119,22 @@ IMPORTANT RULES:
       );
     }
 
-    // Parse JSON - handle markdown wrapping, extra text, etc.
+    // Parse JSON - handle markdown wrapping, truncation, etc.
     let products;
     let textToParse = fullText.trim();
 
     // Strip markdown code blocks if present (```json ... ```)
     textToParse = textToParse.replace(/^```(?:json)?\s*/i, "").replace(/\s*```\s*$/, "");
+
+    // Fix truncated JSON: if it starts with [ but doesn't end with ], try to repair
+    if (textToParse.startsWith("[") && !textToParse.endsWith("]")) {
+      console.log("[Amazon] Truncated JSON detected, attempting repair...");
+      // Find last complete object (ends with })
+      const lastBrace = textToParse.lastIndexOf("}");
+      if (lastBrace > 0) {
+        textToParse = textToParse.substring(0, lastBrace + 1) + "]";
+      }
+    }
 
     try {
       products = JSON.parse(textToParse.trim());
@@ -133,12 +144,19 @@ IMPORTANT RULES:
       if (match) {
         try {
           products = JSON.parse(match[0]);
-        } catch (e2) {
-          console.error("[Amazon] JSON parse failed:", e2, "Text:", textToParse.substring(0, 500));
-          return Response.json(
-            { error: "Sonuc ayristirilamadi", products: [], total: 0, debug: textToParse.substring(0, 200) },
-            { status: 200 }
-          );
+        } catch {
+          // Last resort: try to salvage individual objects
+          const objectMatches = textToParse.match(/\{[^{}]*\}/g);
+          if (objectMatches && objectMatches.length > 0) {
+            products = objectMatches.map((m) => { try { return JSON.parse(m); } catch { return null; } }).filter(Boolean);
+            console.log(`[Amazon] Salvaged ${products.length} products from broken JSON`);
+          } else {
+            console.error("[Amazon] JSON parse failed. Text:", textToParse.substring(0, 500));
+            return Response.json(
+              { error: "Sonuc ayristirilamadi", products: [], total: 0, debug: textToParse.substring(0, 200) },
+              { status: 200 }
+            );
+          }
         }
       } else {
         console.error("[Amazon] No JSON array found:", textToParse.substring(0, 500));
