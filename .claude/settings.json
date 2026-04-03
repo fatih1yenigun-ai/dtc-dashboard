@@ -1,0 +1,10 @@
+{
+  "hooks": {
+    "postToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "command": "cd /Users/fatihyenigun/Documents/dtc-dashboard && npx tsc --noEmit --skipLibCheck 2>&1 | tail -5"
+      }
+    ]
+  }
+}

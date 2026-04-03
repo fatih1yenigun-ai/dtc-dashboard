@@ -137,6 +137,8 @@ async function searchProducts(
     page_size: String(pageSize),
   });
   const url = `https://www.pipiads.com/v1/api/tiktok-shop/product?${params}`;
+  console.log("[TTS Product Search] URL:", url);
+  console.log("[TTS Product Search] sort_key:", sortKey, "sort_type:", sortType);
 
   const res = await fetch(url, {
     method: "POST",
@@ -151,10 +153,26 @@ async function searchProducts(
       method: "POST",
       headers: buildHeaders(newToken),
     });
-    return retryRes.json();
+    const retryJson = await retryRes.json();
+    logProductResults(retryJson, sortKey);
+    return retryJson;
   }
 
-  return res.json();
+  const json = await res.json();
+  logProductResults(json, sortKey);
+  return json;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function logProductResults(json: any, sortKey: string) {
+  const items = json?.result?.data || [];
+  if (items.length > 0) {
+    console.log(`[TTS Product Search] First 3 results (sorted by ${sortKey}):`);
+    items.slice(0, 3).forEach((item: { title?: string; sales_volume?: number; gmv_usd?: number; found_time?: number; play_count?: number; video_count?: number; person_count?: number }, i: number) => {
+      console.log(`  ${i + 1}. ${(item.title || "").substring(0, 50)} | sales=${item.sales_volume} gmv=${item.gmv_usd} views=${item.play_count} videos=${item.video_count} found=${item.found_time} influencers=${item.person_count}`);
+    });
+  }
+  console.log("[TTS Product Search] Total:", json?.result?.total || "unknown");
 }
 
 export async function POST(request: NextRequest) {

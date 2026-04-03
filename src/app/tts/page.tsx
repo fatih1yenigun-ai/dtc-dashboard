@@ -48,7 +48,6 @@ const PRODUCT_SORT_OPTIONS = [
   { value: "sales_volume", label: "Satislar", defaultType: "desc" },
   { value: "gmv", label: "GMV", defaultType: "desc" },
   { value: "play_count", label: "Gosterimler", defaultType: "desc" },
-  { value: "ad_cost", label: "Reklam Harcamasi", defaultType: "desc" },
   { value: "video_count", label: "Reklamlar", defaultType: "desc" },
   { value: "person_count", label: "Influencers", defaultType: "desc" },
 ];
@@ -469,16 +468,13 @@ function ProductTable({ results, onSave, onDetail, sortKey, sortType, onSort }: 
             <tr className="bg-gray-50 border-b border-gray-200">
               <th className="text-left py-3 px-4 font-medium text-gray-500 w-12">#</th>
               <th className="text-left py-3 px-4 font-medium text-gray-500">Urun</th>
-              <th className="text-left py-3 px-4 font-medium text-gray-500">Magaza</th>
-              <th className="text-right py-3 px-4 font-medium text-gray-500 cursor-pointer hover:text-[#667eea] select-none" onClick={() => onSort("sales_volume")}>Satislar{arrow("sales_volume")}</th>
+              <th className="text-right py-3 px-4 font-medium text-gray-500 cursor-pointer hover:text-[#667eea] select-none" onClick={() => onSort("sales_volume")}>Satildi{arrow("sales_volume")}</th>
               <th className="text-right py-3 px-4 font-medium text-gray-500 cursor-pointer hover:text-[#667eea] select-none" onClick={() => onSort("gmv")}>GMV{arrow("gmv")}</th>
-              <th className="text-right py-3 px-4 font-medium text-gray-500 cursor-pointer hover:text-[#667eea] select-none" onClick={() => onSort("price")}>Fiyat{arrow("price")}</th>
               <th className="text-right py-3 px-4 font-medium text-gray-500 cursor-pointer hover:text-[#667eea] select-none" onClick={() => onSort("video_count")}>Reklamlar{arrow("video_count")}</th>
-              <th className="text-right py-3 px-4 font-medium text-gray-500 cursor-pointer hover:text-[#667eea] select-none" onClick={() => onSort("play_count")}>Gosterimler{arrow("play_count")}</th>
+              <th className="text-right py-3 px-4 font-medium text-gray-500 cursor-pointer hover:text-[#667eea] select-none" onClick={() => onSort("play_count")}>Gosterim / Harcama{arrow("play_count")}</th>
               <th className="text-right py-3 px-4 font-medium text-gray-500 cursor-pointer hover:text-[#667eea] select-none" onClick={() => onSort("person_count")}>Influencers{arrow("person_count")}</th>
-              <th className="text-center py-3 px-4 font-medium text-gray-500">Ulke</th>
-              <th className="text-center py-3 px-4 font-medium text-gray-500 w-20">Detay</th>
-              <th className="text-center py-3 px-4 font-medium text-gray-500 w-20">Kaydet</th>
+              <th className="text-center py-3 px-4 font-medium text-gray-500 cursor-pointer hover:text-[#667eea] select-none" onClick={() => onSort("found_time")}>Reklam Tarihi{arrow("found_time")}</th>
+              <th className="text-center py-3 px-4 font-medium text-gray-500 w-20">Eylem</th>
             </tr>
           </thead>
           <tbody>
@@ -486,47 +482,48 @@ function ProductTable({ results, onSave, onDetail, sortKey, sortType, onSort }: 
               <tr key={p.id || i} className="border-b border-gray-100 hover:bg-gray-50/50 transition-colors">
                 <td className="py-3 px-4 text-gray-400 text-xs">{i + 1}</td>
                 <td className="py-3 px-4">
-                  <div className="flex items-center gap-3 min-w-[200px]">
+                  <div className="flex items-center gap-3 min-w-[280px]">
                     {p.image ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={p.image} alt={p.title} className="w-12 h-12 rounded-lg object-cover flex-shrink-0 border border-gray-100" />
+                      <img src={p.image} alt={p.title} className="w-16 h-16 rounded-lg object-cover flex-shrink-0 border border-gray-100" />
                     ) : (
-                      <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0"><ShoppingBag size={16} className="text-gray-300" /></div>
+                      <div className="w-16 h-16 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0"><ShoppingBag size={16} className="text-gray-300" /></div>
                     )}
                     <div className="min-w-0">
                       <button onClick={() => onDetail(p)} className="text-sm font-medium text-gray-900 hover:text-[#667eea] line-clamp-2 transition-colors text-left cursor-pointer" title={p.title}>
                         {p.title?.length > 60 ? p.title.substring(0, 60) + "..." : p.title || "Bilinmeyen"}
                       </button>
-                      {p.titleTr && p.titleTr !== p.title && (
-                        <p className="text-[11px] text-gray-400 line-clamp-1 mt-0.5">{p.titleTr.length > 65 ? p.titleTr.substring(0, 65) + "..." : p.titleTr}</p>
-                      )}
-                      {p.marketingAngle && (
-                        <p className="text-[10px] text-[#667eea] font-medium mt-0.5">{p.marketingAngle}</p>
-                      )}
+                      <div className="flex items-center gap-2 mt-1">
+                        {p.region && <span className="text-sm">{FLAG[p.region?.toUpperCase()] || ""}</span>}
+                        <span className="text-xs font-medium text-orange-600">${p.price_usd.toFixed(2)}</span>
+                      </div>
+                      <div className="flex items-center gap-2 mt-1 flex-wrap">
+                        {p.seller_location && <span className="text-[10px] bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded">{p.seller_location}</span>}
+                        {p.commission_rate > 0 && <span className="text-[10px] text-gray-400">Komisyon: {p.commission_rate}%</span>}
+                      </div>
+                      <div className="flex items-center gap-2 mt-1">
+                        {p.shop_image ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={p.shop_image} alt={p.shop_name} className="w-4 h-4 rounded-full object-cover flex-shrink-0" />
+                        ) : <div className="w-4 h-4 rounded-full bg-gray-200 flex-shrink-0" />}
+                        <span className="text-[11px] text-gray-500 truncate">{p.shop_name || "-"}</span>
+                      </div>
                     </div>
                   </div>
                 </td>
-                <td className="py-3 px-4">
-                  <a href={`https://www.pipiads.com/tr/tiktok-shop-product/${p.id}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 min-w-[120px] hover:text-[#667eea] transition-colors">
-                    {p.shop_image ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={p.shop_image} alt={p.shop_name} className="w-6 h-6 rounded-full object-cover flex-shrink-0" />
-                    ) : <div className="w-6 h-6 rounded-full bg-gray-200 flex-shrink-0" />}
-                    <span className="text-xs text-gray-600 truncate max-w-[100px]">{p.shop_name || "-"}</span>
-                  </a>
-                </td>
                 <td className="py-3 px-4 text-right font-medium text-gray-700">{formatCompact(p.sales_volume)}</td>
                 <td className="py-3 px-4 text-right font-bold text-emerald-600">{formatMoney(p.gmv_usd)}</td>
-                <td className="py-3 px-4 text-right text-gray-700">${p.price_usd.toFixed(2)}</td>
                 <td className="py-3 px-4 text-right text-gray-600">{formatCompact(p.video_count)}</td>
-                <td className="py-3 px-4 text-right text-gray-600">{formatCompact(p.play_count)}</td>
-                <td className="py-3 px-4 text-right text-gray-600">{formatCompact(p.person_count)}</td>
-                <td className="py-3 px-4 text-center text-lg">{FLAG[p.region?.toUpperCase()] || p.region || "-"}</td>
-                <td className="py-3 px-4 text-center">
-                  <button onClick={() => onDetail(p)} className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-50 text-gray-500 hover:text-[#667eea] transition-colors" title="Detay"><Eye size={14} /></button>
+                <td className="py-3 px-4 text-right">
+                  <div className="text-gray-700">{formatCompact(p.play_count)}</div>
                 </td>
+                <td className="py-3 px-4 text-right text-gray-600">{formatCompact(p.person_count)}</td>
+                <td className="py-3 px-4 text-center text-xs text-gray-500 whitespace-nowrap">{formatDateRange(p.found_time, p.put_days) || "-"}</td>
                 <td className="py-3 px-4 text-center">
-                  <button onClick={() => onSave(p)} className="p-1.5 rounded-lg border border-[#667eea]/30 text-[#667eea] hover:bg-[#667eea]/5 transition-colors" title="Kaydet"><Save size={14} /></button>
+                  <div className="flex items-center justify-center gap-1">
+                    <button onClick={() => onDetail(p)} className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-50 text-gray-500 hover:text-[#667eea] transition-colors" title="Detay"><Eye size={14} /></button>
+                    <button onClick={() => onSave(p)} className="p-1.5 rounded-lg border border-[#667eea]/30 text-[#667eea] hover:bg-[#667eea]/5 transition-colors" title="Kaydet"><Save size={14} /></button>
+                  </div>
                 </td>
               </tr>
             ))}
