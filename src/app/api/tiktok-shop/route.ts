@@ -121,27 +121,29 @@ async function searchVideos(
   return json;
 }
 
+// v3 endpoint: GET with numeric sort param
+// sort=2: found_time, sort=3: sales, sort=4: GMV, sort=5: views,
+// sort=7: video_count (ads), sort=8: person_count (influencers)
 async function searchProducts(
   token: string,
   keyword: string,
   page: number,
   pageSize: number,
-  sortKey: string = "gmv",
+  sort: number = 2,
   sortType: string = "desc"
 ) {
   const params = new URLSearchParams({
     keyword,
-    sort_key: sortKey,
+    sort: String(sort),
     sort_type: sortType,
     current_page: String(page),
     page_size: String(pageSize),
   });
-  const url = `https://www.pipiads.com/v1/api/tiktok-shop/product?${params}`;
-  console.log("[TTS Product Search] URL:", url);
-  console.log("[TTS Product Search] sort_key:", sortKey, "sort_type:", sortType);
+  const url = `https://www.pipiads.com/v3/api/tiktok-shop/product?${params}`;
+  console.log("[TTS Product Search] v3 GET:", url);
 
   const res = await fetch(url, {
-    method: "POST",
+    method: "GET",
     headers: buildHeaders(token),
   });
 
@@ -150,29 +152,21 @@ async function searchProducts(
     tokenExpiry = 0;
     const newToken = await pipiadsLogin();
     const retryRes = await fetch(url, {
-      method: "POST",
+      method: "GET",
       headers: buildHeaders(newToken),
     });
-    const retryJson = await retryRes.json();
-    logProductResults(retryJson, sortKey);
-    return retryJson;
+    return retryRes.json();
   }
 
   const json = await res.json();
-  logProductResults(json, sortKey);
-  return json;
-}
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function logProductResults(json: any, sortKey: string) {
   const items = json?.result?.data || [];
   if (items.length > 0) {
-    console.log(`[TTS Product Search] First 3 results (sorted by ${sortKey}):`);
-    items.slice(0, 3).forEach((item: { title?: string; sales_volume?: number; gmv_usd?: number; found_time?: number; play_count?: number; video_count?: number; person_count?: number }, i: number) => {
-      console.log(`  ${i + 1}. ${(item.title || "").substring(0, 50)} | sales=${item.sales_volume} gmv=${item.gmv_usd} views=${item.play_count} videos=${item.video_count} found=${item.found_time} influencers=${item.person_count}`);
+    console.log(`[TTS Product Search] First 3 (sort=${sort} ${sortType}):`);
+    items.slice(0, 3).forEach((item: { title?: string; sales_volume?: number; gmv_usd?: number; play_count?: number; video_count?: number; person_count?: number }, i: number) => {
+      console.log(`  ${i + 1}. ${(item.title || "").substring(0, 50)} | sales=${item.sales_volume} gmv=${item.gmv_usd} views=${item.play_count}`);
     });
   }
-  console.log("[TTS Product Search] Total:", json?.result?.total || "unknown");
+  return json;
 }
 
 export async function POST(request: NextRequest) {
@@ -191,8 +185,8 @@ export async function POST(request: NextRequest) {
       pageSize = 20,
       searchMode = "video",
       sortBy = 999,
-      sortKey = "gmv",
       sortType = "desc",
+      productSort = 2,
       filters,
     } = await request.json();
 
@@ -209,7 +203,7 @@ export async function POST(request: NextRequest) {
     // Call appropriate search endpoint
     let data;
     if (searchMode === "product") {
-      data = await searchProducts(token, keyword, page, pageSize, sortKey, sortType);
+      data = await searchProducts(token, keyword, page, pageSize, productSort, sortType);
     } else {
       data = await searchVideos(token, keyword, page, pageSize, sortBy, filters);
     }

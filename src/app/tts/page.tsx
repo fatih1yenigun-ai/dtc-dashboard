@@ -42,14 +42,15 @@ const TAG_COLORS = [
   "bg-indigo-100 text-indigo-700",
 ];
 
+// v3 numeric sort codes: 2=found_time, 3=sales, 4=GMV, 5=views, 7=ads, 8=influencers
 const PRODUCT_SORT_OPTIONS = [
-  { value: "found_time", label: "Son Zaman", defaultType: "desc" },
-  { value: "found_time", label: "Ilk Zaman", defaultType: "asc", id: "found_time_asc" },
-  { value: "sales_volume", label: "Satislar", defaultType: "desc" },
-  { value: "gmv", label: "GMV", defaultType: "desc" },
-  { value: "play_count", label: "Gosterimler", defaultType: "desc" },
-  { value: "video_count", label: "Reklamlar", defaultType: "desc" },
-  { value: "person_count", label: "Influencers", defaultType: "desc" },
+  { value: 2, label: "Son Zaman", defaultType: "desc" },
+  { value: 2, label: "Ilk Zaman", defaultType: "asc", id: "found_time_asc" },
+  { value: 3, label: "Satislar", defaultType: "desc" },
+  { value: 4, label: "GMV", defaultType: "desc" },
+  { value: 5, label: "Gosterimler", defaultType: "desc" },
+  { value: 7, label: "Reklamlar", defaultType: "desc" },
+  { value: 8, label: "Influencers", defaultType: "desc" },
 ];
 
 const VIDEO_SORT_OPTIONS = [
@@ -137,7 +138,7 @@ export default function TTSPage() {
 
   const [localKeyword, setLocalKeyword] = useState("");
   const [mode, setMode] = useState<Mode>("product");
-  const [productSortKey, setProductSortKey] = useState("found_time");
+  const [productSort, setProductSort] = useState(2);
   const [productSortType, setProductSortType] = useState<"asc" | "desc">("desc");
   const [videoSortBy, setVideoSortBy] = useState(6);
 
@@ -156,7 +157,7 @@ export default function TTSPage() {
   function handleSearch() {
     if (!localKeyword.trim()) return;
     if (mode === "product") {
-      productSearch(localKeyword.trim(), productSortKey, productSortType);
+      productSearch(localKeyword.trim(), productSort, productSortType);
     } else {
       videoSearch(localKeyword.trim(), videoSortBy, {});
     }
@@ -242,13 +243,13 @@ export default function TTSPage() {
             <label className="block text-sm font-medium text-gray-700 mb-1">Siralama</label>
             {mode === "product" ? (
               <select
-                value={productSortKey === "found_time" && productSortType === "asc" ? "found_time_asc" : productSortKey}
+                value={productSort === 2 && productSortType === "asc" ? "found_time_asc" : String(productSort)}
                 onChange={(e) => {
                   const val = e.target.value;
-                  const opt = PRODUCT_SORT_OPTIONS.find((o) => (o.id || o.value) === val);
+                  const opt = PRODUCT_SORT_OPTIONS.find((o) => (o.id || String(o.value)) === val);
                   if (!opt) return;
                   const newType = opt.defaultType as "asc" | "desc";
-                  setProductSortKey(opt.value);
+                  setProductSort(opt.value);
                   setProductSortType(newType);
                   productResort(opt.value, newType);
                 }}
@@ -277,13 +278,13 @@ export default function TTSPage() {
               <label className="block text-sm font-medium text-gray-700 mb-1">Sira</label>
               <div className="flex rounded-lg border border-gray-200 overflow-hidden">
                 <button
-                  onClick={() => { setProductSortType("desc"); productResort(productSortKey, "desc"); }}
+                  onClick={() => { setProductSortType("desc"); productResort(productSort, "desc"); }}
                   className={`flex-1 py-2.5 text-xs font-medium transition-colors ${productSortType === "desc" ? "bg-[#667eea] text-white" : "bg-white text-gray-600 hover:bg-gray-50"}`}
                 >
                   Azalan
                 </button>
                 <button
-                  onClick={() => { setProductSortType("asc"); productResort(productSortKey, "asc"); }}
+                  onClick={() => { setProductSortType("asc"); productResort(productSort, "asc"); }}
                   className={`flex-1 py-2.5 text-xs font-medium transition-colors ${productSortType === "asc" ? "bg-[#667eea] text-white" : "bg-white text-gray-600 hover:bg-gray-50"}`}
                 >
                   Artan
@@ -334,13 +335,13 @@ export default function TTSPage() {
               try { sessionStorage.setItem(`tts_product_${p.id}`, JSON.stringify(p)); } catch { /* ignore */ }
               router.push(`/tts/${p.id}`);
             }}
-            sortKey={productSortKey}
+            sortNum={productSort}
             sortType={productSortType}
-            onSort={(key) => {
-              const newType = key === productSortKey && productSortType === "desc" ? "asc" : "desc";
-              setProductSortKey(key);
+            onSort={(num) => {
+              const newType = num === productSort && productSortType === "desc" ? "asc" : "desc";
+              setProductSort(num);
               setProductSortType(newType);
-              productResort(key, newType);
+              productResort(num, newType);
             }}
           />
 
@@ -455,11 +456,11 @@ export default function TTSPage() {
 }
 
 /* ---- Product Table ---- */
-function ProductTable({ results, onSave, onDetail, sortKey, sortType, onSort }: {
+function ProductTable({ results, onSave, onDetail, sortNum, sortType, onSort }: {
   results: ProductResult[]; onSave: (p: ProductResult) => void; onDetail: (p: ProductResult) => void;
-  sortKey: string; sortType: "asc" | "desc"; onSort: (key: string) => void;
+  sortNum: number; sortType: "asc" | "desc"; onSort: (num: number) => void;
 }) {
-  const arrow = (key: string) => sortKey === key ? (sortType === "desc" ? " \u2193" : " \u2191") : "";
+  const arrow = (num: number) => sortNum === num ? (sortType === "desc" ? " \u2193" : " \u2191") : "";
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
       <div className="overflow-x-auto">
@@ -468,12 +469,12 @@ function ProductTable({ results, onSave, onDetail, sortKey, sortType, onSort }: 
             <tr className="bg-gray-50 border-b border-gray-200">
               <th className="text-left py-3 px-4 font-medium text-gray-500 w-12">#</th>
               <th className="text-left py-3 px-4 font-medium text-gray-500">Urun</th>
-              <th className="text-right py-3 px-4 font-medium text-gray-500 cursor-pointer hover:text-[#667eea] select-none" onClick={() => onSort("sales_volume")}>Satildi{arrow("sales_volume")}</th>
-              <th className="text-right py-3 px-4 font-medium text-gray-500 cursor-pointer hover:text-[#667eea] select-none" onClick={() => onSort("gmv")}>GMV{arrow("gmv")}</th>
-              <th className="text-right py-3 px-4 font-medium text-gray-500 cursor-pointer hover:text-[#667eea] select-none" onClick={() => onSort("video_count")}>Reklamlar{arrow("video_count")}</th>
-              <th className="text-right py-3 px-4 font-medium text-gray-500 cursor-pointer hover:text-[#667eea] select-none" onClick={() => onSort("play_count")}>Gosterim / Harcama{arrow("play_count")}</th>
-              <th className="text-right py-3 px-4 font-medium text-gray-500 cursor-pointer hover:text-[#667eea] select-none" onClick={() => onSort("person_count")}>Influencers{arrow("person_count")}</th>
-              <th className="text-center py-3 px-4 font-medium text-gray-500 cursor-pointer hover:text-[#667eea] select-none" onClick={() => onSort("found_time")}>Reklam Tarihi{arrow("found_time")}</th>
+              <th className="text-right py-3 px-4 font-medium text-gray-500 cursor-pointer hover:text-[#667eea] select-none" onClick={() => onSort(3)}>Satildi{arrow(3)}</th>
+              <th className="text-right py-3 px-4 font-medium text-gray-500 cursor-pointer hover:text-[#667eea] select-none" onClick={() => onSort(4)}>GMV{arrow(4)}</th>
+              <th className="text-right py-3 px-4 font-medium text-gray-500 cursor-pointer hover:text-[#667eea] select-none" onClick={() => onSort(7)}>Reklamlar{arrow(7)}</th>
+              <th className="text-right py-3 px-4 font-medium text-gray-500 cursor-pointer hover:text-[#667eea] select-none" onClick={() => onSort(5)}>Gosterim / Harcama{arrow(5)}</th>
+              <th className="text-right py-3 px-4 font-medium text-gray-500 cursor-pointer hover:text-[#667eea] select-none" onClick={() => onSort(8)}>Influencers{arrow(8)}</th>
+              <th className="text-center py-3 px-4 font-medium text-gray-500 cursor-pointer hover:text-[#667eea] select-none" onClick={() => onSort(2)}>Reklam Tarihi{arrow(2)}</th>
               <th className="text-center py-3 px-4 font-medium text-gray-500 w-20">Eylem</th>
             </tr>
           </thead>

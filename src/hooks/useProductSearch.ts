@@ -162,7 +162,7 @@ export function useProductSearch() {
   const loadingMoreRef = useRef(false);
   const loadingRef = useRef(false);
   const abortRef = useRef<AbortController | null>(null);
-  const searchParamsRef = useRef<{ keyword: string; sortKey: string; sortType: string } | null>(null);
+  const searchParamsRef = useRef<{ keyword: string; productSort: number; sortType: string } | null>(null);
 
   const fetchPage = useCallback(
     async (pageNum: number, append: boolean) => {
@@ -195,7 +195,7 @@ export function useProductSearch() {
             page: pageNum,
             pageSize: PAGE_SIZE,
             searchMode: "product",
-            sortKey: params.sortKey,
+            productSort: params.productSort,
             sortType: params.sortType,
           }),
           signal: controller.signal,
@@ -240,9 +240,9 @@ export function useProductSearch() {
   );
 
   const search = useCallback(
-    (keyword: string, sortKey: string, sortType: string = "desc") => {
+    (keyword: string, productSort: number = 2, sortType: string = "desc") => {
       if (!keyword.trim()) return;
-      searchParamsRef.current = { keyword, sortKey, sortType };
+      searchParamsRef.current = { keyword, productSort, sortType };
       setAllProducts([]);
       setHasMore(true);
       hasMoreRef.current = true;
@@ -257,12 +257,12 @@ export function useProductSearch() {
     fetchPage(pageRef.current + 1, true);
   }, [fetchPage]);
 
-  // Re-search with new sort key/type (server-side sort)
+  // Re-search with new sort (server-side)
   const resort = useCallback(
-    (sortKey: string, sortType?: string) => {
+    (productSort: number, sortType?: string) => {
       const params = searchParamsRef.current;
       if (!params) return;
-      searchParamsRef.current = { ...params, sortKey, sortType: sortType || params.sortType };
+      searchParamsRef.current = { ...params, productSort, sortType: sortType || params.sortType };
       setAllProducts([]);
       setHasMore(true);
       hasMoreRef.current = true;
