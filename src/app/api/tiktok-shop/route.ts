@@ -7,6 +7,46 @@ export const maxDuration = 60;
 let cachedToken: string | null = null;
 let tokenExpiry = 0;
 
+// ── Request queue: serializes all PiPiAds calls with a delay ──
+const REQUEST_DELAY_MS = 600; // minimum ms between PiPiAds requests
+let lastRequestTime = 0;
+const queuedRequests: Array<{
+  execute: () => Promise<unknown>;
+  resolve: (value: unknown) => void;
+  reject: (reason: unknown) => void;
+}> = [];
+let processing = false;
+
+async function processQueue() {
+  if (processing) return;
+  processing = true;
+  while (queuedRequests.length > 0) {
+    const item = queuedRequests.shift()!;
+    const now = Date.now();
+    const wait = Math.max(0, REQUEST_DELAY_MS - (now - lastRequestTime));
+    if (wait > 0) await new Promise((r) => setTimeout(r, wait));
+    try {
+      lastRequestTime = Date.now();
+      const result = await item.execute();
+      item.resolve(result);
+    } catch (err) {
+      item.reject(err);
+    }
+  }
+  processing = false;
+}
+
+function enqueue<T>(execute: () => Promise<T>): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    queuedRequests.push({
+      execute: execute as () => Promise<unknown>,
+      resolve: resolve as (value: unknown) => void,
+      reject,
+    });
+    processQueue();
+  });
+}
+
 async function pipiadsLogin(): Promise<string> {
   // Return cached token if still valid (cache for 30 minutes)
   if (cachedToken && Date.now() < tokenExpiry) {
@@ -200,12 +240,12 @@ export async function POST(request: NextRequest) {
     // Login to PiPiAds
     const token = await pipiadsLogin();
 
-    // Call appropriate search endpoint
+    // Call appropriate search endpoint — queued to avoid hammering PiPiAds
     let data;
     if (searchMode === "product") {
-      data = await searchProducts(token, keyword, page, pageSize, productSort, sortType);
+      data = await enqueue(() => searchProducts(token, keyword, page, pageSize, productSort, sortType));
     } else {
-      data = await searchVideos(token, keyword, page, pageSize, sortBy, filters);
+      data = await enqueue(() => searchVideos(token, keyword, page, pageSize, sortBy, filters));
     }
 
     // Debug: log if no results
