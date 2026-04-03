@@ -38,16 +38,16 @@ export default function HeroSection() {
       <CircuitBackground />
 
       {/* Navbar */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-xl border-b border-gray-100">
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-white backdrop-blur-xl border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           {/* Logo */}
           <a href={CTA_URL} className="flex items-center gap-2 cursor-pointer">
-            <span className="w-2.5 h-2.5 rounded-full bg-green-500" />
+            <img src="/faycom-logo.png" alt="faycom" className="w-8 h-8 object-contain" />
             <span
               className="text-xl tracking-tight text-gray-900"
               style={{ fontFamily: "var(--font-body)", fontWeight: 500 }}
             >
-              Markett
+              faycom
             </span>
           </a>
 
@@ -84,7 +84,7 @@ export default function HeroSection() {
       </nav>
 
       {/* Hero content */}
-      <div className="relative mt-28 md:mt-36 px-6">
+      <div className="relative mt-32 md:mt-44 px-6">
         {/* Purple radial glow behind text */}
         <div
           className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] pointer-events-none"

@@ -126,12 +126,13 @@ async function searchProducts(
   keyword: string,
   page: number,
   pageSize: number,
-  sortKey: string = "gmv"
+  sortKey: string = "gmv",
+  sortType: string = "desc"
 ) {
   const params = new URLSearchParams({
     keyword,
     sort_key: sortKey,
-    sort_type: "desc",
+    sort_type: sortType,
     current_page: String(page),
     page_size: String(pageSize),
   });
@@ -173,6 +174,7 @@ export async function POST(request: NextRequest) {
       searchMode = "video",
       sortBy = 999,
       sortKey = "gmv",
+      sortType = "desc",
       filters,
     } = await request.json();
 
@@ -189,7 +191,7 @@ export async function POST(request: NextRequest) {
     // Call appropriate search endpoint
     let data;
     if (searchMode === "product") {
-      data = await searchProducts(token, keyword, page, pageSize, sortKey);
+      data = await searchProducts(token, keyword, page, pageSize, sortKey, sortType);
     } else {
       data = await searchVideos(token, keyword, page, pageSize, sortBy, filters);
     }

@@ -12,7 +12,6 @@ import {
   Clock,
   Share2,
   Eye,
-  Star,
   ShoppingBag,
 } from "lucide-react";
 import { loadFolders, createFolder, saveBrandsBulk, type BrandData } from "@/lib/supabase";
@@ -44,11 +43,14 @@ const TAG_COLORS = [
 ];
 
 const PRODUCT_SORT_OPTIONS = [
-  { value: "gmv", label: "GMV" },
-  { value: "sales_volume", label: "Satislar" },
-  { value: "video_count", label: "Video Sayisi" },
-  { value: "price", label: "Fiyat" },
-  { value: "play_count", label: "Goruntulenme" },
+  { value: "found_time", label: "Son Zaman", defaultType: "desc" },
+  { value: "found_time", label: "Ilk Zaman", defaultType: "asc", id: "found_time_asc" },
+  { value: "sales_volume", label: "Satislar", defaultType: "desc" },
+  { value: "gmv", label: "GMV", defaultType: "desc" },
+  { value: "play_count", label: "Gosterimler", defaultType: "desc" },
+  { value: "ad_cost", label: "Reklam Harcamasi", defaultType: "desc" },
+  { value: "video_count", label: "Reklamlar", defaultType: "desc" },
+  { value: "person_count", label: "Influencers", defaultType: "desc" },
 ];
 
 const VIDEO_SORT_OPTIONS = [
@@ -136,7 +138,8 @@ export default function TTSPage() {
 
   const [localKeyword, setLocalKeyword] = useState("");
   const [mode, setMode] = useState<Mode>("product");
-  const [productSortKey, setProductSortKey] = useState("gmv");
+  const [productSortKey, setProductSortKey] = useState("found_time");
+  const [productSortType, setProductSortType] = useState<"asc" | "desc">("desc");
   const [videoSortBy, setVideoSortBy] = useState(6);
 
   // Save modal
@@ -154,7 +157,7 @@ export default function TTSPage() {
   function handleSearch() {
     if (!localKeyword.trim()) return;
     if (mode === "product") {
-      productSearch(localKeyword.trim(), productSortKey);
+      productSearch(localKeyword.trim(), productSortKey, productSortType);
     } else {
       videoSearch(localKeyword.trim(), videoSortBy, {});
     }
@@ -236,19 +239,24 @@ export default function TTSPage() {
           </div>
 
           {/* Sort */}
-          <div className="w-44">
+          <div className={mode === "product" ? "w-52" : "w-44"}>
             <label className="block text-sm font-medium text-gray-700 mb-1">Siralama</label>
             {mode === "product" ? (
               <select
-                value={productSortKey}
+                value={productSortKey === "found_time" && productSortType === "asc" ? "found_time_asc" : productSortKey}
                 onChange={(e) => {
-                  setProductSortKey(e.target.value);
-                  productResort(e.target.value);
+                  const val = e.target.value;
+                  const opt = PRODUCT_SORT_OPTIONS.find((o) => (o.id || o.value) === val);
+                  if (!opt) return;
+                  const newType = opt.defaultType as "asc" | "desc";
+                  setProductSortKey(opt.value);
+                  setProductSortType(newType);
+                  productResort(opt.value, newType);
                 }}
                 className="w-full py-2.5 px-3 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#667eea]/30"
               >
                 {PRODUCT_SORT_OPTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  <option key={opt.id || opt.value} value={opt.id || opt.value}>{opt.label}</option>
                 ))}
               </select>
             ) : (
@@ -263,6 +271,27 @@ export default function TTSPage() {
               </select>
             )}
           </div>
+
+          {/* Asc/Desc toggle (products only) */}
+          {mode === "product" && (
+            <div className="w-32">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Sira</label>
+              <div className="flex rounded-lg border border-gray-200 overflow-hidden">
+                <button
+                  onClick={() => { setProductSortType("desc"); productResort(productSortKey, "desc"); }}
+                  className={`flex-1 py-2.5 text-xs font-medium transition-colors ${productSortType === "desc" ? "bg-[#667eea] text-white" : "bg-white text-gray-600 hover:bg-gray-50"}`}
+                >
+                  Azalan
+                </button>
+                <button
+                  onClick={() => { setProductSortType("asc"); productResort(productSortKey, "asc"); }}
+                  className={`flex-1 py-2.5 text-xs font-medium transition-colors ${productSortType === "asc" ? "bg-[#667eea] text-white" : "bg-white text-gray-600 hover:bg-gray-50"}`}
+                >
+                  Artan
+                </button>
+              </div>
+            </div>
+          )}
 
           <div className="flex items-end">
             <button onClick={handleSearch} disabled={loading || !localKeyword.trim()}
@@ -307,7 +336,13 @@ export default function TTSPage() {
               router.push(`/tts/${p.id}`);
             }}
             sortKey={productSortKey}
-            onSort={(key) => { setProductSortKey(key); productResort(key); }}
+            sortType={productSortType}
+            onSort={(key) => {
+              const newType = key === productSortKey && productSortType === "desc" ? "asc" : "desc";
+              setProductSortKey(key);
+              setProductSortType(newType);
+              productResort(key, newType);
+            }}
           />
 
           {productHasMore && !productLoadingMore && <div key={products.length} ref={productSentinelRef} className="py-8" />}
@@ -421,10 +456,11 @@ export default function TTSPage() {
 }
 
 /* ---- Product Table ---- */
-function ProductTable({ results, onSave, onDetail, sortKey, onSort }: {
+function ProductTable({ results, onSave, onDetail, sortKey, sortType, onSort }: {
   results: ProductResult[]; onSave: (p: ProductResult) => void; onDetail: (p: ProductResult) => void;
-  sortKey: string; onSort: (key: string) => void;
+  sortKey: string; sortType: "asc" | "desc"; onSort: (key: string) => void;
 }) {
+  const arrow = (key: string) => sortKey === key ? (sortType === "desc" ? " \u2193" : " \u2191") : "";
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
       <div className="overflow-x-auto">
@@ -434,12 +470,12 @@ function ProductTable({ results, onSave, onDetail, sortKey, onSort }: {
               <th className="text-left py-3 px-4 font-medium text-gray-500 w-12">#</th>
               <th className="text-left py-3 px-4 font-medium text-gray-500">Urun</th>
               <th className="text-left py-3 px-4 font-medium text-gray-500">Magaza</th>
-              <th className="text-right py-3 px-4 font-medium text-gray-500 cursor-pointer hover:text-[#667eea] select-none" onClick={() => onSort("sales_volume")}>Satislar {sortKey === "sales_volume" ? "\u2193" : ""}</th>
-              <th className="text-right py-3 px-4 font-medium text-gray-500 cursor-pointer hover:text-[#667eea] select-none" onClick={() => onSort("gmv")}>GMV {sortKey === "gmv" ? "\u2193" : ""}</th>
-              <th className="text-right py-3 px-4 font-medium text-gray-500 cursor-pointer hover:text-[#667eea] select-none" onClick={() => onSort("price")}>Fiyat {sortKey === "price" ? "\u2193" : ""}</th>
-              <th className="text-center py-3 px-4 font-medium text-gray-500">Puan</th>
-              <th className="text-right py-3 px-4 font-medium text-gray-500 cursor-pointer hover:text-[#667eea] select-none" onClick={() => onSort("video_count")}>Video {sortKey === "video_count" ? "\u2193" : ""}</th>
-              <th className="text-right py-3 px-4 font-medium text-gray-500 cursor-pointer hover:text-[#667eea] select-none" onClick={() => onSort("play_count")}>Goruntulenme {sortKey === "play_count" ? "\u2193" : ""}</th>
+              <th className="text-right py-3 px-4 font-medium text-gray-500 cursor-pointer hover:text-[#667eea] select-none" onClick={() => onSort("sales_volume")}>Satislar{arrow("sales_volume")}</th>
+              <th className="text-right py-3 px-4 font-medium text-gray-500 cursor-pointer hover:text-[#667eea] select-none" onClick={() => onSort("gmv")}>GMV{arrow("gmv")}</th>
+              <th className="text-right py-3 px-4 font-medium text-gray-500 cursor-pointer hover:text-[#667eea] select-none" onClick={() => onSort("price")}>Fiyat{arrow("price")}</th>
+              <th className="text-right py-3 px-4 font-medium text-gray-500 cursor-pointer hover:text-[#667eea] select-none" onClick={() => onSort("video_count")}>Reklamlar{arrow("video_count")}</th>
+              <th className="text-right py-3 px-4 font-medium text-gray-500 cursor-pointer hover:text-[#667eea] select-none" onClick={() => onSort("play_count")}>Gosterimler{arrow("play_count")}</th>
+              <th className="text-right py-3 px-4 font-medium text-gray-500 cursor-pointer hover:text-[#667eea] select-none" onClick={() => onSort("person_count")}>Influencers{arrow("person_count")}</th>
               <th className="text-center py-3 px-4 font-medium text-gray-500">Ulke</th>
               <th className="text-center py-3 px-4 font-medium text-gray-500 w-20">Detay</th>
               <th className="text-center py-3 px-4 font-medium text-gray-500 w-20">Kaydet</th>
@@ -482,14 +518,9 @@ function ProductTable({ results, onSave, onDetail, sortKey, onSort }: {
                 <td className="py-3 px-4 text-right font-medium text-gray-700">{formatCompact(p.sales_volume)}</td>
                 <td className="py-3 px-4 text-right font-bold text-emerald-600">{formatMoney(p.gmv_usd)}</td>
                 <td className="py-3 px-4 text-right text-gray-700">${p.price_usd.toFixed(2)}</td>
-                <td className="py-3 px-4 text-center">
-                  <span className="inline-flex items-center gap-0.5 text-xs">
-                    <Star size={12} className="text-amber-400 fill-amber-400" />
-                    <span className="text-gray-700">{p.score > 0 ? p.score.toFixed(1) : "-"}</span>
-                  </span>
-                </td>
                 <td className="py-3 px-4 text-right text-gray-600">{formatCompact(p.video_count)}</td>
                 <td className="py-3 px-4 text-right text-gray-600">{formatCompact(p.play_count)}</td>
+                <td className="py-3 px-4 text-right text-gray-600">{formatCompact(p.person_count)}</td>
                 <td className="py-3 px-4 text-center text-lg">{FLAG[p.region?.toUpperCase()] || p.region || "-"}</td>
                 <td className="py-3 px-4 text-center">
                   <button onClick={() => onDetail(p)} className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-50 text-gray-500 hover:text-[#667eea] transition-colors" title="Detay"><Eye size={14} /></button>
