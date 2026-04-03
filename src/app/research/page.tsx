@@ -322,6 +322,7 @@ export default function HomePage() {
         "Kurulu\u015f Y\u0131l\u0131": b.founded,
         Ni\u015f: b.niche,
         "Meta Ads": b.meta_ads_url,
+        Kaynak: "Research",
       };
     });
 
