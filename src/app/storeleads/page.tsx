@@ -36,9 +36,14 @@ interface StoreData {
   favicon_url: string | null;
 }
 
+interface CategoryInfo {
+  name: string;
+  count: number;
+  subs: { name: string; count: number }[];
+}
+
 interface FilterOptions {
-  platforms: string[];
-  categories: string[];
+  categories: CategoryInfo[];
   counts: { turkey: number; global: number; total: number };
 }
 
@@ -74,7 +79,7 @@ export default function StoreleadsPage() {
   const [region, setRegion] = useState<"turkey" | "global" | "all">("turkey");
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("");
-  const [platform, setPlatform] = useState("");
+  const [subCategory, setSubCategory] = useState("");
   const [minSales, setMinSales] = useState("");
   const [minTraffic, setMinTraffic] = useState("");
   const [sortBy, setSortBy] = useState("estimated_sales_usd");
@@ -103,8 +108,9 @@ export default function StoreleadsPage() {
           body: JSON.stringify({
             region,
             query: query || undefined,
-            category: category || undefined,
-            platform: platform || undefined,
+            category: subCategory
+              ? `${category}/${subCategory}`
+              : category || undefined,
             minSales: minSales ? Number(minSales) : undefined,
             minTraffic: minTraffic ? Number(minTraffic) : undefined,
             sortBy,
@@ -124,13 +130,13 @@ export default function StoreleadsPage() {
         setLoading(false);
       }
     },
-    [region, query, category, platform, minSales, minTraffic, sortBy, sortAsc]
+    [region, query, category, subCategory, minSales, minTraffic, sortBy, sortAsc]
   );
 
   // Search on filter change
   useEffect(() => {
     doSearch(1);
-  }, [region, category, platform, sortBy, sortAsc]);
+  }, [region, category, subCategory, sortBy, sortAsc]);
 
   const handleSort = (col: string) => {
     if (sortBy === col) {
@@ -175,8 +181,44 @@ export default function StoreleadsPage() {
 
       {/* Filters */}
       <div className="bg-white rounded-xl border border-gray-200 p-4 mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
-          {/* Search */}
+        {/* Category selectors */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+          <select
+            value={category}
+            onChange={(e) => {
+              setCategory(e.target.value);
+              setSubCategory("");
+            }}
+            className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#667eea]/30"
+          >
+            <option value="">Tum Kategoriler</option>
+            {filterOptions?.categories.map((c) => (
+              <option key={c.name} value={c.name}>
+                {c.name} ({c.count.toLocaleString()})
+              </option>
+            ))}
+          </select>
+
+          <select
+            value={subCategory}
+            onChange={(e) => setSubCategory(e.target.value)}
+            disabled={!category}
+            className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#667eea]/30 disabled:opacity-40"
+          >
+            <option value="">Tum Alt Kategoriler</option>
+            {category &&
+              filterOptions?.categories
+                .find((c) => c.name === category)
+                ?.subs.map((s) => (
+                  <option key={s.name} value={s.name}>
+                    {s.name} ({s.count.toLocaleString()})
+                  </option>
+                ))}
+          </select>
+        </div>
+
+        {/* Search + filters */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
           <div className="md:col-span-2">
             <div className="relative">
               <Search
@@ -188,41 +230,18 @@ export default function StoreleadsPage() {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && doSearch(1)}
-                placeholder="Domain, isim veya kategori ara..."
+                placeholder="Domain, isim veya urun ara..."
                 className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#667eea]/30 focus:border-[#667eea]"
               />
             </div>
           </div>
-
-          {/* Category */}
-          <select
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
+          <input
+            type="number"
+            value={minSales}
+            onChange={(e) => setMinSales(e.target.value)}
+            placeholder="Min satis ($)"
             className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#667eea]/30"
-          >
-            <option value="">Tum Kategoriler</option>
-            {filterOptions?.categories.map((c) => (
-              <option key={c} value={c}>
-                {c}
-              </option>
-            ))}
-          </select>
-
-          {/* Platform */}
-          <select
-            value={platform}
-            onChange={(e) => setPlatform(e.target.value)}
-            className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#667eea]/30"
-          >
-            <option value="">Tum Platformlar</option>
-            {filterOptions?.platforms.map((p) => (
-              <option key={p} value={p}>
-                {p}
-              </option>
-            ))}
-          </select>
-
-          {/* Search button */}
+          />
           <button
             onClick={() => doSearch(1)}
             disabled={loading}
@@ -231,24 +250,6 @@ export default function StoreleadsPage() {
             {loading ? <Loader2 size={16} className="animate-spin" /> : <Search size={16} />}
             Ara
           </button>
-        </div>
-
-        {/* Advanced filters row */}
-        <div className="flex gap-3 mt-3">
-          <input
-            type="number"
-            value={minSales}
-            onChange={(e) => setMinSales(e.target.value)}
-            placeholder="Min satis ($)"
-            className="w-36 px-3 py-1.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#667eea]/30"
-          />
-          <input
-            type="number"
-            value={minTraffic}
-            onChange={(e) => setMinTraffic(e.target.value)}
-            placeholder="Min trafik"
-            className="w-36 px-3 py-1.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#667eea]/30"
-          />
         </div>
       </div>
 

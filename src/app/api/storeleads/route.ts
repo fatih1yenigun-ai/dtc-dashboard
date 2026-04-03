@@ -92,39 +92,42 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// GET endpoint for filter options (categories, platforms)
+// GET endpoint for filter options (categories)
 export async function GET() {
   try {
-    // Get unique platforms
-    const { data: platformData } = await supabase
-      .from("storeleads_stores")
-      .select("platform")
-      .not("platform", "is", null)
-      .limit(1000);
-
-    const platforms = [
-      ...new Set((platformData || []).map((r) => r.platform).filter(Boolean)),
-    ].sort();
-
-    // Get categories (sample to extract unique ones)
+    // Get categories — build full hierarchy
     const { data: catData } = await supabase
       .from("storeleads_stores")
       .select("categories")
       .not("categories", "is", null)
-      .limit(5000);
+      .limit(10000);
 
-    const catSet = new Set<string>();
+    // Build a tree: { "Apparel": { "_count": 5, "subs": { "Footwear": 3, "Athletic Apparel": 2 } } }
+    const tree: Record<string, { count: number; subs: Record<string, number> }> = {};
     for (const row of catData || []) {
       if (!row.categories) continue;
-      // Categories are path-style like "/Beauty & Fitness/Face & Body Care"
-      // Split by : for multi-category entries
       for (const cat of row.categories.split(":")) {
         const parts = cat.split("/").filter(Boolean);
-        // Add top-level categories
-        if (parts[0]) catSet.add(parts[0]);
+        if (!parts[0]) continue;
+        const top = parts[0];
+        if (!tree[top]) tree[top] = { count: 0, subs: {} };
+        tree[top].count++;
+        if (parts[1]) {
+          tree[top].subs[parts[1]] = (tree[top].subs[parts[1]] || 0) + 1;
+        }
       }
     }
-    const categories = [...catSet].sort();
+
+    // Convert to sorted array
+    const categories = Object.entries(tree)
+      .map(([name, data]) => ({
+        name,
+        count: data.count,
+        subs: Object.entries(data.subs)
+          .map(([sub, cnt]) => ({ name: sub, count: cnt }))
+          .sort((a, b) => b.count - a.count),
+      }))
+      .sort((a, b) => b.count - a.count);
 
     // Get total count by country
     const { count: trCount } = await supabase
@@ -137,7 +140,6 @@ export async function GET() {
       .select("id", { count: "exact", head: true });
 
     return NextResponse.json({
-      platforms,
       categories,
       counts: {
         turkey: trCount || 0,
