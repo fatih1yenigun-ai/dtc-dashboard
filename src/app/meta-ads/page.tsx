@@ -8,15 +8,10 @@ import {
   Play,
   Save,
   X,
-  Eye,
   ShoppingBag,
   Globe,
-  Users,
-  Clock,
-  DollarSign,
   Megaphone,
   Image as ImageIcon,
-  Layers,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
@@ -264,19 +259,11 @@ export default function MetaAdsPage() {
             {allCount} reklam yuklendi{hasMore ? " (devam ediyor...)" : ""}
           </p>
 
-          <AdTable
-            results={ads}
-            onDetail={openDetail}
-            onSave={openSaveModal}
-            sortKey={sortKey}
-            sortDir={sortDir}
-            onSort={(key) => {
-              const newDir = key === sortKey && sortDir === "desc" ? "asc" : "desc";
-              setSortKey(key);
-              setSortDir(newDir);
-              resort(key, newDir);
-            }}
-          />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {ads.map((ad) => (
+              <AdCard key={ad.id} ad={ad} onDetail={openDetail} onSave={openSaveModal} />
+            ))}
+          </div>
 
           {hasMore && !loadingMore && <div key={ads.length} ref={sentinelRef} className="py-8" />}
           {loadingMore && (
@@ -574,135 +561,161 @@ export default function MetaAdsPage() {
   );
 }
 
-/* ──────── Ad Table ──────── */
-function AdTable({ results, onDetail, onSave, sortKey, sortDir, onSort }: {
-  results: MetaAd[];
+/* ──────── Ad Card (PiPiAds style) ──────── */
+function AdCard({ ad, onDetail, onSave }: {
+  ad: MetaAd;
   onDetail: (ad: MetaAd) => void;
   onSave: (ad: MetaAd) => void;
-  sortKey: SortKey;
-  sortDir: "asc" | "desc";
-  onSort: (key: SortKey) => void;
 }) {
-  const arrow = (key: SortKey) => sortKey === key ? (sortDir === "desc" ? " \u2193" : " \u2191") : "";
+  const dateRange = formatDateRange(ad.adStartedAt, ad.activeDays);
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="bg-gray-50 border-b border-gray-200">
-              <th className="text-left py-3 px-4 font-medium text-gray-500 w-12">#</th>
-              <th className="text-left py-3 px-4 font-medium text-gray-500">Reklam</th>
-              <th className="text-left py-3 px-4 font-medium text-gray-500">Reklamveren</th>
-              <th className="text-left py-3 px-4 font-medium text-gray-500">Ulke</th>
-              <th className="text-right py-3 px-4 font-medium text-gray-500 cursor-pointer hover:text-[#667eea] select-none" onClick={() => onSort("ad_cost")}>
-                Harcama{arrow("ad_cost")}
-              </th>
-              <th className="text-right py-3 px-4 font-medium text-gray-500 cursor-pointer hover:text-[#667eea] select-none" onClick={() => onSort("ad_audience_reach")}>
-                Erisim{arrow("ad_audience_reach")}
-              </th>
-              <th className="text-right py-3 px-4 font-medium text-gray-500 cursor-pointer hover:text-[#667eea] select-none" onClick={() => onSort("adset_count")}>
-                Adset{arrow("adset_count")}
-              </th>
-              <th className="text-center py-3 px-4 font-medium text-gray-500">Platform</th>
-              <th className="text-right py-3 px-4 font-medium text-gray-500 cursor-pointer hover:text-[#667eea] select-none" onClick={() => onSort("active_days")}>
-                Gunler{arrow("active_days")}
-              </th>
-              <th className="text-center py-3 px-4 font-medium text-gray-500 cursor-pointer hover:text-[#667eea] select-none" onClick={() => onSort("ad_started_at")}>
-                Tarih{arrow("ad_started_at")}
-              </th>
-              <th className="text-center py-3 px-4 font-medium text-gray-500 w-20">Eylem</th>
-            </tr>
-          </thead>
-          <tbody>
-            {results.map((ad, i) => (
-              <tr key={ad.id || i} className="border-b border-gray-100 hover:bg-gray-50/50 transition-colors">
-                <td className="py-3 px-4 text-gray-400 text-xs">{i + 1}</td>
-                {/* Ad creative + text */}
-                <td className="py-3 px-4">
-                  <div className="flex items-center gap-3 min-w-[260px]">
-                    {ad.thumbnail ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={ad.thumbnail} alt="" className="w-14 h-14 rounded-lg object-cover flex-shrink-0 border border-gray-100" />
-                    ) : (
-                      <div className="w-14 h-14 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0">
-                        {ad.mediaFormat === 1 ? <Play size={16} className="text-gray-300" /> :
-                         ad.mediaFormat === 3 ? <Layers size={16} className="text-gray-300" /> :
-                         <ImageIcon size={16} className="text-gray-300" />}
-                      </div>
-                    )}
-                    <div className="min-w-0">
-                      <button
-                        onClick={() => onDetail(ad)}
-                        className="text-sm text-gray-900 hover:text-[#667eea] line-clamp-2 transition-colors text-left cursor-pointer leading-snug"
-                      >
-                        {ad.adContent ? (ad.adContent.length > 80 ? ad.adContent.substring(0, 80) + "..." : ad.adContent) : "Reklam metni yok"}
-                      </button>
-                      <div className="flex items-center gap-1.5 mt-1">
-                        {ad.mediaFormat === 1 && <span className="text-[10px] bg-red-50 text-red-600 px-1.5 py-0.5 rounded">Video</span>}
-                        {ad.mediaFormat === 2 && <span className="text-[10px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded">Gorsel</span>}
-                        {ad.mediaFormat === 3 && <span className="text-[10px] bg-purple-50 text-purple-600 px-1.5 py-0.5 rounded">Carousel</span>}
-                        {ad.buttonText && <span className="text-[10px] bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded">{ad.buttonText}</span>}
-                      </div>
-                    </div>
-                  </div>
-                </td>
-                {/* Advertiser */}
-                <td className="py-3 px-4">
-                  <div className="flex items-center gap-2 min-w-[140px]">
-                    {ad.advertiserProfilePic ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={ad.advertiserProfilePic} alt={ad.advertiserName} className="w-8 h-8 rounded-full object-cover flex-shrink-0" />
-                    ) : (
-                      <div className="w-8 h-8 rounded-full bg-gray-200 flex-shrink-0" />
-                    )}
-                    <div className="min-w-0">
-                      <p className="text-xs font-medium text-gray-900 truncate">{ad.advertiserName || "-"}</p>
-                      {ad.ecommercePlatform && (
-                        <span className="text-[10px] text-gray-400">{ad.ecommercePlatform}</span>
-                      )}
-                    </div>
-                  </div>
-                </td>
-                {/* Country */}
-                <td className="py-3 px-4">
-                  <div className="flex flex-wrap gap-0.5">
-                    {ad.country.slice(0, 3).map((c) => (
-                      <span key={c} className="text-sm" title={c}>{FLAG[c.toUpperCase()] || c}</span>
-                    ))}
-                    {ad.country.length > 3 && <span className="text-[10px] text-gray-400">+{ad.country.length - 3}</span>}
-                  </div>
-                </td>
-                {/* Spend */}
-                <td className="py-3 px-4 text-right font-medium text-emerald-600">{formatMoney(ad.adCost)}</td>
-                {/* Reach */}
-                <td className="py-3 px-4 text-right text-gray-700">{formatCompact(ad.adAudienceReach)}</td>
-                {/* Adset */}
-                <td className="py-3 px-4 text-right text-gray-600">{ad.adsetCount}</td>
-                {/* Platform */}
-                <td className="py-3 px-4 text-center">
-                  <div className="flex justify-center gap-1">
-                    {ad.adPlatform.map((p) => (
-                      <span key={p} className="text-[10px] bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded">{PLATFORM_LABELS[p] || p}</span>
-                    ))}
-                  </div>
-                </td>
-                {/* Days */}
-                <td className="py-3 px-4 text-right text-gray-600">{ad.activeDays}</td>
-                {/* Date */}
-                <td className="py-3 px-4 text-center text-xs text-gray-500 whitespace-nowrap">{formatDate(ad.adStartedAt)}</td>
-                {/* Actions */}
-                <td className="py-3 px-4 text-center">
-                  <div className="flex items-center justify-center gap-1">
-                    <button onClick={() => onDetail(ad)} className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-50 text-gray-500 hover:text-[#667eea] transition-colors cursor-pointer" title="Detay"><Eye size={14} /></button>
-                    <button onClick={() => onSave(ad)} className="p-1.5 rounded-lg border border-[#667eea]/30 text-[#667eea] hover:bg-[#667eea]/5 transition-colors cursor-pointer" title="Kaydet"><Save size={14} /></button>
-                  </div>
-                </td>
-              </tr>
+    <div
+      className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow cursor-pointer flex flex-col"
+      onClick={() => onDetail(ad)}
+    >
+      {/* Creative */}
+      <div className="relative aspect-[4/5] bg-gray-100 flex-shrink-0">
+        {ad.mediaFormat === 1 && ad.videos.length > 0 ? (
+          <>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={ad.videos[0].coverUrl || ad.thumbnail}
+              alt=""
+              className="w-full h-full object-cover"
+              loading="lazy"
+            />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="w-14 h-14 rounded-full bg-black/30 flex items-center justify-center">
+                <Play size={24} className="text-white ml-1" fill="white" />
+              </div>
+            </div>
+            {ad.videos[0].duration > 0 && (
+              <div className="absolute bottom-2 left-2">
+                <span className="text-[11px] font-medium px-2 py-0.5 rounded bg-black/70 text-white">
+                  {formatDuration(ad.videos[0].duration)}
+                </span>
+              </div>
+            )}
+          </>
+        ) : ad.mediaFormat === 3 && ad.cards.length > 0 ? (
+          <>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={ad.cards[0].url || ad.thumbnail}
+              alt=""
+              className="w-full h-full object-cover"
+              loading="lazy"
+            />
+            <div className="absolute top-2 right-2">
+              <span className="text-[11px] font-medium px-2 py-0.5 rounded bg-black/70 text-white">
+                1/{ad.cards.length}
+              </span>
+            </div>
+          </>
+        ) : ad.images.length > 0 ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={ad.images[0].url || ad.thumbnail}
+            alt=""
+            className="w-full h-full object-cover"
+            loading="lazy"
+          />
+        ) : ad.thumbnail ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={ad.thumbnail} alt="" className="w-full h-full object-cover" loading="lazy" />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-gray-300">
+            <ImageIcon size={48} />
+          </div>
+        )}
+
+        {/* Status badge */}
+        <div className="absolute top-2 left-2">
+          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 ${
+            ad.adStatus === 2
+              ? "bg-green-100 text-green-700"
+              : "bg-red-100 text-red-700"
+          }`}>
+            <span className={`w-1.5 h-1.5 rounded-full ${ad.adStatus === 2 ? "bg-green-500" : "bg-red-500"}`} />
+            {ad.adStatus === 2 ? "Aktif" : "Kaldirildi"}
+          </span>
+        </div>
+      </div>
+
+      {/* Info */}
+      <div className="p-3 flex flex-col flex-1">
+        {/* Date range + Platform icons */}
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-[11px] text-gray-400">{dateRange}</span>
+          <div className="flex items-center gap-1">
+            {ad.adPlatform.map((p) => (
+              <span key={p} className="text-[10px] bg-gray-100 text-gray-500 px-1 py-0.5 rounded">{PLATFORM_LABELS[p] || p}</span>
             ))}
-          </tbody>
-        </table>
+          </div>
+        </div>
+
+        {/* Metrics row: Gunler, Erisim (Harcama), Adset */}
+        <div className="grid grid-cols-3 gap-2 mb-2">
+          <div className="text-center">
+            <p className="text-base font-bold text-gray-900">{ad.activeDays}</p>
+            <p className="text-[10px] text-gray-400">Gunler</p>
+          </div>
+          <div className="text-center">
+            <p className="text-base font-bold text-gray-900">
+              {formatCompact(ad.adAudienceReach)}
+              {ad.adCost !== null && ad.adCost > 0 && (
+                <span className="text-[10px] font-normal text-gray-400 ml-0.5">({formatMoney(ad.adCost)})</span>
+              )}
+            </p>
+            <p className="text-[10px] text-gray-400">Erisim (Harcama)</p>
+          </div>
+          <div className="text-center">
+            <p className="text-base font-bold text-gray-900">{ad.adsetCount}</p>
+            <p className="text-[10px] text-gray-400">Adset</p>
+          </div>
+        </div>
+
+        {/* Ad text preview */}
+        <p className="text-xs text-gray-700 line-clamp-2 mb-2 leading-snug min-h-[2rem]">
+          {ad.adContent ? (ad.adContent.length > 100 ? ad.adContent.substring(0, 100) + "..." : ad.adContent) : ""}
+        </p>
+
+        <div className="flex-1" />
+
+        {/* CTA button + Country flags */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-1">
+            {ad.country.slice(0, 3).map((c) => (
+              <span key={c} className="text-sm" title={c}>{FLAG[c.toUpperCase()] || c}</span>
+            ))}
+            {ad.country.length > 3 && <span className="text-[10px] text-gray-400">+{ad.country.length - 3}</span>}
+          </div>
+          {ad.buttonText && (
+            <span className="text-[11px] bg-gray-100 text-gray-600 px-2.5 py-1 rounded-lg font-medium">
+              {ad.buttonText}
+            </span>
+          )}
+        </div>
       </div>
     </div>
   );
+}
+
+function formatDuration(seconds: number): string {
+  if (!seconds) return "";
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+}
+
+function formatDateRange(startTs: number, activeDays: number): string {
+  if (!startTs) return "";
+  const start = new Date(startTs * 1000);
+  const end = activeDays > 0 ? new Date(start.getTime() + activeDays * 86400000) : new Date();
+  const fmt = (d: Date) => {
+    const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    return `${months[d.getMonth()]} ${String(d.getDate()).padStart(2, "0")} ${d.getFullYear()}`;
+  };
+  return `${fmt(start)}-${fmt(end)}`;
 }
