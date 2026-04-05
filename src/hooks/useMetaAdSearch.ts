@@ -152,199 +152,154 @@ export type SortKey =
   | "product_creation_time"
   | "active_days";
 
-function getSortValue(ad: MetaAd, key: SortKey): number | null {
-  switch (key) {
-    case "ad_started_at": return ad.adStartedAt || null;
-    case "adset_count": return ad.adsetCount || null;
-    case "ad_audience_reach": return ad.adAudienceReach;
-    case "latest_actived_at": return ad.latestActivedAt || null;
-    case "ad_cost": return ad.adCost;
-    case "advertiser_ad_count": return ad.advertiserAdCount || null;
-    case "product_price_usd": return ad.productPriceUsd || null;
-    case "product_ad_count": return ad.productAdCount || null;
-    case "product_creation_time": return ad.productCreationTime || null;
-    case "active_days": return ad.activeDays || null;
-    default: return null;
-  }
-}
-
-function sortAds(ads: MetaAd[], key: SortKey, direction: "asc" | "desc"): MetaAd[] {
-  if (key === "default") return ads;
-  return [...ads].sort((a, b) => {
-    const va = getSortValue(a, key);
-    const vb = getSortValue(b, key);
-    if (va === null && vb === null) return 0;
-    if (va === null) return 1;
-    if (vb === null) return -1;
-    return direction === "desc" ? vb - va : va - vb;
-  });
-}
+// Maps our sort keys to PiPiAds API order_by values (discovered via testing)
+const ORDER_BY_MAP: Record<SortKey, string | undefined> = {
+  default: undefined,
+  ad_started_at: "ad_started_at",
+  adset_count: "adset_count",
+  ad_audience_reach: "ad_audience_reach",
+  latest_actived_at: "latest_actived_at",
+  ad_cost: "ad_cost",
+  advertiser_ad_count: "advertiser_ad_count",
+  product_price_usd: "product_price_usd",
+  product_ad_count: "product_ad_count",
+  product_creation_time: "product_creation_time",
+  active_days: "active_days",
+};
 
 const PAGE_SIZE = 20;
-const INITIAL_BATCH_PAGES = 5; // Load 100 results on first search
 
 export function useMetaAdSearch() {
   const { token } = useAuth();
-  // allAds = raw unsorted accumulator; sortedAds = what the UI sees
-  const allAdsRef = useRef<MetaAd[]>([]);
-  const [sortedAds, setSortedAds] = useState<MetaAd[]>([]);
+  const [allAds, setAllAds] = useState<MetaAd[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState("");
   const [hasMore, setHasMore] = useState(true);
-  const [allCount, setAllCount] = useState(0);
   const pageRef = useRef(1);
   const hasMoreRef = useRef(true);
   const loadingMoreRef = useRef(false);
   const loadingRef = useRef(false);
   const abortRef = useRef<AbortController | null>(null);
-  const keywordRef = useRef("");
-  const sortRef = useRef<{ key: SortKey; direction: "asc" | "desc" }>({
-    key: "default",
-    direction: "desc",
-  });
+  const searchParamsRef = useRef<{
+    keyword: string;
+    orderBy: string | undefined;
+    direction: "asc" | "desc";
+  } | null>(null);
 
-  const applySortAndUpdate = useCallback((ads: MetaAd[]) => {
-    const { key, direction } = sortRef.current;
-    setSortedAds(sortAds(ads, key, direction));
-    setAllCount(ads.length);
-  }, []);
+  const fetchPage = useCallback(
+    async (pageNum: number, append: boolean) => {
+      const params = searchParamsRef.current;
+      if (!params) return;
+      if (append && loadingMoreRef.current) return;
 
-  const fetchOnePage = useCallback(
-    async (
-      pageNum: number,
-      controller: AbortController
-    ): Promise<MetaAd[]> => {
-      const headers: Record<string, string> = { "Content-Type": "application/json" };
-      if (token) headers["Authorization"] = `Bearer ${token}`;
-
-      const res = await fetch("/api/meta-ads", {
-        method: "POST",
-        headers,
-        body: JSON.stringify({
-          keyword: keywordRef.current,
-          page: pageNum,
-          perPage: PAGE_SIZE,
-        }),
-        signal: controller.signal,
-      });
-
-      if (!res.ok) {
-        const errData = await res.json().catch(() => ({}));
-        throw new Error(errData.error || `API error ${res.status}`);
+      if (!append) {
+        if (abortRef.current) abortRef.current.abort();
+        setLoading(true);
+        loadingRef.current = true;
+        setError("");
+      } else {
+        setLoadingMore(true);
+        loadingMoreRef.current = true;
       }
 
-      const data = await res.json();
-      if (data.error) throw new Error(data.error);
-
-      const list = data.data?.data || [];
-      return list.map(mapAd);
-    },
-    [token]
-  );
-
-  // Batch-fetch multiple pages sequentially
-  const batchFetch = useCallback(
-    async (startPage: number, numPages: number) => {
-      if (abortRef.current) abortRef.current.abort();
       const controller = new AbortController();
-      abortRef.current = controller;
-
-      setLoading(true);
-      loadingRef.current = true;
-      setError("");
+      if (!append) abortRef.current = controller;
 
       try {
-        const accumulated: MetaAd[] = [];
-        const existingIds = new Set(allAdsRef.current.map((a) => a.id));
-        let lastPageFull = true;
+        const headers: Record<string, string> = { "Content-Type": "application/json" };
+        if (token) headers["Authorization"] = `Bearer ${token}`;
 
-        for (let p = startPage; p < startPage + numPages; p++) {
-          const mapped = await fetchOnePage(p, controller);
-          const unique = mapped.filter((a) => !existingIds.has(a.id));
-          unique.forEach((a) => existingIds.add(a.id));
-          accumulated.push(...unique);
-          pageRef.current = p;
+        const res = await fetch("/api/meta-ads", {
+          method: "POST",
+          headers,
+          body: JSON.stringify({
+            keyword: params.keyword,
+            page: pageNum,
+            perPage: PAGE_SIZE,
+            orderBy: params.orderBy,
+            direction: params.direction,
+          }),
+          signal: controller.signal,
+        });
 
-          if (mapped.length < PAGE_SIZE) {
-            lastPageFull = false;
-            break;
-          }
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.error || `API error ${res.status}`);
         }
 
-        const newAll = [...allAdsRef.current, ...accumulated];
-        allAdsRef.current = newAll;
-        applySortAndUpdate(newAll);
+        const data = await res.json();
+        if (data.error) throw new Error(data.error);
 
-        setHasMore(lastPageFull);
-        hasMoreRef.current = lastPageFull;
+        const list = data.data?.data || [];
+        const mapped: MetaAd[] = list.map(mapAd);
+
+        if (append) {
+          setAllAds((prev) => {
+            const ids = new Set(prev.map((a) => a.id));
+            const unique = mapped.filter((a) => !ids.has(a.id));
+            return [...prev, ...unique];
+          });
+        } else {
+          setAllAds(mapped);
+        }
+
+        const more = mapped.length >= PAGE_SIZE;
+        setHasMore(more);
+        hasMoreRef.current = more;
+        pageRef.current = pageNum;
       } catch (err) {
         if ((err as Error).name === "AbortError") return;
         setError((err as Error).message || "Bir hata olustu");
       } finally {
         setLoading(false);
+        setLoadingMore(false);
         loadingRef.current = false;
+        loadingMoreRef.current = false;
       }
     },
-    [fetchOnePage, applySortAndUpdate]
+    [token]
   );
 
   const search = useCallback(
-    (keyword: string) => {
+    (keyword: string, sortKey: SortKey = "default", direction: "asc" | "desc" = "desc") => {
       if (!keyword.trim()) return;
-      keywordRef.current = keyword;
-      sortRef.current = { key: "default", direction: "desc" };
-      allAdsRef.current = [];
-      setSortedAds([]);
-      setAllCount(0);
+      searchParamsRef.current = {
+        keyword,
+        orderBy: ORDER_BY_MAP[sortKey],
+        direction,
+      };
+      setAllAds([]);
       setHasMore(true);
       hasMoreRef.current = true;
-      pageRef.current = 0;
-      // Batch-load first 5 pages (100 results) so sorting is meaningful
-      batchFetch(1, INITIAL_BATCH_PAGES);
+      pageRef.current = 1;
+      fetchPage(1, false);
     },
-    [batchFetch]
+    [fetchPage]
   );
 
-  const loadMore = useCallback(async () => {
+  const loadMore = useCallback(() => {
     if (!hasMoreRef.current || loadingMoreRef.current || loadingRef.current) return;
-    if (!keywordRef.current) return;
+    fetchPage(pageRef.current + 1, true);
+  }, [fetchPage]);
 
-    const controller = new AbortController();
-    setLoadingMore(true);
-    loadingMoreRef.current = true;
-
-    try {
-      const nextPage = pageRef.current + 1;
-      const mapped = await fetchOnePage(nextPage, controller);
-      const existingIds = new Set(allAdsRef.current.map((a) => a.id));
-      const unique = mapped.filter((a) => !existingIds.has(a.id));
-
-      const newAll = [...allAdsRef.current, ...unique];
-      allAdsRef.current = newAll;
-      applySortAndUpdate(newAll);
-      pageRef.current = nextPage;
-
-      const more = mapped.length >= PAGE_SIZE;
-      setHasMore(more);
-      hasMoreRef.current = more;
-    } catch (err) {
-      if ((err as Error).name !== "AbortError") {
-        setError((err as Error).message || "Bir hata olustu");
-      }
-    } finally {
-      setLoadingMore(false);
-      loadingMoreRef.current = false;
-    }
-  }, [fetchOnePage, applySortAndUpdate]);
-
-  // Client-side re-sort of all accumulated results (instant, no API call)
+  // Server-side re-sort: triggers fresh API call with new order_by
   const resort = useCallback(
-    (key: SortKey, direction: "asc" | "desc") => {
-      sortRef.current = { key, direction };
-      setSortedAds(sortAds(allAdsRef.current, key, direction));
+    (sortKey: SortKey, direction: "asc" | "desc") => {
+      const params = searchParamsRef.current;
+      if (!params) return;
+      searchParamsRef.current = {
+        ...params,
+        orderBy: ORDER_BY_MAP[sortKey],
+        direction,
+      };
+      setAllAds([]);
+      setHasMore(true);
+      hasMoreRef.current = true;
+      pageRef.current = 1;
+      fetchPage(1, false);
     },
-    []
+    [fetchPage]
   );
 
   // Sentinel ref for infinite scroll
@@ -370,8 +325,8 @@ export function useMetaAdSearch() {
   }, []);
 
   return {
-    ads: sortedAds,
-    allCount,
+    ads: allAds,
+    allCount: allAds.length,
     loading,
     loadingMore,
     error,

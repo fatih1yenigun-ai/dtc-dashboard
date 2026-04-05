@@ -91,22 +91,29 @@ async function searchAds(
   token: string,
   keyword: string,
   page: number,
-  perPage: number
+  perPage: number,
+  orderBy?: string,
+  direction: string = "desc"
 ) {
   const url = "https://www.pipiads.com/v1/api/ppspy/advertisements";
-  const body = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const body: Record<string, any> = {
     is_real: false,
     is_and: false,
     enable_token_search: 2,
     extend_keywords: JSON.stringify([
       { field: "all", value: keyword, logic_operator: "or" },
     ]),
-    direction: "desc",
+    direction,
     page,
     per_page: perPage,
   };
 
-  console.log("[Meta Ads Search] Request:", { keyword, page, perPage });
+  if (orderBy) {
+    body.order_by = orderBy;
+  }
+
+  console.log("[Meta Ads Search] Request:", { keyword, page, perPage, orderBy, direction });
 
   const res = await fetch(url, {
     method: "POST",
@@ -145,7 +152,7 @@ export async function POST(request: NextRequest) {
       if (payload) userId = payload.userId;
     }
 
-    const { keyword, page = 1, perPage = 20 } = await request.json();
+    const { keyword, page = 1, perPage = 20, orderBy, direction = "desc" } = await request.json();
 
     if (!keyword) {
       return new Response(
@@ -157,7 +164,7 @@ export async function POST(request: NextRequest) {
     const token = await pipiadsLogin();
 
     const data = await enqueue(() =>
-      searchAds(token, keyword, page, perPage)
+      searchAds(token, keyword, page, perPage, orderBy, direction)
     );
 
     if (!data?.data?.data) {

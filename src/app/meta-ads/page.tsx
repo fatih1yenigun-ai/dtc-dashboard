@@ -117,7 +117,7 @@ export default function MetaAdsPage() {
     if (!localKeyword.trim()) return;
     setSortKey("default");
     setSortDir("desc");
-    search(localKeyword.trim());
+    search(localKeyword.trim(), "default", "desc");
   }
 
   function handleSortChange(key: SortKey) {
