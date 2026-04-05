@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import {
   Search,
   Loader2,
@@ -117,7 +117,7 @@ export default function MetaAdsPage() {
     if (!localKeyword.trim()) return;
     setSortKey("default");
     setSortDir("desc");
-    search(localKeyword.trim());
+    search(localKeyword.trim(), "default", "desc");
   }
 
   function handleSortChange(key: SortKey) {
@@ -567,39 +567,66 @@ function AdCard({ ad, onDetail, onSave }: {
   onDetail: (ad: MetaAd) => void;
   onSave: (ad: MetaAd) => void;
 }) {
+  const [playing, setPlaying] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
   const dateRange = formatDateRange(ad.adStartedAt, ad.activeDays);
 
+  function handleVideoClick(e: React.MouseEvent) {
+    e.stopPropagation(); // Don't open popup
+    if (playing) {
+      videoRef.current?.pause();
+      setPlaying(false);
+    } else {
+      videoRef.current?.play();
+      setPlaying(true);
+    }
+  }
+
   return (
-    <div
-      className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow cursor-pointer flex flex-col"
-      onClick={() => onDetail(ad)}
-    >
-      {/* Creative */}
+    <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow flex flex-col">
+      {/* Creative area — video plays inline, images/carousel open popup */}
       <div className="relative aspect-[4/5] bg-gray-100 flex-shrink-0">
         {ad.mediaFormat === 1 && ad.videos.length > 0 ? (
-          <>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={ad.videos[0].coverUrl || ad.thumbnail}
-              alt=""
-              className="w-full h-full object-cover"
-              loading="lazy"
-            />
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-14 h-14 rounded-full bg-black/30 flex items-center justify-center">
-                <Play size={24} className="text-white ml-1" fill="white" />
-              </div>
-            </div>
-            {ad.videos[0].duration > 0 && (
+          /* Video: click plays inline */
+          <div className="w-full h-full cursor-pointer" onClick={handleVideoClick}>
+            {playing ? (
+              <video
+                ref={videoRef}
+                src={ad.videos[0].url}
+                poster={ad.videos[0].coverUrl || ad.thumbnail}
+                className="w-full h-full object-cover"
+                autoPlay
+                loop
+                playsInline
+                onClick={handleVideoClick}
+              />
+            ) : (
+              <>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={ad.videos[0].coverUrl || ad.thumbnail}
+                  alt=""
+                  className="w-full h-full object-cover"
+                  loading="lazy"
+                />
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <div className="w-14 h-14 rounded-full bg-black/30 flex items-center justify-center">
+                    <Play size={24} className="text-white ml-1" fill="white" />
+                  </div>
+                </div>
+              </>
+            )}
+            {ad.videos[0].duration > 0 && !playing && (
               <div className="absolute bottom-2 left-2">
                 <span className="text-[11px] font-medium px-2 py-0.5 rounded bg-black/70 text-white">
                   {formatDuration(ad.videos[0].duration)}
                 </span>
               </div>
             )}
-          </>
+          </div>
         ) : ad.mediaFormat === 3 && ad.cards.length > 0 ? (
-          <>
+          /* Carousel: click opens popup */
+          <div className="w-full h-full cursor-pointer" onClick={() => onDetail(ad)}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={ad.cards[0].url || ad.thumbnail}
@@ -612,26 +639,31 @@ function AdCard({ ad, onDetail, onSave }: {
                 1/{ad.cards.length}
               </span>
             </div>
-          </>
+          </div>
         ) : ad.images.length > 0 ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={ad.images[0].url || ad.thumbnail}
-            alt=""
-            className="w-full h-full object-cover"
-            loading="lazy"
-          />
+          /* Image: click opens popup */
+          <div className="w-full h-full cursor-pointer" onClick={() => onDetail(ad)}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={ad.images[0].url || ad.thumbnail}
+              alt=""
+              className="w-full h-full object-cover"
+              loading="lazy"
+            />
+          </div>
         ) : ad.thumbnail ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={ad.thumbnail} alt="" className="w-full h-full object-cover" loading="lazy" />
+          <div className="w-full h-full cursor-pointer" onClick={() => onDetail(ad)}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={ad.thumbnail} alt="" className="w-full h-full object-cover" loading="lazy" />
+          </div>
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-gray-300">
+          <div className="w-full h-full flex items-center justify-center text-gray-300 cursor-pointer" onClick={() => onDetail(ad)}>
             <ImageIcon size={48} />
           </div>
         )}
 
         {/* Status badge */}
-        <div className="absolute top-2 left-2">
+        <div className="absolute top-2 left-2 pointer-events-none">
           <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 ${
             ad.adStatus === 2
               ? "bg-green-100 text-green-700"
@@ -643,8 +675,8 @@ function AdCard({ ad, onDetail, onSave }: {
         </div>
       </div>
 
-      {/* Info */}
-      <div className="p-3 flex flex-col flex-1">
+      {/* Info area — click opens popup */}
+      <div className="p-3 flex flex-col flex-1 cursor-pointer" onClick={() => onDetail(ad)}>
         {/* Date range + Platform icons */}
         <div className="flex items-center justify-between mb-2">
           <span className="text-[11px] text-gray-400">{dateRange}</span>

@@ -171,56 +171,26 @@ export type SortKey =
   | "product_creation_time"
   | "active_days";
 
-function getSortValue(ad: MetaAd, key: SortKey): number | null {
-  switch (key) {
-    case "ad_started_at":
-      return ad.adStartedAt || null;
-    case "adset_count":
-      return ad.adsetCount || null;
-    case "ad_audience_reach":
-      return ad.adAudienceReach;
-    case "latest_actived_at":
-      return ad.latestActivedAt || null;
-    case "ad_cost":
-      return ad.adCost;
-    case "advertiser_ad_count":
-      return ad.advertiserAdCount || null;
-    case "product_price_usd":
-      return ad.productPriceUsd || null;
-    case "product_ad_count":
-      return ad.productAdCount || null;
-    case "product_creation_time":
-      return ad.productCreationTime || null;
-    case "active_days":
-      return ad.activeDays || null;
-    default:
-      return null;
-  }
-}
-
-function sortAds(
-  ads: MetaAd[],
-  key: SortKey,
-  direction: "asc" | "desc"
-): MetaAd[] {
-  if (key === "default") return ads;
-  return [...ads].sort((a, b) => {
-    const va = getSortValue(a, key);
-    const vb = getSortValue(b, key);
-    // null always last
-    if (va === null && vb === null) return 0;
-    if (va === null) return 1;
-    if (vb === null) return -1;
-    return direction === "desc" ? vb - va : va - vb;
-  });
-}
+// Map our sort keys to PiPiAds API sort_key values
+const SORT_KEY_API_MAP: Record<SortKey, string | undefined> = {
+  default: undefined,
+  ad_started_at: "ad_started_at",
+  adset_count: "adset_count",
+  ad_audience_reach: "ad_audience_reach",
+  latest_actived_at: "latest_actived_at",
+  ad_cost: "ad_cost",
+  advertiser_ad_count: "advertiser_ad_count",
+  product_price_usd: "product_price_usd",
+  product_ad_count: "product_ad_count",
+  product_creation_time: "product_creation_time",
+  active_days: "active_days",
+};
 
 const PAGE_SIZE = 20;
 
 export function useMetaAdSearch() {
   const { token } = useAuth();
   const [allAds, setAllAds] = useState<MetaAd[]>([]);
-  const [sortedAds, setSortedAds] = useState<MetaAd[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState("");
@@ -230,20 +200,11 @@ export function useMetaAdSearch() {
   const loadingMoreRef = useRef(false);
   const loadingRef = useRef(false);
   const abortRef = useRef<AbortController | null>(null);
-  const searchParamsRef = useRef<{ keyword: string } | null>(null);
-  const sortRef = useRef<{ key: SortKey; direction: "asc" | "desc" }>({
-    key: "default",
-    direction: "desc",
-  });
-
-  const applySortAndSet = useCallback(
-    (ads: MetaAd[], key?: SortKey, dir?: "asc" | "desc") => {
-      const sk = key ?? sortRef.current.key;
-      const sd = dir ?? sortRef.current.direction;
-      setSortedAds(sortAds(ads, sk, sd));
-    },
-    []
-  );
+  const searchParamsRef = useRef<{
+    keyword: string;
+    sortKey: SortKey;
+    direction: "asc" | "desc";
+  } | null>(null);
 
   const fetchPage = useCallback(
     async (pageNum: number, append: boolean) => {
@@ -277,6 +238,8 @@ export function useMetaAdSearch() {
             keyword: params.keyword,
             page: pageNum,
             perPage: PAGE_SIZE,
+            sortKey: SORT_KEY_API_MAP[params.sortKey],
+            direction: params.direction,
           }),
           signal: controller.signal,
         });
@@ -292,18 +255,15 @@ export function useMetaAdSearch() {
         const list = data.data?.data || [];
         const mapped: MetaAd[] = list.map(mapAd);
 
-        let newAll: MetaAd[];
         if (append) {
-          newAll = [...allAds];
-          const ids = new Set(newAll.map((a) => a.id));
-          const unique = mapped.filter((a) => !ids.has(a.id));
-          newAll = [...newAll, ...unique];
+          setAllAds((prev) => {
+            const ids = new Set(prev.map((a) => a.id));
+            const unique = mapped.filter((a) => !ids.has(a.id));
+            return [...prev, ...unique];
+          });
         } else {
-          newAll = mapped;
+          setAllAds(mapped);
         }
-
-        setAllAds(newAll);
-        applySortAndSet(newAll);
 
         const more = mapped.length >= PAGE_SIZE;
         setHasMore(more);
@@ -319,16 +279,14 @@ export function useMetaAdSearch() {
         loadingMoreRef.current = false;
       }
     },
-    [token, allAds, applySortAndSet]
+    [token]
   );
 
   const search = useCallback(
-    (keyword: string) => {
+    (keyword: string, sortKey: SortKey = "default", direction: "asc" | "desc" = "desc") => {
       if (!keyword.trim()) return;
-      searchParamsRef.current = { keyword };
-      sortRef.current = { key: "default", direction: "desc" };
+      searchParamsRef.current = { keyword, sortKey, direction };
       setAllAds([]);
-      setSortedAds([]);
       setHasMore(true);
       hasMoreRef.current = true;
       pageRef.current = 1;
@@ -343,12 +301,19 @@ export function useMetaAdSearch() {
     fetchPage(pageRef.current + 1, true);
   }, [fetchPage]);
 
+  // Re-search with new sort (server-side — triggers fresh API call)
   const resort = useCallback(
-    (key: SortKey, direction: "asc" | "desc") => {
-      sortRef.current = { key, direction };
-      applySortAndSet(allAds, key, direction);
+    (sortKey: SortKey, direction: "asc" | "desc") => {
+      const params = searchParamsRef.current;
+      if (!params) return;
+      searchParamsRef.current = { ...params, sortKey, direction };
+      setAllAds([]);
+      setHasMore(true);
+      hasMoreRef.current = true;
+      pageRef.current = 1;
+      fetchPage(1, false);
     },
-    [allAds, applySortAndSet]
+    [fetchPage]
   );
 
   // Sentinel ref for infinite scroll
@@ -374,7 +339,7 @@ export function useMetaAdSearch() {
   }, []);
 
   return {
-    ads: sortedAds,
+    ads: allAds,
     allCount: allAds.length,
     loading,
     loadingMore,
