@@ -70,10 +70,25 @@ function formatMoney(n: number): string {
   return `$${n.toFixed(0)}`;
 }
 
-const PIE_COLORS = [
-  "#667eea", "#764ba2", "#f093fb", "#4facfe", "#00f2fe",
-  "#43e97b", "#fa709a", "#feb47b", "#7f5af0", "#2cb67d",
+// Neon palette for dark charts
+const NEON_COLORS = [
+  "#00f0ff", "#7f5af0", "#2ee89e", "#ff6bcb", "#ffd866",
+  "#4facfe", "#f093fb", "#ff8c42", "#00e676", "#ff5252",
 ];
+
+// Glow colors (matching neon but used for shadows)
+const GLOW_MAP: Record<string, string> = {
+  "#00f0ff": "rgba(0,240,255,0.4)",
+  "#7f5af0": "rgba(127,90,240,0.4)",
+  "#2ee89e": "rgba(46,232,158,0.4)",
+  "#ff6bcb": "rgba(255,107,203,0.4)",
+  "#ffd866": "rgba(255,216,102,0.4)",
+  "#4facfe": "rgba(79,172,254,0.4)",
+  "#f093fb": "rgba(240,147,251,0.4)",
+  "#ff8c42": "rgba(255,140,66,0.4)",
+  "#00e676": "rgba(0,230,118,0.4)",
+  "#ff5252": "rgba(255,82,82,0.4)",
+};
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -178,6 +193,115 @@ function ProductRow({ product, rank, selected, onToggle }: { product: AmazonProd
   );
 }
 
+// ── Neon Tooltip ───────────────────────────────────────────────────────────
+
+function NeonTooltip({ active, payload }: { active?: boolean; payload?: Array<{ name: string; value: number; payload: { color: string } }> }) {
+  if (!active || !payload?.length) return null;
+  const { name, value, payload: item } = payload[0];
+  return (
+    <div
+      className="rounded-lg px-3 py-2 text-xs"
+      style={{
+        background: "rgba(10,10,20,0.95)",
+        border: `1px solid ${item.color}66`,
+        boxShadow: `0 0 12px ${GLOW_MAP[item.color] || item.color + "40"}`,
+      }}
+    >
+      <p className="font-medium" style={{ color: item.color }}>{name}</p>
+      <p className="text-white/80 font-bold">{formatCompact(value)}</p>
+    </div>
+  );
+}
+
+// ── Neon Pie Chart wrapper ─────────────────────────────────────────────────
+
+function NeonPieChart({ data, centerLabel, centerValue }: {
+  data: Array<{ name: string; value: number; color: string }>;
+  centerLabel: string;
+  centerValue: string;
+}) {
+  return (
+    <div
+      className="relative rounded-2xl p-5 overflow-hidden"
+      style={{
+        background: "#0a0a14",
+        border: "1px solid rgba(102,126,234,0.25)",
+      }}
+    >
+      {/* Grid overlay */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          backgroundImage: "linear-gradient(rgba(102,126,234,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(102,126,234,0.06) 1px, transparent 1px)",
+          backgroundSize: "32px 32px",
+        }}
+      />
+
+      {/* Pie */}
+      <div className="h-[300px] relative z-10">
+        <ResponsiveContainer width="100%" height="100%">
+          <PieChart>
+            <defs>
+              {data.map((entry, i) => (
+                <filter key={`glow-${i}`} id={`neon-glow-${i}-${entry.name.replace(/\s/g, "")}`}>
+                  <feGaussianBlur stdDeviation="3" result="blur1" />
+                  <feGaussianBlur stdDeviation="8" result="blur2" />
+                  <feMerge>
+                    <feMergeNode in="blur2" />
+                    <feMergeNode in="blur1" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+              ))}
+            </defs>
+            <Pie
+              data={data}
+              cx="50%"
+              cy="50%"
+              innerRadius={65}
+              outerRadius={115}
+              paddingAngle={3}
+              dataKey="value"
+              animationBegin={0}
+              animationDuration={800}
+              stroke="rgba(10,10,20,0.8)"
+              strokeWidth={2}
+            >
+              {data.map((entry, i) => (
+                <Cell
+                  key={i}
+                  fill={entry.color + "B3"}
+                  style={{
+                    filter: `drop-shadow(0 0 4px ${entry.color}) drop-shadow(0 0 14px ${GLOW_MAP[entry.color] || entry.color + "40"})`,
+                  }}
+                />
+              ))}
+            </Pie>
+            <Tooltip content={<NeonTooltip />} />
+          </PieChart>
+        </ResponsiveContainer>
+
+        {/* Center label */}
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
+          <div className="text-center">
+            <p className="text-2xl font-bold text-white" style={{ textShadow: "0 0 20px rgba(102,126,234,0.5)" }}>{centerValue}</p>
+            <p className="text-[10px] text-[#888899] uppercase tracking-wider">{centerLabel}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Bottom pool glow */}
+      <div
+        className="absolute bottom-0 left-1/2 -translate-x-1/2 w-3/4 h-16 rounded-full pointer-events-none"
+        style={{
+          background: `radial-gradient(ellipse, ${data[0]?.color || "#667eea"}20 0%, transparent 70%)`,
+          filter: "blur(20px)",
+        }}
+      />
+    </div>
+  );
+}
+
 // ── Hacimler Tab (Keywords + Websites side by side) ────────────────────────
 
 function HacimlerTab({ keywords, websites }: { keywords: KeywordVolume[]; websites: TopWebsite[] }) {
@@ -187,142 +311,116 @@ function HacimlerTab({ keywords, websites }: { keywords: KeywordVolume[]; websit
   const kwData = keywords.map((k, i) => ({
     name: k.keyword,
     value: k.monthlyVolume,
-    color: PIE_COLORS[i % PIE_COLORS.length],
+    color: NEON_COLORS[i % NEON_COLORS.length],
   }));
 
   const wsData = websites.map((w, i) => ({
     name: w.brandName,
     value: w.monthlyTraffic,
     domain: w.domain,
-    color: PIE_COLORS[i % PIE_COLORS.length],
+    color: NEON_COLORS[i % NEON_COLORS.length],
   }));
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {/* ── Left: Keywords ──────────────────────────────── */}
-      <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-        <h3 className="font-semibold text-gray-900 mb-1 flex items-center gap-2">
-          <KeyRound size={18} className="text-[#667eea]" />
-          Anahtar Kelimeler
-        </h3>
-        <p className="text-xs text-gray-400 mb-4">Google aylik arama hacimleri</p>
+      <div className="space-y-4">
+        <div>
+          <h3 className="font-semibold text-gray-900 flex items-center gap-2">
+            <KeyRound size={18} className="text-[#667eea]" />
+            Anahtar Kelimeler
+          </h3>
+          <p className="text-xs text-gray-400">Google aylik arama hacimleri</p>
+        </div>
 
         {keywords.length > 0 ? (
           <>
-            <div className="h-[280px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={kwData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={110}
-                    paddingAngle={2}
-                    dataKey="value"
-                    label={({ name, value }: { name?: string; value?: number }) => `${(name || "").length > 20 ? (name || "").slice(0, 18) + "..." : (name || "")}: ${formatCompact(value || 0)}`}
-                    labelLine={false}
-                  >
-                    {kwData.map((entry, i) => (
-                      <Cell key={i} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip formatter={(value) => formatCompact(Number(value || 0))} />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-
-            {/* Total */}
-            <div className="text-center mt-2 mb-4 py-3 bg-[#667eea]/5 rounded-xl">
-              <p className="text-xs text-gray-500">Toplam Hacim</p>
-              <p className="text-2xl font-bold text-[#667eea]">{formatCompact(totalVolume)}</p>
-              <p className="text-[10px] text-gray-400">aylik arama</p>
-            </div>
+            <NeonPieChart
+              data={kwData}
+              centerLabel="Toplam Hacim"
+              centerValue={formatCompact(totalVolume)}
+            />
 
             {/* Keyword list */}
-            <div className="space-y-2">
-              {keywords.map((kw, i) => (
-                <div key={i} className="flex items-center gap-2 text-sm">
-                  <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: PIE_COLORS[i % PIE_COLORS.length] }} />
-                  <span className="flex-1 text-gray-700 truncate">{kw.keyword}</span>
-                  <span className="font-semibold text-gray-900">{formatCompact(kw.monthlyVolume)}</span>
-                  <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${
-                    kw.difficulty >= 70 ? "bg-red-100 text-red-700" : kw.difficulty >= 40 ? "bg-amber-100 text-amber-700" : "bg-emerald-100 text-emerald-700"
-                  }`}>
-                    {kw.difficulty}
-                  </span>
-                </div>
-              ))}
+            <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm space-y-2">
+              {keywords.map((kw, i) => {
+                const color = NEON_COLORS[i % NEON_COLORS.length];
+                return (
+                  <div key={i} className="flex items-center gap-2 text-sm group">
+                    <div
+                      className="w-6 h-2 rounded-full flex-shrink-0"
+                      style={{
+                        backgroundColor: color,
+                        boxShadow: `0 0 6px ${GLOW_MAP[color] || color + "40"}`,
+                      }}
+                    />
+                    <span className="flex-1 text-gray-700 truncate">{kw.keyword}</span>
+                    <span className="font-bold text-gray-900">{formatCompact(kw.monthlyVolume)}</span>
+                    <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${
+                      kw.difficulty >= 70 ? "bg-red-100 text-red-700" : kw.difficulty >= 40 ? "bg-amber-100 text-amber-700" : "bg-emerald-100 text-emerald-700"
+                    }`}>
+                      {kw.difficulty}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
           </>
         ) : (
-          <div className="text-center py-12">
-            <KeyRound size={32} className="text-gray-300 mx-auto mb-2" />
-            <p className="text-sm text-gray-400">Veri bulunamadi</p>
+          <div className="text-center py-12 bg-[#0a0a14] rounded-2xl">
+            <KeyRound size={32} className="text-gray-600 mx-auto mb-2" />
+            <p className="text-sm text-gray-500">Veri bulunamadi</p>
           </div>
         )}
       </div>
 
-      {/* ── Right: Top Websites ─────────────────────────── */}
-      <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-        <h3 className="font-semibold text-gray-900 mb-1 flex items-center gap-2">
-          <Globe size={18} className="text-[#667eea]" />
-          Top Markalar & Websiteler
-        </h3>
-        <p className="text-xs text-gray-400 mb-4">Trafik bazli pazar paylari</p>
+      {/* ── Right: Brands ───────────────────────────────── */}
+      <div className="space-y-4">
+        <div>
+          <h3 className="font-semibold text-gray-900 flex items-center gap-2">
+            <Globe size={18} className="text-[#667eea]" />
+            Markalar
+          </h3>
+          <p className="text-xs text-gray-400">Trafik bazli pazar paylari</p>
+        </div>
 
         {websites.length > 0 ? (
           <>
-            <div className="h-[280px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={wsData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={110}
-                    paddingAngle={2}
-                    dataKey="value"
-                    label={({ name, value }) => `${name}: ${formatCompact(value)}`}
-                    labelLine={false}
-                  >
-                    {wsData.map((entry, i) => (
-                      <Cell key={i} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip formatter={(value) => formatCompact(Number(value || 0))} />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-
-            {/* Total */}
-            <div className="text-center mt-2 mb-4 py-3 bg-[#667eea]/5 rounded-xl">
-              <p className="text-xs text-gray-500">Toplam Trafik</p>
-              <p className="text-2xl font-bold text-[#667eea]">{formatCompact(totalTraffic)}</p>
-              <p className="text-[10px] text-gray-400">aylik ziyaret</p>
-            </div>
+            <NeonPieChart
+              data={wsData}
+              centerLabel="Toplam Trafik"
+              centerValue={formatCompact(totalTraffic)}
+            />
 
             {/* Website list */}
-            <div className="space-y-2">
-              {websites.map((ws, i) => (
-                <div key={i} className="flex items-center gap-2 text-sm">
-                  <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: PIE_COLORS[i % PIE_COLORS.length] }} />
-                  <span className="flex-1 min-w-0">
-                    <span className="font-medium text-gray-900">{ws.brandName}</span>
-                    <a href={`https://${ws.domain}`} target="_blank" rel="noopener noreferrer" className="text-[10px] text-blue-500 hover:underline ml-1">
-                      {ws.domain} <ExternalLink size={8} className="inline" />
-                    </a>
-                  </span>
-                  <span className="font-semibold text-gray-900 flex-shrink-0">{formatCompact(ws.monthlyTraffic)}</span>
-                </div>
-              ))}
+            <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm space-y-2">
+              {websites.map((ws, i) => {
+                const color = NEON_COLORS[i % NEON_COLORS.length];
+                return (
+                  <div key={i} className="flex items-center gap-2 text-sm">
+                    <div
+                      className="w-6 h-2 rounded-full flex-shrink-0"
+                      style={{
+                        backgroundColor: color,
+                        boxShadow: `0 0 6px ${GLOW_MAP[color] || color + "40"}`,
+                      }}
+                    />
+                    <span className="flex-1 min-w-0">
+                      <span className="font-medium text-gray-900">{ws.brandName}</span>
+                      <a href={`https://${ws.domain}`} target="_blank" rel="noopener noreferrer" className="text-[10px] text-blue-500 hover:underline ml-1">
+                        {ws.domain} <ExternalLink size={8} className="inline" />
+                      </a>
+                    </span>
+                    <span className="font-bold text-gray-900 flex-shrink-0">{formatCompact(ws.monthlyTraffic)}</span>
+                  </div>
+                );
+              })}
             </div>
           </>
         ) : (
-          <div className="text-center py-12">
-            <Globe size={32} className="text-gray-300 mx-auto mb-2" />
-            <p className="text-sm text-gray-400">Veri bulunamadi</p>
+          <div className="text-center py-12 bg-[#0a0a14] rounded-2xl">
+            <Globe size={32} className="text-gray-600 mx-auto mb-2" />
+            <p className="text-sm text-gray-500">Veri bulunamadi</p>
           </div>
         )}
       </div>
