@@ -14,13 +14,16 @@ import {
   DollarSign,
   X,
 } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import { supabase, uploadExpertAvatar, updateExpertProfile } from "@/lib/supabase";
+import { Upload, Camera } from "lucide-react";
 
 interface UserRow {
   id: number;
   username: string;
   role: string;
   created_at: string;
+  expertise: string | null;
+  avatar_url: string | null;
 }
 
 interface ActivityRow {
@@ -90,7 +93,7 @@ export default function AdminPage() {
       // Fetch users
       const { data: usersData } = await supabase
         .from("users")
-        .select("id, username, role, created_at")
+        .select("id, username, role, created_at, expertise, avatar_url")
         .order("created_at", { ascending: false });
       setUsers(usersData || []);
 
@@ -485,6 +488,70 @@ export default function AdminPage() {
                     <X size={22} />
                   </button>
                 </div>
+
+                {/* Expert Profile Section */}
+                {(userModal.user.role === "expert" || userModal.user.role === "admin") && (
+                  <div className="px-6 py-4 border-b border-gray-700">
+                    <h3 className="text-sm font-semibold text-gray-300 mb-3">Uzman Profili</h3>
+                    <div className="flex items-start gap-4">
+                      {/* Avatar upload */}
+                      <div className="relative group">
+                        <div className="w-16 h-16 rounded-full overflow-hidden bg-gradient-to-br from-[#667eea] to-[#764ba2] flex items-center justify-center">
+                          {userModal.user.avatar_url ? (
+                            <img src={userModal.user.avatar_url} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            <span className="text-xl font-bold text-white">
+                              {userModal.user.username.charAt(0).toUpperCase()}
+                            </span>
+                          )}
+                        </div>
+                        <label className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                          <Camera size={18} className="text-white" />
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={async (e) => {
+                              const file = e.target.files?.[0];
+                              if (!file) return;
+                              const url = await uploadExpertAvatar(userModal.user.id, file);
+                              if (url) {
+                                setUserModal((prev) => prev ? {
+                                  ...prev,
+                                  user: { ...prev.user, avatar_url: url },
+                                } : null);
+                                setUsers((prev) => prev.map((x) =>
+                                  x.id === userModal.user.id ? { ...x, avatar_url: url } : x
+                                ));
+                              }
+                            }}
+                          />
+                        </label>
+                      </div>
+                      {/* Expertise input */}
+                      <div className="flex-1">
+                        <label className="text-xs text-gray-400 mb-1 block">Uzmanlık Alanı</label>
+                        <input
+                          type="text"
+                          defaultValue={userModal.user.expertise || ""}
+                          placeholder="ör. DTC Kozmetik Uzmanı"
+                          onBlur={async (e) => {
+                            const val = e.target.value.trim();
+                            await updateExpertProfile(userModal.user.id, { expertise: val || null });
+                            setUserModal((prev) => prev ? {
+                              ...prev,
+                              user: { ...prev.user, expertise: val || null },
+                            } : null);
+                            setUsers((prev) => prev.map((x) =>
+                              x.id === userModal.user.id ? { ...x, expertise: val || null } : x
+                            ));
+                          }}
+                          className="w-full bg-[#1a2942] border border-gray-600 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#667eea] transition-colors"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 {/* Stats */}
                 <div className="grid grid-cols-2 gap-3 px-6 py-4">

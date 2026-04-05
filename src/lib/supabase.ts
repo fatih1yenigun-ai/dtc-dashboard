@@ -315,6 +315,35 @@ export async function removeExpertArchiveItem(itemId: number, userId: number): P
   if (error) console.error("removeExpertArchiveItem error:", error);
 }
 
+// ---------- Expert Profile ----------
+export async function uploadExpertAvatar(userId: number, file: File): Promise<string | null> {
+  const ext = file.name.split(".").pop() || "jpg";
+  const path = `avatars/${userId}.${ext}`;
+
+  const { error: uploadError } = await supabase.storage
+    .from("expert-avatars")
+    .upload(path, file, { upsert: true });
+  if (uploadError) {
+    console.error("uploadExpertAvatar error:", uploadError);
+    return null;
+  }
+
+  const { data } = supabase.storage.from("expert-avatars").getPublicUrl(path);
+  const url = data.publicUrl;
+
+  // Save URL to users table
+  await supabase.from("users").update({ avatar_url: url }).eq("id", userId);
+  return url;
+}
+
+export async function updateExpertProfile(
+  userId: number,
+  updates: { expertise?: string | null; avatar_url?: string | null }
+): Promise<void> {
+  const { error } = await supabase.from("users").update(updates).eq("id", userId);
+  if (error) console.error("updateExpertProfile error:", error);
+}
+
 // ---------- Public Expert Browse ----------
 export async function loadExpertUsers(): Promise<ExpertUser[]> {
   const { data, error } = await supabase
