@@ -959,30 +959,6 @@ export default function ReklamTaraPage() {
                   </div>
                 </div>
 
-                {/* Row 2: Reklam maliyeti, Donusumler, Ecom */}
-                <div className="grid grid-cols-3 gap-2">
-                  <div className="border border-emerald-100 rounded-lg p-2.5 text-center">
-                    <p className="text-sm font-bold text-emerald-700">
-                      {detailVideo.ad_cost_min > 0 || detailVideo.ad_cost_max > 0
-                        ? `$${formatCompact(detailVideo.ad_cost_min)}-${formatCompact(detailVideo.ad_cost_max)}`
-                        : "--"}
-                    </p>
-                    <p className="text-[10px] text-emerald-500">Reklam maliyeti</p>
-                  </div>
-                  <div className="border border-amber-100 rounded-lg p-2.5 text-center">
-                    <p className="text-sm font-bold text-amber-700">
-                      {detailVideo.conversion_min > 0 || detailVideo.conversion_max > 0
-                        ? `${formatCompact(detailVideo.conversion_min)}-${formatCompact(detailVideo.conversion_max)}`
-                        : "--"}
-                    </p>
-                    <p className="text-[10px] text-amber-500">Donusumler</p>
-                  </div>
-                  <div className="border border-gray-200 rounded-lg p-2.5 text-center">
-                    <p className="text-sm font-bold text-gray-700">{detailVideo.ecom_platform || "--"}</p>
-                    <p className="text-[10px] text-gray-400">Ecom platformu</p>
-                  </div>
-                </div>
-
                 {/* Info rows */}
                 <div className="space-y-2 text-sm">
                   <div className="flex items-center">
@@ -1007,35 +983,45 @@ export default function ReklamTaraPage() {
                   </div>
                 </div>
 
-                {/* Landing page link */}
-                {detailVideo.landing_page && (
-                  <div className="flex items-center gap-2 bg-gray-50 rounded-lg px-3 py-2">
+                {/* Son baglanti */}
+                {(detailVideo.landing_page || detailVideo.product_id) && (
+                  <div className="flex items-center gap-2 bg-gray-50 rounded-lg px-3 py-2.5">
                     <span className="text-xs text-gray-500 w-24 flex-shrink-0">Son baglanti:</span>
-                    <a href={detailVideo.landing_page} target="_blank" rel="noopener noreferrer" className="text-xs text-[#667eea] hover:underline truncate flex items-center gap-1">
-                      <ExternalLink size={10} />{detailVideo.landing_page.length > 50 ? detailVideo.landing_page.substring(0, 50) + "..." : detailVideo.landing_page}
+                    <a
+                      href={detailVideo.landing_page || `https://shop.tiktok.com/view/product/${detailVideo.product_id}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs text-[#667eea] hover:underline truncate flex items-center gap-1"
+                    >
+                      <ExternalLink size={10} />
+                      {(detailVideo.landing_page || `https://shop.tiktok.com/view/product/${detailVideo.product_id}`).substring(0, 50)}...
                     </a>
                   </div>
                 )}
 
-                {/* Product card */}
-                {detailVideo.product_name && (
+                {/* Product card — shows when shop_id exists */}
+                {detailVideo.product_id && (
                   <div
-                    className={`border border-gray-200 rounded-lg p-3 flex items-center gap-3 ${detailVideo.product_id ? "cursor-pointer hover:bg-gray-50 transition-colors" : ""}`}
-                    onClick={() => detailVideo.product_id && goToProductFromVideo(detailVideo.product_id)}
+                    className="border border-gray-200 rounded-lg p-3 flex items-center gap-3 cursor-pointer hover:bg-gray-50 transition-colors"
+                    onClick={() => goToProductFromVideo(detailVideo.product_id)}
                   >
-                    {detailVideo.product_image && (
+                    {detailVideo.product_image ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={detailVideo.product_image} alt={detailVideo.product_name} className="w-14 h-14 rounded-lg object-cover flex-shrink-0" />
+                      <img src={detailVideo.product_image} alt={detailVideo.product_name || "Product"} className="w-14 h-14 rounded-lg object-cover flex-shrink-0" />
+                    ) : (
+                      <div className="w-14 h-14 rounded-lg bg-orange-50 flex items-center justify-center flex-shrink-0">
+                        <ShoppingBag size={20} className="text-orange-400" />
+                      </div>
                     )}
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900 truncate">{detailVideo.product_name}</p>
+                      <p className="text-sm font-medium text-gray-900 truncate">{detailVideo.product_name || "TikTok Shop Urun"}</p>
                       <div className="flex items-center gap-3 mt-1">
-                        <span className="text-[10px] bg-orange-50 text-orange-600 px-1.5 py-0.5 rounded">TikTok Shop</span>
+                        <span className="text-[10px] bg-orange-50 text-orange-600 px-1.5 py-0.5 rounded font-medium">TikTok Shop</span>
                         {detailVideo.product_price > 0 && <span className="text-xs font-bold text-orange-600">Fiyat: ${detailVideo.product_price.toFixed(2)}</span>}
                         {detailVideo.product_sold > 0 && <span className="text-xs text-red-500 font-medium">Satildi: {formatCompact(detailVideo.product_sold)}</span>}
                       </div>
                     </div>
-                    {detailVideo.product_id && <ChevronRight size={16} className="text-gray-400 flex-shrink-0" />}
+                    <ChevronRight size={16} className="text-gray-400 flex-shrink-0" />
                   </div>
                 )}
 

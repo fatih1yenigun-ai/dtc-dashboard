@@ -75,7 +75,7 @@ export interface CategoryAnalytics {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function mapVideo(item: any): VideoResult {
-  const prod = item.product_info || item.products?.[0] || {};
+  const shopId = item.shop_id || "";
   return {
     id: item.ad_id || item.id || "",
     title: item.desc || item.ai_analysis_main_hook || "",
@@ -99,26 +99,26 @@ function mapVideo(item: any): VideoResult {
     human_presenter: item.ai_analysis_human_presenter || "",
     ad_create_time: item.ad_create_time || 0,
     put_days: item.put_days || 0,
-    // Extended fields
+    // Extended fields from raw API
     collect_count: item.collect_count || 0,
-    ad_cost_min: item.ad_cost?.min || 0,
-    ad_cost_max: item.ad_cost?.max || 0,
-    conversion_min: item.conversion?.min || 0,
-    conversion_max: item.conversion?.max || 0,
-    like_rate: item.digg_count && item.play_count ? (item.digg_count / item.play_count) : 0,
-    audience_age_min: item.audience_age?.min || 0,
-    audience_age_max: item.audience_age?.max || 0,
-    audience_device: item.audience_device || "",
-    first_seen: item.first_seen || item.ad_create_time || 0,
-    last_seen: item.last_seen || 0,
-    tiktok_post_url: item.tiktok_post_url || (item.ad_id ? `https://www.tiktok.com/@${item.unique_id || ""}/video/${item.ad_id}` : ""),
-    landing_page: item.landing_page || item.product_link || "",
-    product_name: prod.title || prod.name || "",
-    product_price: prod.price_usd || prod.price || 0,
-    product_image: prod.image || prod.cover || "",
-    product_sold: prod.sales_volume || prod.sold || 0,
-    product_id: prod.id || prod.product_id || "",
-    ecom_platform: item.ecom_platform || "",
+    ad_cost_min: item.min_cpa || 0,
+    ad_cost_max: item.min_cpm || 0,
+    conversion_min: 0,
+    conversion_max: 0,
+    like_rate: item.digg_play_rate || (item.digg_count && item.play_count ? (item.digg_count / item.play_count) : 0),
+    audience_age_min: 0,
+    audience_age_max: 0,
+    audience_device: "",
+    first_seen: item.found_time || item.ad_create_time || 0,
+    last_seen: item.last_put_time || 0,
+    tiktok_post_url: item.ad_id ? `https://www.tiktok.com/@${item.unique_id || ""}/video/${item.ad_id}` : "",
+    landing_page: shopId ? `https://shop.tiktok.com/view/product/${shopId}` : "",
+    product_name: "",
+    product_price: 0,
+    product_image: "",
+    product_sold: 0,
+    product_id: shopId,
+    ecom_platform: item.have_tiktok_shop ? "TikTok Shop" : "",
   };
 }
 
