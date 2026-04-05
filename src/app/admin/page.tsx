@@ -61,6 +61,115 @@ function formatCost(tokens: number): string {
   return `$${cost.toFixed(2)}`;
 }
 
+function ExpertProfileEditor({ userRow, onUpdate }: { userRow: UserRow; onUpdate: (u: Partial<UserRow>) => void }) {
+  const [expertise, setExpertise] = useState(userRow.expertise || "");
+  const [avatarUrl, setAvatarUrl] = useState(userRow.avatar_url || "");
+  const [uploading, setUploading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [msg, setMsg] = useState("");
+
+  async function handleFileUpload(file: File) {
+    setUploading(true);
+    setMsg("");
+    try {
+      const url = await uploadExpertAvatar(userRow.id, file);
+      if (url) {
+        // Add cache-busting param
+        const freshUrl = url + "?t=" + Date.now();
+        setAvatarUrl(freshUrl);
+        onUpdate({ avatar_url: freshUrl });
+        setMsg("Fotoğraf yüklendi!");
+      } else {
+        setMsg("Yükleme hatası — Storage bucket ayarlarını kontrol edin");
+      }
+    } catch {
+      setMsg("Yükleme hatası");
+    } finally {
+      setUploading(false);
+      setTimeout(() => setMsg(""), 3000);
+    }
+  }
+
+  async function handleSave() {
+    setSaving(true);
+    setMsg("");
+    try {
+      await updateExpertProfile(userRow.id, { expertise: expertise.trim() || null });
+      onUpdate({ expertise: expertise.trim() || null });
+      setMsg("Kaydedildi!");
+    } catch {
+      setMsg("Kaydetme hatası");
+    } finally {
+      setSaving(false);
+      setTimeout(() => setMsg(""), 3000);
+    }
+  }
+
+  return (
+    <div className="px-6 py-4 border-b border-gray-700">
+      <h3 className="text-sm font-semibold text-gray-300 mb-3">Uzman Profili</h3>
+      <div className="flex items-start gap-4">
+        {/* Avatar */}
+        <div className="flex flex-col items-center gap-2">
+          <div className="w-20 h-20 rounded-full overflow-hidden bg-gradient-to-br from-[#667eea] to-[#764ba2] flex items-center justify-center">
+            {avatarUrl ? (
+              <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
+            ) : (
+              <span className="text-2xl font-bold text-white">
+                {userRow.username.charAt(0).toUpperCase()}
+              </span>
+            )}
+          </div>
+          <label className="flex items-center gap-1.5 px-3 py-1.5 bg-[#1a2942] border border-gray-600 rounded-lg text-xs text-gray-300 hover:border-[#667eea] transition-colors cursor-pointer">
+            {uploading ? (
+              <span>Yükleniyor...</span>
+            ) : (
+              <>
+                <Upload size={12} />
+                Fotoğraf Yükle
+              </>
+            )}
+            <input
+              type="file"
+              accept="image/*"
+              className="hidden"
+              disabled={uploading}
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) handleFileUpload(file);
+              }}
+            />
+          </label>
+        </div>
+
+        {/* Expertise + save */}
+        <div className="flex-1">
+          <label className="text-xs text-gray-400 mb-1 block">Uzmanlık Alanı</label>
+          <input
+            type="text"
+            value={expertise}
+            onChange={(e) => setExpertise(e.target.value)}
+            placeholder="ör. DTC Kozmetik Uzmanı"
+            className="w-full bg-[#1a2942] border border-gray-600 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#667eea] transition-colors mb-3"
+          />
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="px-4 py-2 bg-[#667eea] text-white rounded-lg text-xs font-medium hover:opacity-90 transition-opacity disabled:opacity-40"
+          >
+            {saving ? "Kaydediliyor..." : "Kaydet"}
+          </button>
+          {msg && (
+            <span className={`ml-3 text-xs font-medium ${msg.includes("hata") ? "text-red-400" : "text-green-400"}`}>
+              {msg}
+            </span>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function AdminPage() {
   const { user, token } = useAuth();
   const router = useRouter();
@@ -491,66 +600,18 @@ export default function AdminPage() {
 
                 {/* Expert Profile Section */}
                 {(userModal.user.role === "expert" || userModal.user.role === "admin") && (
-                  <div className="px-6 py-4 border-b border-gray-700">
-                    <h3 className="text-sm font-semibold text-gray-300 mb-3">Uzman Profili</h3>
-                    <div className="flex items-start gap-4">
-                      {/* Avatar upload */}
-                      <div className="relative group">
-                        <div className="w-16 h-16 rounded-full overflow-hidden bg-gradient-to-br from-[#667eea] to-[#764ba2] flex items-center justify-center">
-                          {userModal.user.avatar_url ? (
-                            <img src={userModal.user.avatar_url} alt="" className="w-full h-full object-cover" />
-                          ) : (
-                            <span className="text-xl font-bold text-white">
-                              {userModal.user.username.charAt(0).toUpperCase()}
-                            </span>
-                          )}
-                        </div>
-                        <label className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
-                          <Camera size={18} className="text-white" />
-                          <input
-                            type="file"
-                            accept="image/*"
-                            className="hidden"
-                            onChange={async (e) => {
-                              const file = e.target.files?.[0];
-                              if (!file) return;
-                              const url = await uploadExpertAvatar(userModal.user.id, file);
-                              if (url) {
-                                setUserModal((prev) => prev ? {
-                                  ...prev,
-                                  user: { ...prev.user, avatar_url: url },
-                                } : null);
-                                setUsers((prev) => prev.map((x) =>
-                                  x.id === userModal.user.id ? { ...x, avatar_url: url } : x
-                                ));
-                              }
-                            }}
-                          />
-                        </label>
-                      </div>
-                      {/* Expertise input */}
-                      <div className="flex-1">
-                        <label className="text-xs text-gray-400 mb-1 block">Uzmanlık Alanı</label>
-                        <input
-                          type="text"
-                          defaultValue={userModal.user.expertise || ""}
-                          placeholder="ör. DTC Kozmetik Uzmanı"
-                          onBlur={async (e) => {
-                            const val = e.target.value.trim();
-                            await updateExpertProfile(userModal.user.id, { expertise: val || null });
-                            setUserModal((prev) => prev ? {
-                              ...prev,
-                              user: { ...prev.user, expertise: val || null },
-                            } : null);
-                            setUsers((prev) => prev.map((x) =>
-                              x.id === userModal.user.id ? { ...x, expertise: val || null } : x
-                            ));
-                          }}
-                          className="w-full bg-[#1a2942] border border-gray-600 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#667eea] transition-colors"
-                        />
-                      </div>
-                    </div>
-                  </div>
+                  <ExpertProfileEditor
+                    userRow={userModal.user}
+                    onUpdate={(updates) => {
+                      setUserModal((prev) => prev ? {
+                        ...prev,
+                        user: { ...prev.user, ...updates },
+                      } : null);
+                      setUsers((prev) => prev.map((x) =>
+                        x.id === userModal.user.id ? { ...x, ...updates } : x
+                      ));
+                    }}
+                  />
                 )}
 
                 {/* Stats */}
