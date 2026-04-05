@@ -29,8 +29,6 @@ import { useAuth } from "@/context/AuthContext";
 const navItems = [
   { href: "/storeleads", label: "Website", icon: Store },
   { href: "/reklam-tara", label: "Reklam Tara", icon: Radar },
-  { href: "/tts", label: "TikTok Shop", icon: ShoppingBag },
-  { href: "/meta-ads", label: "Meta Ad Library", icon: Megaphone },
   { href: "/amazon", label: "Hacimler", icon: BarChart3 },
   { href: "/kombine", label: "Kombine Aratıcı", icon: Layers },
   { href: "/saved", label: "Kaydedilenler", icon: Bookmark },
