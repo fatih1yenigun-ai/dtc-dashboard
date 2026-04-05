@@ -28,8 +28,8 @@ export async function POST(request: NextRequest) {
 Return a single JSON object with exactly this structure (NO markdown, NO explanation, ONLY the JSON):
 {
   "amazon": [ ... 15 products ... ],
-  "keywords": [ ... 5 keywords ... ],
-  "websites": [ ... 5 websites ... ]
+  "keywords": [ ... 10 keywords ... ],
+  "websites": [ ... 10 websites ... ]
 }
 
 ## Amazon Products
@@ -48,7 +48,7 @@ Each product object:
 }
 
 ## Google Keywords
-For "keywords": provide the top 5 most searched Google keywords related to "${keyword}". Include the main keyword itself as #1.
+For "keywords": provide the top 10 most searched Google keywords related to "${keyword}". Include the main keyword itself as #1.
 Each keyword object:
 {
   "keyword": "exact search term",
@@ -64,7 +64,7 @@ Rules:
 - trend: "up", "down", or "stable" based on market direction
 
 ## Top Websites
-For "websites": provide the top 5 websites/brands that rank highest on Google for "${keyword}" and dominate this market.
+For "websites": provide the top 10 websites/brands that rank highest on Google for "${keyword}" and dominate this market.
 Each website object:
 {
   "rank": 1,
