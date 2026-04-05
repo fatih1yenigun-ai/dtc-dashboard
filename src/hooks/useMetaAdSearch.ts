@@ -18,12 +18,11 @@ export interface MetaAd {
   landingPages: string[];
   country: string[];
   language: string;
-  mediaFormat: number; // 1=video, 2=image, 3=carousel
+  mediaFormat: number;
   sourceAdId: string;
   firstDiscoveredAt: number;
   lastDiscoveredAt: number;
   latestActivedAt: number;
-  // Advertiser
   advertiserName: string;
   advertiserProfilePic: string;
   advertiserAdCount: number;
@@ -33,12 +32,10 @@ export interface MetaAd {
   ecommercePlatform: string;
   advertiserLikeCount: number;
   advertiserLink: string;
-  // Store
   storeName: string;
   storeLink: string;
   storeLogo: string;
   storeId: string;
-  // Product (first product if exists)
   productName: string;
   productPrice: number;
   productPriceUsd: number;
@@ -47,18 +44,15 @@ export interface MetaAd {
   productCategoryName: string;
   productImageUrl: string;
   productCreationTime: number;
-  // Media
   videos: Array<{ duration: number; url: string; coverUrl: string }>;
   images: Array<{ url: string; width: number; height: number }>;
   cards: Array<{ url: string; coverUrl: string | null; mediaType: number }>;
-  // Audience
   adAudience: {
     totalReach: number;
     genderAudience: string;
     ageMin: number;
     ageMax: number;
   } | null;
-  // Thumbnail helper
   thumbnail: string;
 }
 
@@ -67,32 +61,19 @@ function mapAd(item: any): MetaAd {
   const adv = item.advertiser || {};
   const store = item.store || {};
   const prod = item.products?.[0] || {};
-  const vids = (item.videos || []).map(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (v: any) => ({
-      duration: v.duration || 0,
-      url: v.url || "",
-      coverUrl: v.cover_url || "",
-    })
-  );
-  const imgs = (item.images || []).map(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (img: any) => ({
-      url: img.url || "",
-      width: img.width || 0,
-      height: img.height || 0,
-    })
-  );
-  const cards = (item.cards || []).map(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (c: any) => ({
-      url: c.url || "",
-      coverUrl: c.cover_url || null,
-      mediaType: c.media_type || 0,
-    })
-  );
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const vids = (item.videos || []).map((v: any) => ({
+    duration: v.duration || 0, url: v.url || "", coverUrl: v.cover_url || "",
+  }));
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const imgs = (item.images || []).map((img: any) => ({
+    url: img.url || "", width: img.width || 0, height: img.height || 0,
+  }));
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const cards = (item.cards || []).map((c: any) => ({
+    url: c.url || "", coverUrl: c.cover_url || null, mediaType: c.media_type || 0,
+  }));
 
-  // Pick best thumbnail
   let thumbnail = "";
   if (vids.length > 0 && vids[0].coverUrl) thumbnail = vids[0].coverUrl;
   else if (imgs.length > 0 && imgs[0].url) thumbnail = imgs[0].url;
@@ -171,149 +152,199 @@ export type SortKey =
   | "product_creation_time"
   | "active_days";
 
-// Map our sort keys to PiPiAds API sort_key values
-const SORT_KEY_API_MAP: Record<SortKey, string | undefined> = {
-  default: undefined,
-  ad_started_at: "ad_started_at",
-  adset_count: "adset_count",
-  ad_audience_reach: "ad_audience_reach",
-  latest_actived_at: "latest_actived_at",
-  ad_cost: "ad_cost",
-  advertiser_ad_count: "advertiser_ad_count",
-  product_price_usd: "product_price_usd",
-  product_ad_count: "product_ad_count",
-  product_creation_time: "product_creation_time",
-  active_days: "active_days",
-};
+function getSortValue(ad: MetaAd, key: SortKey): number | null {
+  switch (key) {
+    case "ad_started_at": return ad.adStartedAt || null;
+    case "adset_count": return ad.adsetCount || null;
+    case "ad_audience_reach": return ad.adAudienceReach;
+    case "latest_actived_at": return ad.latestActivedAt || null;
+    case "ad_cost": return ad.adCost;
+    case "advertiser_ad_count": return ad.advertiserAdCount || null;
+    case "product_price_usd": return ad.productPriceUsd || null;
+    case "product_ad_count": return ad.productAdCount || null;
+    case "product_creation_time": return ad.productCreationTime || null;
+    case "active_days": return ad.activeDays || null;
+    default: return null;
+  }
+}
+
+function sortAds(ads: MetaAd[], key: SortKey, direction: "asc" | "desc"): MetaAd[] {
+  if (key === "default") return ads;
+  return [...ads].sort((a, b) => {
+    const va = getSortValue(a, key);
+    const vb = getSortValue(b, key);
+    if (va === null && vb === null) return 0;
+    if (va === null) return 1;
+    if (vb === null) return -1;
+    return direction === "desc" ? vb - va : va - vb;
+  });
+}
 
 const PAGE_SIZE = 20;
+const INITIAL_BATCH_PAGES = 5; // Load 100 results on first search
 
 export function useMetaAdSearch() {
   const { token } = useAuth();
-  const [allAds, setAllAds] = useState<MetaAd[]>([]);
+  // allAds = raw unsorted accumulator; sortedAds = what the UI sees
+  const allAdsRef = useRef<MetaAd[]>([]);
+  const [sortedAds, setSortedAds] = useState<MetaAd[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState("");
   const [hasMore, setHasMore] = useState(true);
+  const [allCount, setAllCount] = useState(0);
   const pageRef = useRef(1);
   const hasMoreRef = useRef(true);
   const loadingMoreRef = useRef(false);
   const loadingRef = useRef(false);
   const abortRef = useRef<AbortController | null>(null);
-  const searchParamsRef = useRef<{
-    keyword: string;
-    sortKey: SortKey;
-    direction: "asc" | "desc";
-  } | null>(null);
+  const keywordRef = useRef("");
+  const sortRef = useRef<{ key: SortKey; direction: "asc" | "desc" }>({
+    key: "default",
+    direction: "desc",
+  });
 
-  const fetchPage = useCallback(
-    async (pageNum: number, append: boolean) => {
-      const params = searchParamsRef.current;
-      if (!params) return;
-      if (append && loadingMoreRef.current) return;
+  const applySortAndUpdate = useCallback((ads: MetaAd[]) => {
+    const { key, direction } = sortRef.current;
+    setSortedAds(sortAds(ads, key, direction));
+    setAllCount(ads.length);
+  }, []);
 
-      if (!append) {
-        if (abortRef.current) abortRef.current.abort();
-        setLoading(true);
-        loadingRef.current = true;
-        setError("");
-      } else {
-        setLoadingMore(true);
-        loadingMoreRef.current = true;
+  const fetchOnePage = useCallback(
+    async (
+      pageNum: number,
+      controller: AbortController
+    ): Promise<MetaAd[]> => {
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (token) headers["Authorization"] = `Bearer ${token}`;
+
+      const res = await fetch("/api/meta-ads", {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          keyword: keywordRef.current,
+          page: pageNum,
+          perPage: PAGE_SIZE,
+        }),
+        signal: controller.signal,
+      });
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || `API error ${res.status}`);
       }
 
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+
+      const list = data.data?.data || [];
+      return list.map(mapAd);
+    },
+    [token]
+  );
+
+  // Batch-fetch multiple pages sequentially
+  const batchFetch = useCallback(
+    async (startPage: number, numPages: number) => {
+      if (abortRef.current) abortRef.current.abort();
       const controller = new AbortController();
-      if (!append) abortRef.current = controller;
+      abortRef.current = controller;
+
+      setLoading(true);
+      loadingRef.current = true;
+      setError("");
 
       try {
-        const headers: Record<string, string> = {
-          "Content-Type": "application/json",
-        };
-        if (token) headers["Authorization"] = `Bearer ${token}`;
+        const accumulated: MetaAd[] = [];
+        const existingIds = new Set(allAdsRef.current.map((a) => a.id));
+        let lastPageFull = true;
 
-        const res = await fetch("/api/meta-ads", {
-          method: "POST",
-          headers,
-          body: JSON.stringify({
-            keyword: params.keyword,
-            page: pageNum,
-            perPage: PAGE_SIZE,
-            sortKey: SORT_KEY_API_MAP[params.sortKey],
-            direction: params.direction,
-          }),
-          signal: controller.signal,
-        });
+        for (let p = startPage; p < startPage + numPages; p++) {
+          const mapped = await fetchOnePage(p, controller);
+          const unique = mapped.filter((a) => !existingIds.has(a.id));
+          unique.forEach((a) => existingIds.add(a.id));
+          accumulated.push(...unique);
+          pageRef.current = p;
 
-        if (!res.ok) {
-          const errData = await res.json().catch(() => ({}));
-          throw new Error(errData.error || `API error ${res.status}`);
+          if (mapped.length < PAGE_SIZE) {
+            lastPageFull = false;
+            break;
+          }
         }
 
-        const data = await res.json();
-        if (data.error) throw new Error(data.error);
+        const newAll = [...allAdsRef.current, ...accumulated];
+        allAdsRef.current = newAll;
+        applySortAndUpdate(newAll);
 
-        const list = data.data?.data || [];
-        const mapped: MetaAd[] = list.map(mapAd);
-
-        if (append) {
-          setAllAds((prev) => {
-            const ids = new Set(prev.map((a) => a.id));
-            const unique = mapped.filter((a) => !ids.has(a.id));
-            return [...prev, ...unique];
-          });
-        } else {
-          setAllAds(mapped);
-        }
-
-        const more = mapped.length >= PAGE_SIZE;
-        setHasMore(more);
-        hasMoreRef.current = more;
-        pageRef.current = pageNum;
+        setHasMore(lastPageFull);
+        hasMoreRef.current = lastPageFull;
       } catch (err) {
         if ((err as Error).name === "AbortError") return;
         setError((err as Error).message || "Bir hata olustu");
       } finally {
         setLoading(false);
-        setLoadingMore(false);
         loadingRef.current = false;
-        loadingMoreRef.current = false;
       }
     },
-    [token]
+    [fetchOnePage, applySortAndUpdate]
   );
 
   const search = useCallback(
-    (keyword: string, sortKey: SortKey = "default", direction: "asc" | "desc" = "desc") => {
+    (keyword: string) => {
       if (!keyword.trim()) return;
-      searchParamsRef.current = { keyword, sortKey, direction };
-      setAllAds([]);
+      keywordRef.current = keyword;
+      sortRef.current = { key: "default", direction: "desc" };
+      allAdsRef.current = [];
+      setSortedAds([]);
+      setAllCount(0);
       setHasMore(true);
       hasMoreRef.current = true;
-      pageRef.current = 1;
-      fetchPage(1, false);
+      pageRef.current = 0;
+      // Batch-load first 5 pages (100 results) so sorting is meaningful
+      batchFetch(1, INITIAL_BATCH_PAGES);
     },
-    [fetchPage]
+    [batchFetch]
   );
 
-  const loadMore = useCallback(() => {
-    if (!hasMoreRef.current || loadingMoreRef.current || loadingRef.current)
-      return;
-    fetchPage(pageRef.current + 1, true);
-  }, [fetchPage]);
+  const loadMore = useCallback(async () => {
+    if (!hasMoreRef.current || loadingMoreRef.current || loadingRef.current) return;
+    if (!keywordRef.current) return;
 
-  // Re-search with new sort (server-side — triggers fresh API call)
+    const controller = new AbortController();
+    setLoadingMore(true);
+    loadingMoreRef.current = true;
+
+    try {
+      const nextPage = pageRef.current + 1;
+      const mapped = await fetchOnePage(nextPage, controller);
+      const existingIds = new Set(allAdsRef.current.map((a) => a.id));
+      const unique = mapped.filter((a) => !existingIds.has(a.id));
+
+      const newAll = [...allAdsRef.current, ...unique];
+      allAdsRef.current = newAll;
+      applySortAndUpdate(newAll);
+      pageRef.current = nextPage;
+
+      const more = mapped.length >= PAGE_SIZE;
+      setHasMore(more);
+      hasMoreRef.current = more;
+    } catch (err) {
+      if ((err as Error).name !== "AbortError") {
+        setError((err as Error).message || "Bir hata olustu");
+      }
+    } finally {
+      setLoadingMore(false);
+      loadingMoreRef.current = false;
+    }
+  }, [fetchOnePage, applySortAndUpdate]);
+
+  // Client-side re-sort of all accumulated results (instant, no API call)
   const resort = useCallback(
-    (sortKey: SortKey, direction: "asc" | "desc") => {
-      const params = searchParamsRef.current;
-      if (!params) return;
-      searchParamsRef.current = { ...params, sortKey, direction };
-      setAllAds([]);
-      setHasMore(true);
-      hasMoreRef.current = true;
-      pageRef.current = 1;
-      fetchPage(1, false);
+    (key: SortKey, direction: "asc" | "desc") => {
+      sortRef.current = { key, direction };
+      setSortedAds(sortAds(allAdsRef.current, key, direction));
     },
-    [fetchPage]
+    []
   );
 
   // Sentinel ref for infinite scroll
@@ -339,8 +370,8 @@ export function useMetaAdSearch() {
   }, []);
 
   return {
-    ads: allAds,
-    allCount: allAds.length,
+    ads: sortedAds,
+    allCount,
     loading,
     loadingMore,
     error,
