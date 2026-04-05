@@ -14,9 +14,6 @@ import {
   Eye,
   Link,
   Loader2,
-  ShoppingCart,
-  ShoppingBag,
-  Search,
 } from "lucide-react";
 import {
   loadFolders,
@@ -29,131 +26,27 @@ import {
   type SavedBrand,
 } from "@/lib/supabase";
 import { useAuth } from "@/context/AuthContext";
-
-const FLAG: Record<string, string> = {
-  US: "\u{1F1FA}\u{1F1F8}", UK: "\u{1F1EC}\u{1F1E7}", DE: "\u{1F1E9}\u{1F1EA}", FR: "\u{1F1EB}\u{1F1F7}",
-  TR: "\u{1F1F9}\u{1F1F7}", AU: "\u{1F1E6}\u{1F1FA}", KR: "\u{1F1F0}\u{1F1F7}", JP: "\u{1F1EF}\u{1F1F5}",
-  CA: "\u{1F1E8}\u{1F1E6}", NL: "\u{1F1F3}\u{1F1F1}", SE: "\u{1F1F8}\u{1F1EA}", DK: "\u{1F1E9}\u{1F1F0}",
-  IT: "\u{1F1EE}\u{1F1F9}", ES: "\u{1F1EA}\u{1F1F8}", BR: "\u{1F1E7}\u{1F1F7}", IN: "\u{1F1EE}\u{1F1F3}",
-  CN: "\u{1F1E8}\u{1F1F3}", IL: "\u{1F1EE}\u{1F1F1}",
-};
-
-function formatNumber(n: number): string {
-  return n.toLocaleString("tr-TR");
-}
-
-function formatTraffic(n: number | null): string {
-  if (!n) return "-";
-  if (n >= 1000000) return `${(n / 1000000).toFixed(1)}M`;
-  if (n >= 1000) return `${(n / 1000).toFixed(0)}K`;
-  return String(n);
-}
-
-function formatRevenue(n: number | null): string {
-  if (n == null) return "-";
-  if (n >= 1000000) return `$${(n / 1000000).toFixed(1)}M`;
-  if (n >= 1000) return `$${Math.round(n / 1000)}K`;
-  return `$${n}`;
-}
-
-function getBrandName(brand: SavedBrand): string {
-  const d = brand.brand_data;
-  return (d?.Marka as string) || (d?.brand as string) || "Bilinmeyen";
-}
-
-function getBrandWebsite(brand: SavedBrand): string {
-  const d = brand.brand_data;
-  return (d?.["Web Sitesi"] as string) || (d?.website as string) || "";
-}
-
-function getBrandCategory(brand: SavedBrand): string {
-  const d = brand.brand_data;
-  return (d?.Kategori as string) || (d?.category as string) || "";
-}
-
-function getBrandAov(brand: SavedBrand): number | null {
-  const d = brand.brand_data;
-  const aov = d?.["AOV ($)"] ?? d?.aov;
-  if (aov == null) return null;
-  return typeof aov === "number" ? aov : null;
-}
-
-function getBrandInsight(brand: SavedBrand): string {
-  const d = brand.brand_data;
-  return (d?.["\u00d6ne \u00c7\u0131kan \u00d6zellik"] as string) || (d?.insight as string) || "";
-}
-
-function getBrandMetaAds(brand: SavedBrand): string {
-  const d = brand.brand_data;
-  return (d?.["Meta Ads"] as string) || (d?.meta_ads_url as string) || "";
-}
-
-function getBrandTraffic(brand: SavedBrand): number | null {
-  return (brand.brand_data?.["Ayl\u0131k Trafik"] as number) ?? null;
-}
-
-function getBrandTQS(brand: SavedBrand): number | null {
-  return (brand.brand_data?.TQS as number) ?? null;
-}
-
-function getBrandRevenue(brand: SavedBrand): number | null {
-  return (brand.brand_data?.["Ciro ($)"] as number)
-    ?? (brand.brand_data?.["Tahmini Ayl\u0131k Gelir ($)"] as number)
-    ?? null;
-}
-
-function getBrandCountry(brand: SavedBrand): string {
-  return (brand.brand_data?.["\u00dclke"] as string) || "";
-}
-
-function getBrandGrowth(brand: SavedBrand): string {
-  return (brand.brand_data?.["B\u00fcy\u00fcme Y\u00f6ntemi"] as string) || "";
-}
-
-function getBrandFounded(brand: SavedBrand): number | null {
-  return (brand.brand_data?.["Kurulu\u015f Y\u0131l\u0131"] as number) ?? null;
-}
-
-function getBrandConversion(brand: SavedBrand): number | null {
-  return (brand.brand_data?.["D\u00f6n\u00fc\u015f\u00fcm %"] as number) ?? null;
-}
-
-function getBrandMarketingAngles(brand: SavedBrand): string {
-  return (brand.brand_data?.["Pazarlama A\u00e7\u0131lar\u0131"] as string) || "";
-}
-
-function getBrandSource(brand: SavedBrand): string {
-  const d = brand.brand_data;
-  const kaynak = (d?.Kaynak as string) || "";
-  if (kaynak === "Amazon") return "Amazon";
-  if (kaynak === "PiPiAds" || (d?.["Büyüme Yöntemi"] as string)?.includes("TikTok")) return "TikTok";
-  return "Research";
-}
-
-function SourceBadge({ source }: { source: string }) {
-  if (source === "Amazon") {
-    return (
-      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-[#FF9900]/10 text-[#FF9900] text-[10px] font-bold">
-        <ShoppingCart size={10} />
-        Amazon
-      </span>
-    );
-  }
-  if (source === "TikTok") {
-    return (
-      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-black/5 text-gray-800 text-[10px] font-bold">
-        <ShoppingBag size={10} />
-        TikTok
-      </span>
-    );
-  }
-  return (
-    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-[#667eea]/10 text-[#667eea] text-[10px] font-bold">
-      <Search size={10} />
-      Research
-    </span>
-  );
-}
+import {
+  FLAG,
+  formatTraffic,
+  formatRevenue,
+  getBrandName,
+  getBrandWebsite,
+  getBrandCategory,
+  getBrandAov,
+  getBrandInsight,
+  getBrandMetaAds,
+  getBrandTraffic,
+  getBrandTQS,
+  getBrandRevenue,
+  getBrandCountry,
+  getBrandGrowth,
+  getBrandFounded,
+  getBrandConversion,
+  getBrandMarketingAngles,
+  getBrandSource,
+  SourceBadge,
+} from "@/lib/brand-utils";
 
 type SortKey = "revenue" | "traffic" | "tqs" | "aov" | "founded";
 

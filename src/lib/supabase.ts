@@ -6,6 +6,25 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // ---------- Types ----------
+export interface ExpertCollection {
+  id: number;
+  name: string;
+  category: string | null;
+  user_id: number;
+  created_at: string;
+  username?: string;
+  item_count?: number;
+}
+
+export interface ExpertArchiveItem {
+  id: number;
+  collection_id: number;
+  user_id: number;
+  brand_data: BrandData;
+  expert_note: string;
+  created_at: string;
+}
+
 export interface BrandData {
   Marka?: string;
   brand?: string;
@@ -182,4 +201,135 @@ export async function getAllSavedCount(userId?: number): Promise<number> {
   const { count, error } = await query;
   if (error) return 0;
   return count ?? 0;
+}
+
+// ---------- Expert Collections ----------
+export async function loadExpertCollections(userId: number): Promise<ExpertCollection[]> {
+  const { data, error } = await supabase
+    .from("expert_collections")
+    .select("*")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: true });
+  if (error) {
+    console.error("loadExpertCollections error:", error);
+    return [];
+  }
+  return data ?? [];
+}
+
+export async function createExpertCollection(
+  name: string,
+  category: string | null,
+  userId: number
+): Promise<boolean> {
+  const { data: existing } = await supabase
+    .from("expert_collections")
+    .select("id")
+    .eq("name", name)
+    .eq("user_id", userId);
+  if (existing && existing.length > 0) return true;
+
+  const { error } = await supabase
+    .from("expert_collections")
+    .insert({ name, category, user_id: userId });
+  if (error) {
+    console.error("createExpertCollection error:", error);
+    return false;
+  }
+  return true;
+}
+
+export async function deleteExpertCollection(collectionId: number, userId: number): Promise<void> {
+  await supabase
+    .from("expert_archive_items")
+    .delete()
+    .eq("collection_id", collectionId)
+    .eq("user_id", userId);
+  await supabase
+    .from("expert_collections")
+    .delete()
+    .eq("id", collectionId)
+    .eq("user_id", userId);
+}
+
+// ---------- Expert Archive Items ----------
+export async function loadExpertArchiveItems(collectionId: number): Promise<ExpertArchiveItem[]> {
+  const { data, error } = await supabase
+    .from("expert_archive_items")
+    .select("*")
+    .eq("collection_id", collectionId)
+    .order("created_at", { ascending: true });
+  if (error) {
+    console.error("loadExpertArchiveItems error:", error);
+    return [];
+  }
+  return data ?? [];
+}
+
+export async function addExpertArchiveItem(
+  collectionId: number,
+  userId: number,
+  brandData: BrandData,
+  expertNote: string
+): Promise<boolean> {
+  const { error } = await supabase.from("expert_archive_items").insert({
+    collection_id: collectionId,
+    user_id: userId,
+    brand_data: cleanBrandData(brandData as Record<string, unknown>),
+    expert_note: expertNote,
+  });
+  if (error) {
+    console.error("addExpertArchiveItem error:", error);
+    return false;
+  }
+  return true;
+}
+
+export async function updateExpertArchiveItemNote(
+  itemId: number,
+  userId: number,
+  note: string
+): Promise<void> {
+  const { error } = await supabase
+    .from("expert_archive_items")
+    .update({ expert_note: note })
+    .eq("id", itemId)
+    .eq("user_id", userId);
+  if (error) console.error("updateExpertArchiveItemNote error:", error);
+}
+
+export async function removeExpertArchiveItem(itemId: number, userId: number): Promise<void> {
+  const { error } = await supabase
+    .from("expert_archive_items")
+    .delete()
+    .eq("id", itemId)
+    .eq("user_id", userId);
+  if (error) console.error("removeExpertArchiveItem error:", error);
+}
+
+// ---------- Public Expert Browse ----------
+export async function loadAllExpertCollections(): Promise<ExpertCollection[]> {
+  const { data, error } = await supabase
+    .from("expert_collections")
+    .select("*, users(username)")
+    .order("created_at", { ascending: false });
+  if (error) {
+    console.error("loadAllExpertCollections error:", error);
+    return [];
+  }
+
+  // Get item counts per collection
+  const collections: ExpertCollection[] = [];
+  for (const row of data ?? []) {
+    const { count } = await supabase
+      .from("expert_archive_items")
+      .select("id", { count: "exact", head: true })
+      .eq("collection_id", row.id);
+    collections.push({
+      ...row,
+      username: (row.users as { username: string } | null)?.username ?? "Bilinmiyor",
+      item_count: count ?? 0,
+    });
+  }
+  return collections;
 }

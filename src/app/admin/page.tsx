@@ -397,15 +397,29 @@ export default function AdminPage() {
                         <span className="text-xs text-green-600 font-medium">{formatCost(userTokens)}</span>
                       ) : null;
                     })()}
-                    <span
-                      className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                        u.role === "admin"
-                          ? "bg-red-100 text-red-700"
-                          : "bg-gray-100 text-gray-600"
-                      }`}
-                    >
-                      {u.role}
-                    </span>
+                    {u.role === "admin" ? (
+                      <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700">
+                        admin
+                      </span>
+                    ) : (
+                      <select
+                        value={u.role}
+                        onClick={(e) => e.stopPropagation()}
+                        onChange={async (e) => {
+                          const newRole = e.target.value;
+                          await supabase.from("users").update({ role: newRole }).eq("id", u.id);
+                          setUsers((prev) => prev.map((x) => x.id === u.id ? { ...x, role: newRole } : x));
+                        }}
+                        className={`px-2 py-0.5 rounded-full text-xs font-medium cursor-pointer border-0 outline-none ${
+                          u.role === "expert"
+                            ? "bg-amber-100 text-amber-700"
+                            : "bg-gray-100 text-gray-600"
+                        }`}
+                      >
+                        <option value="user">user</option>
+                        <option value="expert">expert</option>
+                      </select>
+                    )}
                     <button
                       onClick={(e) => { e.stopPropagation(); openUserModal(u); }}
                       className="px-2 py-0.5 rounded text-xs font-medium bg-[#667eea]/10 text-[#667eea] hover:bg-[#667eea]/20 transition-colors"
