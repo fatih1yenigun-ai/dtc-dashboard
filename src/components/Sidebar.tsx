@@ -19,12 +19,16 @@ import {
   Layers,
   Megaphone,
   BarChart3,
+  BookOpen,
+  Award,
+  Radar,
 } from "lucide-react";
 import { loadFolders, getAllSavedCount } from "@/lib/supabase";
 import { useAuth } from "@/context/AuthContext";
 
 const navItems = [
   { href: "/storeleads", label: "Website", icon: Store },
+  { href: "/reklam-tara", label: "Reklam Tara", icon: Radar },
   { href: "/tts", label: "TikTok Shop", icon: ShoppingBag },
   { href: "/meta-ads", label: "Meta Ad Library", icon: Megaphone },
   { href: "/amazon", label: "Hacimler", icon: BarChart3 },
@@ -83,6 +87,36 @@ export default function Sidebar() {
             </Link>
           );
         })}
+
+        {/* Expert browse - visible to all */}
+        <Link
+          href="/expert-browse"
+          onClick={() => setMobileOpen(false)}
+          className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
+            pathname === "/expert-browse"
+              ? "bg-[#667eea]/20 text-[#667eea]"
+              : "text-gray-300 hover:bg-white/5 hover:text-white"
+          }`}
+        >
+          <BookOpen size={18} />
+          Uzman Arşivleri
+        </Link>
+
+        {/* Expert archive - expert/admin only */}
+        {(user?.role === "expert" || user?.role === "admin") && (
+          <Link
+            href="/expert-archive"
+            onClick={() => setMobileOpen(false)}
+            className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
+              pathname === "/expert-archive"
+                ? "bg-[#667eea]/20 text-[#667eea]"
+                : "text-gray-300 hover:bg-white/5 hover:text-white"
+            }`}
+          >
+            <Award size={18} />
+            Uzman Arşivim
+          </Link>
+        )}
 
         {/* Admin link */}
         {user?.role === "admin" && (

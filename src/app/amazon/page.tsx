@@ -18,11 +18,9 @@ import {
   CheckSquare,
   Square,
   Globe,
-  ArrowUp,
-  ArrowDown,
-  Minus,
   KeyRound,
 } from "lucide-react";
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import {
   useHacimler,
   type AmazonProduct,
@@ -72,9 +70,14 @@ function formatMoney(n: number): string {
   return `$${n.toFixed(0)}`;
 }
 
+const PIE_COLORS = [
+  "#667eea", "#764ba2", "#f093fb", "#4facfe", "#00f2fe",
+  "#43e97b", "#fa709a", "#feb47b", "#7f5af0", "#2cb67d",
+];
+
 // ── Types ──────────────────────────────────────────────────────────────────
 
-type Tab = "amazon" | "keywords" | "websites";
+type Tab = "amazon" | "hacimler";
 type SortKey = "monthlyRevenue" | "monthlySales" | "bsr" | "price" | "reviewCount" | "rating";
 
 const SORT_OPTIONS: { value: SortKey; label: string }[] = [
@@ -90,19 +93,10 @@ const SORT_OPTIONS: { value: SortKey; label: string }[] = [
 
 function TierBadge({ tier }: { tier: string }) {
   if (tier === "-") return <span className="text-gray-400 text-xs">-</span>;
-  return (
-    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${salesTierColor(tier)}`}>
-      {tier}
-    </span>
-  );
+  return <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${salesTierColor(tier)}`}>{tier}</span>;
 }
 
-function StatCard({ icon: Icon, label, value, sub }: {
-  icon: typeof Package;
-  label: string;
-  value: string;
-  sub?: string;
-}) {
+function StatCard({ icon: Icon, label, value, sub }: { icon: typeof Package; label: string; value: string; sub?: string }) {
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
       <div className="flex items-center gap-2 mb-1">
@@ -177,12 +171,6 @@ function ProductRow({ product, rank, selected, onToggle }: { product: AmazonProd
                 <p className="text-[10px] text-gray-400">Aylik Gelir</p>
               </div>
             )}
-            {product.category && (
-              <div className="text-center">
-                <p className="text-xs text-gray-600 max-w-[120px] truncate">{product.category}</p>
-                <p className="text-[10px] text-gray-400">Kategori</p>
-              </div>
-            )}
           </div>
         </div>
       </div>
@@ -190,78 +178,153 @@ function ProductRow({ product, rank, selected, onToggle }: { product: AmazonProd
   );
 }
 
-// ── Keyword Volume Card ────────────────────────────────────────────────────
+// ── Hacimler Tab (Keywords + Websites side by side) ────────────────────────
 
-function KeywordCard({ kw, maxVolume }: { kw: KeywordVolume; maxVolume: number }) {
-  const barWidth = maxVolume > 0 ? Math.max(5, (kw.monthlyVolume / maxVolume) * 100) : 0;
-  const TrendIcon = kw.trend === "up" ? ArrowUp : kw.trend === "down" ? ArrowDown : Minus;
-  const trendColor = kw.trend === "up" ? "text-emerald-600" : kw.trend === "down" ? "text-red-500" : "text-gray-400";
-  const difficultyColor = kw.difficulty >= 70 ? "bg-red-100 text-red-700" : kw.difficulty >= 40 ? "bg-amber-100 text-amber-700" : "bg-emerald-100 text-emerald-700";
+function HacimlerTab({ keywords, websites }: { keywords: KeywordVolume[]; websites: TopWebsite[] }) {
+  const totalVolume = keywords.reduce((s, k) => s + k.monthlyVolume, 0);
+  const totalTraffic = websites.reduce((s, w) => s + w.monthlyTraffic, 0);
+
+  const kwData = keywords.map((k, i) => ({
+    name: k.keyword,
+    value: k.monthlyVolume,
+    color: PIE_COLORS[i % PIE_COLORS.length],
+  }));
+
+  const wsData = websites.map((w, i) => ({
+    name: w.brandName,
+    value: w.monthlyTraffic,
+    domain: w.domain,
+    color: PIE_COLORS[i % PIE_COLORS.length],
+  }));
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm hover:shadow-md transition-shadow">
-      <div className="flex items-start justify-between mb-3">
-        <div className="min-w-0">
-          <h3 className="text-sm font-semibold text-gray-900">{kw.keyword}</h3>
-          <div className="flex items-center gap-2 mt-1">
-            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${difficultyColor}`}>
-              Zorluk: {kw.difficulty}/100
-            </span>
-            <span className="text-[10px] text-gray-500">CPC: ${kw.cpc.toFixed(2)}</span>
-          </div>
-        </div>
-        <div className="flex items-center gap-1 flex-shrink-0">
-          <TrendIcon size={14} className={trendColor} />
-          <span className={`text-xs font-medium ${trendColor}`}>
-            {kw.trend === "up" ? "Yukselis" : kw.trend === "down" ? "Dusus" : "Stabil"}
-          </span>
-        </div>
-      </div>
-      <div className="flex items-end gap-3">
-        <div className="flex-1">
-          <div className="h-3 bg-gray-100 rounded-full overflow-hidden">
-            <div className="h-full bg-[#667eea] rounded-full transition-all" style={{ width: `${barWidth}%` }} />
-          </div>
-        </div>
-        <span className="text-lg font-bold text-gray-900 flex-shrink-0">{formatCompact(kw.monthlyVolume)}</span>
-      </div>
-      <p className="text-[10px] text-gray-400 mt-1">aylik arama hacmi</p>
-    </div>
-  );
-}
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* ── Left: Keywords ──────────────────────────────── */}
+      <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+        <h3 className="font-semibold text-gray-900 mb-1 flex items-center gap-2">
+          <KeyRound size={18} className="text-[#667eea]" />
+          Anahtar Kelimeler
+        </h3>
+        <p className="text-xs text-gray-400 mb-4">Google aylik arama hacimleri</p>
 
-// ── Website Card ───────────────────────────────────────────────────────────
-
-function WebsiteCard({ site }: { site: TopWebsite }) {
-  return (
-    <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm hover:shadow-md transition-shadow">
-      <div className="flex items-start gap-3">
-        <div className="w-10 h-10 rounded-full bg-[#667eea]/10 flex items-center justify-center flex-shrink-0">
-          <span className="text-sm font-bold text-[#667eea]">#{site.rank}</span>
-        </div>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center justify-between gap-2">
-            <h3 className="text-sm font-bold text-gray-900">{site.brandName}</h3>
-            <a href={`https://${site.domain}`} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-[#667eea] transition-colors flex-shrink-0">
-              <ExternalLink size={14} />
-            </a>
-          </div>
-          <a href={`https://${site.domain}`} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-500 hover:underline">
-            {site.domain}
-          </a>
-          <div className="flex items-center gap-3 mt-2">
-            <div>
-              <p className="text-lg font-bold text-[#667eea]">{formatCompact(site.monthlyTraffic)}</p>
-              <p className="text-[10px] text-gray-400">aylik trafik</p>
+        {keywords.length > 0 ? (
+          <>
+            <div className="h-[280px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={kwData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={110}
+                    paddingAngle={2}
+                    dataKey="value"
+                    label={({ name, value }: { name?: string; value?: number }) => `${(name || "").length > 20 ? (name || "").slice(0, 18) + "..." : (name || "")}: ${formatCompact(value || 0)}`}
+                    labelLine={false}
+                  >
+                    {kwData.map((entry, i) => (
+                      <Cell key={i} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip formatter={(value) => formatCompact(Number(value || 0))} />
+                </PieChart>
+              </ResponsiveContainer>
             </div>
-            {site.category && (
-              <span className="text-[10px] bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">{site.category}</span>
-            )}
+
+            {/* Total */}
+            <div className="text-center mt-2 mb-4 py-3 bg-[#667eea]/5 rounded-xl">
+              <p className="text-xs text-gray-500">Toplam Hacim</p>
+              <p className="text-2xl font-bold text-[#667eea]">{formatCompact(totalVolume)}</p>
+              <p className="text-[10px] text-gray-400">aylik arama</p>
+            </div>
+
+            {/* Keyword list */}
+            <div className="space-y-2">
+              {keywords.map((kw, i) => (
+                <div key={i} className="flex items-center gap-2 text-sm">
+                  <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: PIE_COLORS[i % PIE_COLORS.length] }} />
+                  <span className="flex-1 text-gray-700 truncate">{kw.keyword}</span>
+                  <span className="font-semibold text-gray-900">{formatCompact(kw.monthlyVolume)}</span>
+                  <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${
+                    kw.difficulty >= 70 ? "bg-red-100 text-red-700" : kw.difficulty >= 40 ? "bg-amber-100 text-amber-700" : "bg-emerald-100 text-emerald-700"
+                  }`}>
+                    {kw.difficulty}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </>
+        ) : (
+          <div className="text-center py-12">
+            <KeyRound size={32} className="text-gray-300 mx-auto mb-2" />
+            <p className="text-sm text-gray-400">Veri bulunamadi</p>
           </div>
-          {site.description && (
-            <p className="text-xs text-gray-500 mt-2 line-clamp-2">{site.description}</p>
-          )}
-        </div>
+        )}
+      </div>
+
+      {/* ── Right: Top Websites ─────────────────────────── */}
+      <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+        <h3 className="font-semibold text-gray-900 mb-1 flex items-center gap-2">
+          <Globe size={18} className="text-[#667eea]" />
+          Top Markalar & Websiteler
+        </h3>
+        <p className="text-xs text-gray-400 mb-4">Trafik bazli pazar paylari</p>
+
+        {websites.length > 0 ? (
+          <>
+            <div className="h-[280px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={wsData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={110}
+                    paddingAngle={2}
+                    dataKey="value"
+                    label={({ name, value }) => `${name}: ${formatCompact(value)}`}
+                    labelLine={false}
+                  >
+                    {wsData.map((entry, i) => (
+                      <Cell key={i} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip formatter={(value) => formatCompact(Number(value || 0))} />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* Total */}
+            <div className="text-center mt-2 mb-4 py-3 bg-[#667eea]/5 rounded-xl">
+              <p className="text-xs text-gray-500">Toplam Trafik</p>
+              <p className="text-2xl font-bold text-[#667eea]">{formatCompact(totalTraffic)}</p>
+              <p className="text-[10px] text-gray-400">aylik ziyaret</p>
+            </div>
+
+            {/* Website list */}
+            <div className="space-y-2">
+              {websites.map((ws, i) => (
+                <div key={i} className="flex items-center gap-2 text-sm">
+                  <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: PIE_COLORS[i % PIE_COLORS.length] }} />
+                  <span className="flex-1 min-w-0">
+                    <span className="font-medium text-gray-900">{ws.brandName}</span>
+                    <a href={`https://${ws.domain}`} target="_blank" rel="noopener noreferrer" className="text-[10px] text-blue-500 hover:underline ml-1">
+                      {ws.domain} <ExternalLink size={8} className="inline" />
+                    </a>
+                  </span>
+                  <span className="font-semibold text-gray-900 flex-shrink-0">{formatCompact(ws.monthlyTraffic)}</span>
+                </div>
+              ))}
+            </div>
+          </>
+        ) : (
+          <div className="text-center py-12">
+            <Globe size={32} className="text-gray-300 mx-auto mb-2" />
+            <p className="text-sm text-gray-400">Veri bulunamadi</p>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -372,49 +435,30 @@ function downloadCSV(products: AmazonProduct[], keyword: string) {
 export default function HacimlerPage() {
   const { keyword, amazonResults, keywordResults, websiteResults, loading, error, search, setKeyword } = useHacimler();
   const { user } = useAuth();
-  const [tab, setTab] = useState<Tab>("amazon");
+  const [tab, setTab] = useState<Tab>("hacimler");
   const [localKeyword, setLocalKeyword] = useState("");
   const [sortKey, setSortKey] = useState<SortKey>("monthlyRevenue");
-
-  // Selection
   const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set());
-
-  // Save modal
   const [showSaveModal, setShowSaveModal] = useState(false);
   const [folders, setFolders] = useState<string[]>([]);
   const [selectedFolder, setSelectedFolder] = useState("");
   const [newFolderName, setNewFolderName] = useState("");
   const [saveMsg, setSaveMsg] = useState("");
-
-  // BSR calculator toggle
   const [showBsr, setShowBsr] = useState(false);
 
   const hasResults = amazonResults.length > 0 || keywordResults.length > 0 || websiteResults.length > 0;
 
   const toggleProduct = (id: string) => {
-    setSelectedProducts((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id); else next.add(id);
-      return next;
-    });
+    setSelectedProducts((prev) => { const next = new Set(prev); if (next.has(id)) next.delete(id); else next.add(id); return next; });
   };
-
   const toggleAll = () => {
-    if (selectedProducts.size === amazonResults.length) {
-      setSelectedProducts(new Set());
-    } else {
-      setSelectedProducts(new Set(amazonResults.map((p) => p.asin || p.title)));
-    }
+    if (selectedProducts.size === amazonResults.length) setSelectedProducts(new Set());
+    else setSelectedProducts(new Set(amazonResults.map((p) => p.asin || p.title)));
   };
 
   async function openSaveModal() {
-    setShowSaveModal(true);
-    setSaveMsg("");
-    try {
-      const f = await loadFolders(user?.userId);
-      setFolders(f);
-      if (f.length > 0 && !selectedFolder) setSelectedFolder(f[0]);
-    } catch { setFolders(["Genel"]); }
+    setShowSaveModal(true); setSaveMsg("");
+    try { const f = await loadFolders(user?.userId); setFolders(f); if (f.length > 0 && !selectedFolder) setSelectedFolder(f[0]); } catch { setFolders(["Genel"]); }
   }
 
   async function handleSave() {
@@ -422,27 +466,16 @@ export default function HacimlerPage() {
     if (!folder) return;
     try {
       if (newFolderName.trim()) await createFolder(newFolderName.trim(), user?.userId);
-      const productsToSave = selectedProducts.size > 0
-        ? amazonResults.filter((p) => selectedProducts.has(p.asin || p.title))
-        : amazonResults;
-      const brandData = productsToSave.map(toBrandDataAmazon);
-      const added = await saveBrandsBulk(folder, brandData, user?.userId);
+      const productsToSave = selectedProducts.size > 0 ? amazonResults.filter((p) => selectedProducts.has(p.asin || p.title)) : amazonResults;
+      const added = await saveBrandsBulk(folder, productsToSave.map(toBrandDataAmazon), user?.userId);
       setSaveMsg(`${added} urun kaydedildi!`);
       setTimeout(() => { setShowSaveModal(false); setSaveMsg(""); setSelectedProducts(new Set()); }, 1200);
     } catch { setSaveMsg("Hata olustu!"); }
   }
 
-  const handleSearch = () => {
-    if (!localKeyword.trim()) return;
-    setKeyword(localKeyword);
-    search(localKeyword);
-  };
+  const handleSearch = () => { if (!localKeyword.trim()) return; setKeyword(localKeyword); search(localKeyword); };
+  const handleKeyDown = (e: React.KeyboardEvent) => { if (e.key === "Enter") handleSearch(); };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") handleSearch();
-  };
-
-  // Amazon sort + stats
   const sortedAmazon = [...amazonResults].sort((a, b) => {
     if (sortKey === "bsr") return (a.bsr || 999999) - (b.bsr || 999999);
     return (b[sortKey] || 0) - (a[sortKey] || 0);
@@ -453,82 +486,64 @@ export default function HacimlerPage() {
   const avgPrice = withPrice.length > 0 ? withPrice.reduce((s, p) => s + p.price, 0) / withPrice.length : 0;
   const avgRevenue = withRevenue.length > 0 ? withRevenue.reduce((s, p) => s + p.monthlyRevenue, 0) / withRevenue.length : 0;
   const totalRevenue = withRevenue.reduce((s, p) => s + p.monthlyRevenue, 0);
-  const maxVolume = keywordResults.length > 0 ? Math.max(...keywordResults.map((k) => k.monthlyVolume)) : 0;
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Hacimler</h1>
-        <p className="text-sm text-gray-500 mt-1">Bir anahtar kelime gir - Amazon, Google arama hacimleri ve top websiteleri gor</p>
+        <p className="text-sm text-gray-500 mt-1">Bir anahtar kelime gir - arama hacimleri, top markalar ve Amazon verileri</p>
       </div>
 
-      {/* Search bar (shared across all tabs) */}
+      {/* Search bar */}
       <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
         <div className="flex gap-3">
           <div className="flex-1 relative">
             <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-            <input
-              type="text"
-              value={localKeyword}
-              onChange={(e) => setLocalKeyword(e.target.value)}
-              onKeyDown={handleKeyDown}
+            <input type="text" value={localKeyword} onChange={(e) => setLocalKeyword(e.target.value)} onKeyDown={handleKeyDown}
               placeholder="Anahtar kelime girin... (orn: yoga mat, wireless earbuds, skincare)"
-              className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#667eea]/30 focus:border-[#667eea]"
-            />
+              className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#667eea]/30 focus:border-[#667eea]" />
           </div>
-          <button
-            onClick={handleSearch}
-            disabled={loading || !localKeyword.trim()}
-            className="px-6 py-2.5 bg-[#667eea] text-white rounded-lg text-sm font-medium hover:bg-[#5a6fd6] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
-          >
+          <button onClick={handleSearch} disabled={loading || !localKeyword.trim()}
+            className="px-6 py-2.5 bg-[#667eea] text-white rounded-lg text-sm font-medium hover:bg-[#5a6fd6] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2">
             {loading ? <Loader2 size={16} className="animate-spin" /> : <Search size={16} />}
             Ara
           </button>
         </div>
       </div>
 
-      {/* Loading */}
       {loading && (
         <div className="bg-white rounded-xl border border-gray-200 p-12 shadow-sm text-center">
           <Loader2 size={32} className="animate-spin text-[#667eea] mx-auto mb-3" />
           <p className="text-sm text-gray-600">Veriler analiz ediliyor... (15-30 saniye)</p>
-          <p className="text-xs text-gray-400 mt-1">Amazon, Google Keywords ve Top Websiteler</p>
         </div>
       )}
 
-      {/* Error */}
       {error && (
         <div className="bg-red-50 border border-red-200 rounded-xl p-4">
           <p className="text-sm text-red-700">{error}</p>
         </div>
       )}
 
-      {/* Tabs + Results */}
       {!loading && hasResults && (
         <>
-          {/* Tab bar with result counts */}
+          {/* Tabs */}
           <div className="flex gap-1 bg-gray-100 p-1 rounded-xl w-fit">
             {[
+              { key: "hacimler" as Tab, label: "Hacimler & Markalar", icon: BarChart3, count: keywordResults.length + websiteResults.length },
               { key: "amazon" as Tab, label: "Amazon", icon: ShoppingCart, count: amazonResults.length },
-              { key: "keywords" as Tab, label: "Anahtar Kelimeler", icon: KeyRound, count: keywordResults.length },
-              { key: "websites" as Tab, label: "Top Websiteler", icon: Globe, count: websiteResults.length },
             ].map(({ key, label, icon: Icon, count }) => (
-              <button
-                key={key}
-                onClick={() => setTab(key)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                  tab === key ? "bg-white text-[#667eea] shadow-sm" : "text-gray-500 hover:text-gray-700"
-                }`}
-              >
-                <Icon size={16} />
-                {label}
+              <button key={key} onClick={() => setTab(key)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${tab === key ? "bg-white text-[#667eea] shadow-sm" : "text-gray-500 hover:text-gray-700"}`}>
+                <Icon size={16} /> {label}
                 {count > 0 && <span className="text-[10px] bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded-full">{count}</span>}
               </button>
             ))}
           </div>
 
-          {/* ── Amazon Tab ────────────────────────────────────── */}
+          {/* ── Hacimler Tab (Keywords + Websites) ─────────── */}
+          {tab === "hacimler" && <HacimlerTab keywords={keywordResults} websites={websiteResults} />}
+
+          {/* ── Amazon Tab ────────────────────────────────── */}
           {tab === "amazon" && amazonResults.length > 0 && (
             <>
               <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
@@ -545,17 +560,13 @@ export default function HacimlerPage() {
                     {selectedProducts.size === amazonResults.length ? <CheckSquare size={14} className="text-[#667eea]" /> : <Square size={14} />}
                     {selectedProducts.size > 0 ? `${selectedProducts.size} secili` : "Tumunu Sec"}
                   </button>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-gray-500">Sirala:</span>
-                    <select value={sortKey} onChange={(e) => setSortKey(e.target.value as SortKey)} className="px-3 py-1.5 rounded-lg border border-gray-300 text-xs focus:outline-none focus:ring-2 focus:ring-[#667eea]/30">
-                      {SORT_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-                    </select>
-                  </div>
+                  <select value={sortKey} onChange={(e) => setSortKey(e.target.value as SortKey)} className="px-3 py-1.5 rounded-lg border border-gray-300 text-xs">
+                    {SORT_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                  </select>
                 </div>
                 <div className="flex items-center gap-2">
                   <button onClick={openSaveModal} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-[#667eea] rounded-lg hover:bg-[#5a6fd6] transition-colors">
-                    <Bookmark size={14} />
-                    {selectedProducts.size > 0 ? `${selectedProducts.size} Urun Kaydet` : "Tumunu Kaydet"}
+                    <Bookmark size={14} /> {selectedProducts.size > 0 ? `${selectedProducts.size} Kaydet` : "Tumunu Kaydet"}
                   </button>
                   <button onClick={() => downloadCSV(sortedAmazon, keyword)} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
                     <Download size={14} /> CSV
@@ -569,64 +580,12 @@ export default function HacimlerPage() {
                 ))}
               </div>
 
-              {/* BSR Calculator collapsible */}
               <div className="border-t border-gray-200 pt-4">
                 <button onClick={() => setShowBsr(!showBsr)} className="flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-[#667eea] transition-colors">
-                  <Calculator size={16} />
-                  BSR Hesaplayici {showBsr ? "▲" : "▼"}
+                  <Calculator size={16} /> BSR Hesaplayici {showBsr ? "▲" : "▼"}
                 </button>
                 {showBsr && <div className="mt-4"><BsrCalculator /></div>}
               </div>
-            </>
-          )}
-
-          {/* ── Keywords Tab ──────────────────────────────────── */}
-          {tab === "keywords" && (
-            <>
-              {keywordResults.length > 0 ? (
-                <>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                    <StatCard icon={KeyRound} label="Anahtar Kelime" value={String(keywordResults.length)} />
-                    <StatCard icon={TrendingUp} label="Top Hacim" value={formatCompact(maxVolume)} sub="aylik arama" />
-                    <StatCard icon={DollarSign} label="Ort. CPC" value={`$${(keywordResults.reduce((s, k) => s + k.cpc, 0) / keywordResults.length).toFixed(2)}`} />
-                  </div>
-                  <div className="space-y-3">
-                    {keywordResults.map((kw, i) => (
-                      <KeywordCard key={i} kw={kw} maxVolume={maxVolume} />
-                    ))}
-                  </div>
-                </>
-              ) : (
-                <div className="bg-white rounded-xl border border-gray-200 p-12 shadow-sm text-center">
-                  <KeyRound size={40} className="text-gray-300 mx-auto mb-3" />
-                  <p className="text-sm text-gray-500">Anahtar kelime verisi bulunamadi</p>
-                </div>
-              )}
-            </>
-          )}
-
-          {/* ── Websites Tab ─────────────────────────────────── */}
-          {tab === "websites" && (
-            <>
-              {websiteResults.length > 0 ? (
-                <>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                    <StatCard icon={Globe} label="Top Website" value={String(websiteResults.length)} />
-                    <StatCard icon={TrendingUp} label="Top Trafik" value={formatCompact(Math.max(...websiteResults.map((w) => w.monthlyTraffic)))} sub="aylik ziyaret" />
-                    <StatCard icon={BarChart3} label="Toplam Trafik" value={formatCompact(websiteResults.reduce((s, w) => s + w.monthlyTraffic, 0))} />
-                  </div>
-                  <div className="space-y-3">
-                    {websiteResults.map((site, i) => (
-                      <WebsiteCard key={i} site={site} />
-                    ))}
-                  </div>
-                </>
-              ) : (
-                <div className="bg-white rounded-xl border border-gray-200 p-12 shadow-sm text-center">
-                  <Globe size={40} className="text-gray-300 mx-auto mb-3" />
-                  <p className="text-sm text-gray-500">Website verisi bulunamadi</p>
-                </div>
-              )}
             </>
           )}
         </>
@@ -637,15 +596,10 @@ export default function HacimlerPage() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl p-6 w-full max-w-md mx-4 shadow-2xl">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold text-gray-900 flex items-center gap-2">
-                <ShoppingCart size={18} className="text-[#FF9900]" />
-                Amazon Urunlerini Kaydet
-              </h3>
+              <h3 className="font-semibold text-gray-900 flex items-center gap-2"><ShoppingCart size={18} className="text-[#FF9900]" /> Amazon Urunlerini Kaydet</h3>
               <button onClick={() => setShowSaveModal(false)} className="text-gray-400 hover:text-gray-600"><X size={20} /></button>
             </div>
-            <p className="text-sm text-gray-500 mb-4">
-              {selectedProducts.size > 0 ? `${selectedProducts.size} urun secildi` : `${amazonResults.length} urun kaydedilecek`}
-            </p>
+            <p className="text-sm text-gray-500 mb-4">{selectedProducts.size > 0 ? `${selectedProducts.size} urun secildi` : `${amazonResults.length} urun kaydedilecek`}</p>
             {folders.length > 0 && (
               <div className="mb-4">
                 <label className="block text-xs font-medium text-gray-500 mb-1">Mevcut Klasor</label>
