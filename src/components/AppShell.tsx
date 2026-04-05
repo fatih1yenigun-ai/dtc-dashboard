@@ -8,7 +8,7 @@ import Sidebar from "@/components/Sidebar";
 import FloatingChat from "@/components/FloatingChat";
 import { ResearchProvider } from "@/context/ResearchContext";
 import { TikTokShopProvider } from "@/context/TikTokShopContext";
-import { AmazonProvider } from "@/context/AmazonContext";
+import { HacimlerProvider } from "@/context/HacimlerContext";
 import { MetaAdsProvider } from "@/context/MetaAdsContext";
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
@@ -41,7 +41,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <ResearchProvider>
       <TikTokShopProvider>
-        <AmazonProvider>
+        <HacimlerProvider>
           <MetaAdsProvider>
           <div className="flex min-h-screen">
             <Sidebar />
@@ -51,7 +51,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             <FloatingChat />
           </div>
         </MetaAdsProvider>
-        </AmazonProvider>
+        </HacimlerProvider>
       </TikTokShopProvider>
     </ResearchProvider>
   );
