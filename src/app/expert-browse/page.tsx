@@ -3,22 +3,21 @@
 import { useState, useEffect, useCallback } from "react";
 import {
   ExternalLink,
-  ChevronDown,
-  ChevronRight,
   Package,
-  User,
   Eye,
   X,
-  Filter,
+  FolderOpen,
+  ArrowLeft,
 } from "lucide-react";
 import {
-  loadAllExpertCollections,
+  loadExpertUsers,
+  loadExpertCollectionsForUser,
   loadExpertArchiveItems,
+  type ExpertUser,
   type ExpertCollection,
   type ExpertArchiveItem,
   type SavedBrand,
 } from "@/lib/supabase";
-import { useAuth } from "@/context/AuthContext";
 import {
   FLAG,
   formatTraffic,
@@ -38,64 +37,82 @@ import {
 } from "@/lib/brand-utils";
 
 export default function ExpertBrowsePage() {
-  const { user } = useAuth();
-  const [collections, setCollections] = useState<ExpertCollection[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [expandedId, setExpandedId] = useState<number | null>(null);
-  const [expandedItems, setExpandedItems] = useState<ExpertArchiveItem[]>([]);
-  const [expandedLoading, setExpandedLoading] = useState(false);
+  // View state: "experts" → "collections" → "items"
+  const [view, setView] = useState<"experts" | "collections" | "items">("experts");
 
-  // Filters
-  const [filterExpert, setFilterExpert] = useState("");
-  const [filterCategory, setFilterCategory] = useState("");
+  // Expert users
+  const [experts, setExperts] = useState<ExpertUser[]>([]);
+  const [loadingExperts, setLoadingExperts] = useState(true);
+
+  // Selected expert's collections
+  const [selectedExpert, setSelectedExpert] = useState<ExpertUser | null>(null);
+  const [collections, setCollections] = useState<ExpertCollection[]>([]);
+  const [loadingCollections, setLoadingCollections] = useState(false);
+
+  // Selected collection's items
+  const [selectedCollection, setSelectedCollection] = useState<ExpertCollection | null>(null);
+  const [items, setItems] = useState<ExpertArchiveItem[]>([]);
+  const [loadingItems, setLoadingItems] = useState(false);
 
   // Detail modal
   const [detailItem, setDetailItem] = useState<ExpertArchiveItem | null>(null);
 
-  const fetchCollections = useCallback(async () => {
-    setLoading(true);
+  // Load experts on mount
+  const fetchExperts = useCallback(async () => {
+    setLoadingExperts(true);
     try {
-      const c = await loadAllExpertCollections();
-      setCollections(c);
+      const e = await loadExpertUsers();
+      setExperts(e);
     } catch {
       // ignore
     } finally {
-      setLoading(false);
+      setLoadingExperts(false);
     }
   }, []);
 
   useEffect(() => {
-    fetchCollections();
-  }, [fetchCollections]);
+    fetchExperts();
+  }, [fetchExperts]);
 
-  async function toggleCollection(collectionId: number) {
-    if (expandedId === collectionId) {
-      setExpandedId(null);
-      setExpandedItems([]);
-      return;
-    }
-    setExpandedId(collectionId);
-    setExpandedLoading(true);
+  async function handleSelectExpert(expert: ExpertUser) {
+    setSelectedExpert(expert);
+    setView("collections");
+    setLoadingCollections(true);
     try {
-      const items = await loadExpertArchiveItems(collectionId);
-      setExpandedItems(items);
+      const c = await loadExpertCollectionsForUser(expert.id);
+      setCollections(c);
     } catch {
-      setExpandedItems([]);
+      setCollections([]);
     } finally {
-      setExpandedLoading(false);
+      setLoadingCollections(false);
     }
   }
 
-  // Get unique experts and categories for filters
-  const experts = [...new Set(collections.map((c) => c.username).filter(Boolean))] as string[];
-  const categories = [...new Set(collections.map((c) => c.category).filter(Boolean))] as string[];
+  async function handleSelectCollection(collection: ExpertCollection) {
+    setSelectedCollection(collection);
+    setView("items");
+    setLoadingItems(true);
+    try {
+      const i = await loadExpertArchiveItems(collection.id);
+      setItems(i);
+    } catch {
+      setItems([]);
+    } finally {
+      setLoadingItems(false);
+    }
+  }
 
-  // Filtered collections
-  const filtered = collections.filter((c) => {
-    if (filterExpert && c.username !== filterExpert) return false;
-    if (filterCategory && c.category !== filterCategory) return false;
-    return true;
-  });
+  function goBackToExperts() {
+    setView("experts");
+    setSelectedExpert(null);
+    setCollections([]);
+  }
+
+  function goBackToCollections() {
+    setView("collections");
+    setSelectedCollection(null);
+    setItems([]);
+  }
 
   return (
     <div>
@@ -107,205 +124,277 @@ export default function ExpertBrowsePage() {
         </p>
       </div>
 
-      {/* Filters */}
-      {(experts.length > 1 || categories.length > 0) && (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-6">
-          <div className="flex items-center gap-3 flex-wrap">
-            <Filter size={16} className="text-gray-400" />
-            {experts.length > 1 && (
-              <select
-                value={filterExpert}
-                onChange={(e) => setFilterExpert(e.target.value)}
-                className="py-1.5 px-3 border border-gray-200 rounded-lg text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-[#667eea]/30"
-              >
-                <option value="">Tüm Uzmanlar</option>
-                {experts.map((e) => (
-                  <option key={e} value={e}>{e}</option>
-                ))}
-              </select>
-            )}
-            {categories.length > 0 && (
-              <select
-                value={filterCategory}
-                onChange={(e) => setFilterCategory(e.target.value)}
-                className="py-1.5 px-3 border border-gray-200 rounded-lg text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-[#667eea]/30"
-              >
-                <option value="">Tüm Kategoriler</option>
-                {categories.map((c) => (
-                  <option key={c} value={c}>{c}</option>
-                ))}
-              </select>
-            )}
-            {(filterExpert || filterCategory) && (
-              <button
-                onClick={() => { setFilterExpert(""); setFilterCategory(""); }}
-                className="text-xs text-gray-400 hover:text-gray-600"
-              >
-                Temizle
-              </button>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Collections */}
-      {loading ? (
-        <div className="text-center py-10 text-gray-400">Yükleniyor...</div>
-      ) : filtered.length === 0 ? (
-        <div className="text-center py-16 text-gray-400">
-          <Package size={48} className="mx-auto mb-3 opacity-50" />
-          <p className="text-base">Henüz uzman arşivi yok</p>
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {filtered.map((collection) => {
-            const isExpanded = expandedId === collection.id;
-            return (
-              <div key={collection.id} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                {/* Collection header */}
+      {/* === VIEW: Expert Cards === */}
+      {view === "experts" && (
+        <>
+          {loadingExperts ? (
+            <div className="text-center py-10 text-gray-400">Yükleniyor...</div>
+          ) : experts.length === 0 ? (
+            <div className="text-center py-16 text-gray-400">
+              <Package size={48} className="mx-auto mb-3 opacity-50" />
+              <p className="text-base">Henüz uzman yok</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+              {experts.map((expert) => (
                 <button
-                  onClick={() => toggleCollection(collection.id)}
-                  className="w-full flex items-center justify-between px-6 py-4 hover:bg-gray-50 transition-colors text-left"
+                  key={expert.id}
+                  onClick={() => handleSelectExpert(expert)}
+                  className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 hover:shadow-lg hover:border-[#667eea]/30 transition-all text-center group"
                 >
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center">
-                      <span className="text-sm font-bold text-amber-700">
-                        {(collection.username || "?").charAt(0).toUpperCase()}
-                      </span>
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-base font-semibold text-gray-900">{collection.name}</span>
-                        {collection.category && (
-                          <span className="inline-block bg-[#667eea]/10 text-[#667eea] px-2 py-0.5 rounded-full text-[10px] font-medium">
-                            {collection.category}
-                          </span>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-2 mt-0.5">
-                        <User size={12} className="text-gray-400" />
-                        <span className="text-xs text-gray-500">{collection.username}</span>
-                        <span className="text-xs text-gray-300">|</span>
-                        <span className="text-xs text-gray-500">{collection.item_count ?? 0} marka</span>
-                      </div>
-                    </div>
-                  </div>
-                  {isExpanded ? (
-                    <ChevronDown size={18} className="text-gray-400" />
-                  ) : (
-                    <ChevronRight size={18} className="text-gray-400" />
-                  )}
-                </button>
-
-                {/* Expanded items */}
-                {isExpanded && (
-                  <div className="border-t border-gray-100 px-6 py-4">
-                    {expandedLoading ? (
-                      <p className="text-sm text-gray-400 text-center py-4">Yükleniyor...</p>
-                    ) : expandedItems.length === 0 ? (
-                      <p className="text-sm text-gray-400 text-center py-4">Bu koleksiyon boş</p>
+                  {/* Avatar */}
+                  <div className="w-20 h-20 rounded-full mx-auto mb-4 overflow-hidden bg-gradient-to-br from-[#667eea] to-[#764ba2] flex items-center justify-center group-hover:scale-105 transition-transform">
+                    {expert.avatar_url ? (
+                      <img
+                        src={expert.avatar_url}
+                        alt={expert.username}
+                        className="w-full h-full object-cover"
+                      />
                     ) : (
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {expandedItems.map((item) => {
-                          const brand = { brand_data: item.brand_data } as SavedBrand;
-                          const name = getBrandName(brand);
-                          const website = getBrandWebsite(brand);
-                          const country = getBrandCountry(brand);
-                          const category = getBrandCategory(brand);
-                          const aov = getBrandAov(brand);
-                          const revenue = getBrandRevenue(brand);
-                          const traffic = getBrandTraffic(brand);
-                          const tqs = getBrandTQS(brand);
-                          const websiteClean = website.replace(/^https?:\/\//, "");
-                          const source = getBrandSource(brand);
-
-                          return (
-                            <div key={item.id} className="bg-gray-50 rounded-xl border border-gray-200 p-4">
-                              {/* Name + source */}
-                              <div className="flex items-start justify-between mb-1">
-                                <div className="flex items-center gap-2 min-w-0">
-                                  <span className="text-sm font-bold text-gray-900 truncate">{name}</span>
-                                  <SourceBadge source={source} />
-                                </div>
-                                {country && (
-                                  <span className="text-sm flex-shrink-0 ml-1">
-                                    {FLAG[country.toUpperCase()] || country.toUpperCase()}
-                                  </span>
-                                )}
-                              </div>
-
-                              {/* Website */}
-                              {websiteClean && (
-                                <a
-                                  href={website.startsWith("http") ? website : `https://${website}`}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-xs text-blue-500 hover:underline inline-flex items-center gap-1 mb-2"
-                                >
-                                  {websiteClean} <ExternalLink size={10} />
-                                </a>
-                              )}
-
-                              {/* Quick metrics */}
-                              <div className="grid grid-cols-2 gap-x-3 gap-y-1 mb-2 text-xs">
-                                <div>
-                                  <span className="text-gray-500">Ciro: </span>
-                                  <span className="font-semibold text-[#27AE60]">{formatRevenue(revenue)}</span>
-                                </div>
-                                <div>
-                                  <span className="text-gray-500">AOV: </span>
-                                  <span className="font-semibold text-[#764ba2]">{aov != null ? `$${aov}` : "-"}</span>
-                                </div>
-                                <div>
-                                  <span className="text-gray-500">Trafik: </span>
-                                  <span className="font-semibold text-[#2980B9]">{formatTraffic(traffic)}</span>
-                                </div>
-                                <div>
-                                  <span className="text-gray-500">TQS: </span>
-                                  {tqs != null ? (
-                                    <span className="inline-block bg-amber-100 text-amber-800 px-1 py-0.5 rounded text-[10px] font-semibold">
-                                      {tqs}
-                                    </span>
-                                  ) : (
-                                    <span className="text-gray-300">-</span>
-                                  )}
-                                </div>
-                              </div>
-
-                              {/* Category */}
-                              {category && (
-                                <span className="inline-block bg-[#667eea]/10 text-[#667eea] px-2 py-0.5 rounded-full text-[10px] font-medium mb-2">
-                                  {category}
-                                </span>
-                              )}
-
-                              {/* Expert note */}
-                              {item.expert_note && (
-                                <div className="bg-amber-50 border border-amber-200 rounded-lg p-2.5 mb-2">
-                                  <p className="text-[10px] font-semibold text-amber-700 uppercase tracking-wide mb-0.5">Uzman Notu</p>
-                                  <p className="text-xs text-amber-900 leading-relaxed">{item.expert_note}</p>
-                                </div>
-                              )}
-
-                              {/* Detail button */}
-                              <button
-                                onClick={() => setDetailItem(item)}
-                                className="inline-flex items-center gap-1 px-2.5 py-1 bg-[#667eea]/10 text-[#667eea] rounded-lg text-[11px] font-medium hover:bg-[#667eea]/20 transition-colors"
-                              >
-                                <Eye size={11} />
-                                Detay
-                              </button>
-                            </div>
-                          );
-                        })}
-                      </div>
+                      <span className="text-2xl font-bold text-white">
+                        {expert.username.charAt(0).toUpperCase()}
+                      </span>
                     )}
                   </div>
+                  {/* Name */}
+                  <h3 className="text-base font-bold text-gray-900 mb-1">
+                    {expert.username}
+                  </h3>
+                  {/* Expertise */}
+                  <p className="text-sm text-gray-500 mb-3 line-clamp-2">
+                    {expert.expertise || "Uzman"}
+                  </p>
+                  {/* Collection count */}
+                  <span className="inline-block bg-[#667eea]/10 text-[#667eea] px-3 py-1 rounded-full text-xs font-medium">
+                    {expert.collection_count ?? 0} koleksiyon
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
+        </>
+      )}
+
+      {/* === VIEW: Collections (Folders) === */}
+      {view === "collections" && selectedExpert && (
+        <>
+          {/* Back button + expert info */}
+          <button
+            onClick={goBackToExperts}
+            className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700 mb-6 transition-colors"
+          >
+            <ArrowLeft size={16} />
+            Tüm Uzmanlar
+          </button>
+
+          {/* Expert header card */}
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-6 flex items-center gap-5">
+            <div className="w-16 h-16 rounded-full overflow-hidden bg-gradient-to-br from-[#667eea] to-[#764ba2] flex items-center justify-center flex-shrink-0">
+              {selectedExpert.avatar_url ? (
+                <img
+                  src={selectedExpert.avatar_url}
+                  alt={selectedExpert.username}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <span className="text-xl font-bold text-white">
+                  {selectedExpert.username.charAt(0).toUpperCase()}
+                </span>
+              )}
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-gray-900">{selectedExpert.username}</h2>
+              <p className="text-sm text-gray-500">{selectedExpert.expertise || "Uzman"}</p>
+            </div>
+          </div>
+
+          {/* Collection cards */}
+          {loadingCollections ? (
+            <div className="text-center py-10 text-gray-400">Yükleniyor...</div>
+          ) : collections.length === 0 ? (
+            <div className="text-center py-16 text-gray-400">
+              <FolderOpen size={48} className="mx-auto mb-3 opacity-50" />
+              <p className="text-base">Bu uzmanın henüz koleksiyonu yok</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {collections.map((collection) => (
+                <button
+                  key={collection.id}
+                  onClick={() => handleSelectCollection(collection)}
+                  className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 hover:shadow-lg hover:border-[#667eea]/30 transition-all text-center group"
+                >
+                  {/* Folder icon */}
+                  <div className="w-14 h-14 rounded-xl bg-amber-50 border border-amber-200 mx-auto mb-3 flex items-center justify-center group-hover:scale-105 transition-transform">
+                    <FolderOpen size={28} className="text-amber-500" />
+                  </div>
+                  {/* Name */}
+                  <h3 className="text-sm font-bold text-gray-900 mb-1 truncate">
+                    {collection.name}
+                  </h3>
+                  {/* Category */}
+                  {collection.category && (
+                    <span className="inline-block bg-[#667eea]/10 text-[#667eea] px-2 py-0.5 rounded-full text-[10px] font-medium mb-2">
+                      {collection.category}
+                    </span>
+                  )}
+                  {/* Item count */}
+                  <p className="text-xs text-gray-400">
+                    {collection.item_count ?? 0} marka
+                  </p>
+                </button>
+              ))}
+            </div>
+          )}
+        </>
+      )}
+
+      {/* === VIEW: Items in Collection === */}
+      {view === "items" && selectedExpert && selectedCollection && (
+        <>
+          {/* Back button */}
+          <button
+            onClick={goBackToCollections}
+            className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700 mb-6 transition-colors"
+          >
+            <ArrowLeft size={16} />
+            {selectedExpert.username} — Koleksiyonlar
+          </button>
+
+          {/* Collection header */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-6 flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-amber-50 border border-amber-200 flex items-center justify-center">
+              <FolderOpen size={20} className="text-amber-500" />
+            </div>
+            <div>
+              <h2 className="text-lg font-bold text-gray-900">{selectedCollection.name}</h2>
+              <div className="flex items-center gap-2">
+                {selectedCollection.category && (
+                  <span className="inline-block bg-[#667eea]/10 text-[#667eea] px-2 py-0.5 rounded-full text-[10px] font-medium">
+                    {selectedCollection.category}
+                  </span>
                 )}
+                <span className="text-xs text-gray-400">{items.length} marka</span>
               </div>
-            );
-          })}
-        </div>
+            </div>
+          </div>
+
+          {/* Items grid */}
+          {loadingItems ? (
+            <div className="text-center py-10 text-gray-400">Yükleniyor...</div>
+          ) : items.length === 0 ? (
+            <div className="text-center py-16 text-gray-400">
+              <Package size={48} className="mx-auto mb-3 opacity-50" />
+              <p className="text-base">Bu koleksiyon boş</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {items.map((item) => {
+                const brand = { brand_data: item.brand_data } as SavedBrand;
+                const name = getBrandName(brand);
+                const website = getBrandWebsite(brand);
+                const country = getBrandCountry(brand);
+                const category = getBrandCategory(brand);
+                const aov = getBrandAov(brand);
+                const revenue = getBrandRevenue(brand);
+                const traffic = getBrandTraffic(brand);
+                const tqs = getBrandTQS(brand);
+                const websiteClean = website.replace(/^https?:\/\//, "");
+                const source = getBrandSource(brand);
+
+                return (
+                  <div key={item.id} className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 hover:shadow-md transition-shadow">
+                    {/* Name + source */}
+                    <div className="flex items-start justify-between mb-1">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="text-base font-bold text-gray-900 truncate">{name}</span>
+                        <SourceBadge source={source} />
+                      </div>
+                      {country && (
+                        <span className="text-base flex-shrink-0 ml-2">
+                          {FLAG[country.toUpperCase()] || country.toUpperCase()}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Website */}
+                    {websiteClean && (
+                      <a
+                        href={website.startsWith("http") ? website : `https://${website}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm text-blue-500 hover:underline inline-flex items-center gap-1 mb-3"
+                      >
+                        {websiteClean} <ExternalLink size={11} />
+                      </a>
+                    )}
+
+                    {/* Quick metrics */}
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 mb-3">
+                      <div>
+                        <span className="text-sm text-gray-500">Ciro: </span>
+                        <span className="text-base font-semibold text-[#27AE60]">{formatRevenue(revenue)}</span>
+                      </div>
+                      <div>
+                        <span className="text-sm text-gray-500">AOV: </span>
+                        <span className="text-base font-semibold text-[#764ba2]">{aov != null ? `$${aov}` : "-"}</span>
+                      </div>
+                      <div>
+                        <span className="text-sm text-gray-500">Trafik: </span>
+                        <span className="text-base font-semibold text-[#2980B9]">{formatTraffic(traffic)}</span>
+                      </div>
+                      <div>
+                        <span className="text-sm text-gray-500">TQS: </span>
+                        {tqs != null ? (
+                          <span className="inline-block bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded text-xs font-semibold">
+                            {tqs}
+                          </span>
+                        ) : (
+                          <span className="text-sm text-gray-300">-</span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Category */}
+                    {category && (
+                      <div className="mb-2">
+                        <span className="inline-block bg-[#667eea]/10 text-[#667eea] px-2 py-0.5 rounded-full text-xs font-medium">
+                          {category}
+                        </span>
+                      </div>
+                    )}
+
+                    {/* Expert note */}
+                    {item.expert_note && (
+                      <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-3">
+                        <p className="text-[10px] font-semibold text-amber-700 uppercase tracking-wide mb-0.5">Uzman Notu</p>
+                        <p className="text-sm text-amber-900 leading-relaxed">{item.expert_note}</p>
+                      </div>
+                    )}
+
+                    {/* Insight */}
+                    {getBrandInsight(brand) && (
+                      <p className="text-sm text-gray-500 italic line-clamp-2 mb-3">
+                        &ldquo;{getBrandInsight(brand)}&rdquo;
+                      </p>
+                    )}
+
+                    {/* Detail button */}
+                    <div className="pt-2 border-t border-gray-100">
+                      <button
+                        onClick={() => setDetailItem(item)}
+                        className="inline-flex items-center gap-1 px-3 py-1.5 bg-[#667eea]/10 text-[#667eea] rounded-lg text-xs font-medium hover:bg-[#667eea]/20 transition-colors"
+                      >
+                        <Eye size={12} />
+                        Detay
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </>
       )}
 
       {/* Detail Modal */}
@@ -331,15 +420,12 @@ export default function ExpertBrowsePage() {
               </button>
             </div>
             <div className="p-6">
-              {/* Expert Note prominently */}
               {detailItem.expert_note && (
                 <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-4">
                   <p className="text-xs text-amber-600 font-semibold mb-2 uppercase tracking-wide">Uzman Notu</p>
                   <p className="text-sm text-amber-900 leading-relaxed">{detailItem.expert_note}</p>
                 </div>
               )}
-
-              {/* Metrics */}
               <div className="grid grid-cols-2 gap-4 mb-4">
                 <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4">
                   <p className="text-xs text-emerald-600 font-medium mb-1">Tahmini Ciro</p>
@@ -363,8 +449,6 @@ export default function ExpertBrowsePage() {
                   </p>
                 </div>
               </div>
-
-              {/* Insight */}
               {getBrandInsight({ brand_data: detailItem.brand_data } as SavedBrand) && (
                 <div className="bg-gray-50 rounded-xl p-4">
                   <p className="text-xs text-gray-500 font-semibold mb-2 uppercase tracking-wide">Öne Çıkan Özellik</p>

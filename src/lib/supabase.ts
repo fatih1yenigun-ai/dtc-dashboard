@@ -6,6 +6,14 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // ---------- Types ----------
+export interface ExpertUser {
+  id: number;
+  username: string;
+  expertise: string | null;
+  avatar_url: string | null;
+  collection_count?: number;
+}
+
 export interface ExpertCollection {
   id: number;
   name: string;
@@ -308,6 +316,51 @@ export async function removeExpertArchiveItem(itemId: number, userId: number): P
 }
 
 // ---------- Public Expert Browse ----------
+export async function loadExpertUsers(): Promise<ExpertUser[]> {
+  const { data, error } = await supabase
+    .from("users")
+    .select("id, username, expertise, avatar_url")
+    .eq("role", "expert")
+    .order("username", { ascending: true });
+  if (error) {
+    console.error("loadExpertUsers error:", error);
+    return [];
+  }
+
+  // Get collection counts per expert
+  const experts: ExpertUser[] = [];
+  for (const u of data ?? []) {
+    const { count } = await supabase
+      .from("expert_collections")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", u.id);
+    experts.push({ ...u, collection_count: count ?? 0 });
+  }
+  return experts;
+}
+
+export async function loadExpertCollectionsForUser(userId: number): Promise<ExpertCollection[]> {
+  const { data, error } = await supabase
+    .from("expert_collections")
+    .select("*")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: true });
+  if (error) {
+    console.error("loadExpertCollectionsForUser error:", error);
+    return [];
+  }
+
+  const collections: ExpertCollection[] = [];
+  for (const row of data ?? []) {
+    const { count } = await supabase
+      .from("expert_archive_items")
+      .select("id", { count: "exact", head: true })
+      .eq("collection_id", row.id);
+    collections.push({ ...row, item_count: count ?? 0 });
+  }
+  return collections;
+}
+
 export async function loadAllExpertCollections(): Promise<ExpertCollection[]> {
   const { data, error } = await supabase
     .from("expert_collections")
