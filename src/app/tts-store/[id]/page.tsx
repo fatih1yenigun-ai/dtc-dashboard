@@ -510,7 +510,10 @@ export default function StoreDetailPage({ params }: { params: Promise<{ id: stri
                 {store.best_selling_goods.map((item, i) => (
                   <div
                     key={item.product_id || i}
-                    onClick={() => window.open(`/tts/${item.product_id}`, "_blank")}
+                    onClick={() => {
+                      try { sessionStorage.setItem(`tts_product_${item.product_id}`, JSON.stringify({ id: item.product_id, image: storeImg(item.image), sales_volume: item.sales_volume, shop_name: store.title })); } catch {}
+                      window.open(`/tts/${item.product_id}`, "_blank");
+                    }}
                     className="bg-gray-50 rounded-lg p-3 cursor-pointer hover:shadow-md transition-shadow border border-gray-100"
                   >
                     {item.image ? (
@@ -588,7 +591,10 @@ export default function StoreDetailPage({ params }: { params: Promise<{ id: stri
                     {products.map((p, i) => (
                       <tr
                         key={p.id || i}
-                        onClick={() => window.open(`/tts/${p.id}`, "_blank")}
+                        onClick={() => {
+                          try { sessionStorage.setItem(`tts_product_${p.id}`, JSON.stringify(p)); } catch {}
+                          window.open(`/tts/${p.id}`, "_blank");
+                        }}
                         className="border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors"
                       >
                         <td className="py-3 px-4">
