@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, use } from "react";
+import { useState, useEffect, use, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
@@ -112,6 +112,9 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
 
   // Chart period
   const [chartPeriod, setChartPeriod] = useState<"7" | "30">("30");
+
+  // Video detail popup
+  const [detailVideo, setDetailVideo] = useState<TTSProduct | null>(null);
 
   // Resolve product data
   useEffect(() => {
@@ -263,8 +266,8 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
   if (productLoading) {
     return (
       <div className="flex flex-col items-center justify-center py-32">
-        <Loader2 size={32} className="animate-spin text-[#667eea] mb-3" />
-        <p className="text-gray-500 text-sm">Urun bilgileri yukleniyor...</p>
+        <Loader2 size={32} className="animate-spin text-accent mb-3" />
+        <p className="text-text-secondary text-sm">Urun bilgileri yukleniyor...</p>
       </div>
     );
   }
@@ -279,17 +282,17 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
 
     return (
       <div className="max-w-lg mx-auto py-16">
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8 text-center">
-          <div className="w-16 h-16 rounded-full bg-[#667eea]/10 flex items-center justify-center mx-auto mb-4">
-            <ShoppingBag size={28} className="text-[#667eea]" />
+        <div className="bg-bg-card rounded-[14px] shadow-sm border border-border-default p-8 text-center">
+          <div className="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-4">
+            <ShoppingBag size={28} className="text-accent" />
           </div>
-          <h2 className="text-lg font-bold text-gray-900 mb-2">
+          <h2 className="text-lg font-bold text-text-primary mb-2">
             {videoContext.shopName ? `${videoContext.shopName}` : "Urun Detayi"}
           </h2>
           {videoContext.shopHandle && (
-            <p className="text-sm text-gray-500 mb-4">@{videoContext.shopHandle}</p>
+            <p className="text-sm text-text-secondary mb-4">@{videoContext.shopHandle}</p>
           )}
-          <p className="text-sm text-gray-500 mb-6">
+          <p className="text-sm text-text-secondary mb-6">
             Bu urun PiPiAds veritabaninda bulunamadi. TikTok Shop&apos;tan dogrudan gorebilirsiniz.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
@@ -308,14 +311,14 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                 href={`https://www.tiktok.com/@${videoContext.shopHandle}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-gray-100 text-gray-700 text-sm font-medium hover:bg-gray-200"
+                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-bg-hover text-text-primary text-sm font-medium hover:bg-bg-hover"
               >
                 <ExternalLink size={14} /> TikTok Profili
               </a>
             )}
             <button
               onClick={() => router.push("/reklam-tara")}
-              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg border border-gray-200 text-gray-600 text-sm font-medium hover:bg-gray-50 cursor-pointer"
+              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg border border-border-default text-text-secondary text-sm font-medium hover:bg-bg-hover cursor-pointer"
             >
               <ArrowLeft size={14} /> Reklam Tara&apos;ya Don
             </button>
@@ -328,21 +331,21 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
   return (
     <div className="max-w-7xl mx-auto">
       {/* Back navigation */}
-      <button onClick={() => { setSelectedProduct(null); router.push("/tts"); }} className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 mb-6 cursor-pointer">
+      <button onClick={() => { setSelectedProduct(null); router.push("/tts"); }} className="flex items-center gap-2 text-sm text-text-secondary hover:text-text-primary mb-6 cursor-pointer">
         <ArrowLeft size={16} /> TikTok Shop / Urun Detayi
       </button>
 
       {/* ═══ SECTION 1: Product Header ═══ */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+      <div className="bg-bg-card rounded-[14px] shadow-sm border border-border-default p-6 mb-6">
         <div className="flex flex-col md:flex-row gap-6">
           {/* Images */}
           <div className="w-full md:w-72 flex-shrink-0">
             {mainImage ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={mainImage} alt={product.title} className="w-full rounded-xl object-cover border border-gray-100 mb-3" />
+              <img src={mainImage} alt={product.title} className="w-full rounded-xl object-cover border border-border-default mb-3" />
             ) : (
-              <div className="w-full aspect-square rounded-xl bg-gray-100 flex items-center justify-center mb-3">
-                <ShoppingBag size={48} className="text-gray-300" />
+              <div className="w-full aspect-square rounded-xl bg-bg-hover flex items-center justify-center mb-3">
+                <ShoppingBag size={48} className="text-text-muted" />
               </div>
             )}
             {product.image_list && product.image_list.length > 1 && (
@@ -352,7 +355,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                   <img
                     key={i} src={img} alt={`${i + 1}`}
                     onClick={() => setMainImage(img)}
-                    className={`w-14 h-14 rounded-lg object-cover cursor-pointer border-2 flex-shrink-0 ${mainImage === img ? "border-[#667eea]" : "border-gray-100"}`}
+                    className={`w-14 h-14 rounded-lg object-cover cursor-pointer border-2 flex-shrink-0 ${mainImage === img ? "border-accent" : "border-border-default"}`}
                   />
                 ))}
               </div>
@@ -367,18 +370,18 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={product.shop_image} alt={product.shop_name} className="w-10 h-10 rounded-full object-cover" />
               ) : (
-                <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center"><ShoppingBag size={18} className="text-gray-400" /></div>
+                <div className="w-10 h-10 rounded-full bg-bg-hover flex items-center justify-center"><ShoppingBag size={18} className="text-text-muted" /></div>
               )}
               <div>
-                <p className="font-semibold text-gray-900 text-sm">{product.shop_name || "Bilinmeyen Magaza"}</p>
-                <div className="flex items-center gap-2 text-xs text-gray-500">
+                <p className="font-semibold text-text-primary text-sm">{product.shop_name || "Bilinmeyen Magaza"}</p>
+                <div className="flex items-center gap-2 text-xs text-text-secondary">
                   {product.region && <span>{FLAG[product.region.toUpperCase()] || ""} {product.region.toUpperCase()}</span>}
                   {product.seller_location && <span>· {product.seller_location}</span>}
                 </div>
               </div>
             </div>
 
-            <h1 className="text-xl font-bold text-gray-900 mb-3 leading-snug">{product.title}</h1>
+            <h1 className="text-xl font-bold text-text-primary mb-3 leading-snug">{product.title}</h1>
 
             {/* Badges */}
             <div className="flex flex-wrap gap-2 mb-4">
@@ -391,10 +394,10 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
 
             {/* Key metrics */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
-              <div><p className="text-xs text-gray-500">Fiyat</p><p className="text-xl font-bold text-gray-900">${product.price_usd.toFixed(2)}</p></div>
-              <div><p className="text-xs text-gray-500">Satislar</p><p className="text-xl font-bold text-blue-600">{formatCompact(product.sales_volume)}</p></div>
-              <div><p className="text-xs text-gray-500">GMV</p><p className="text-xl font-bold text-emerald-600">{formatMoney(product.gmv_usd)}</p></div>
-              <div><p className="text-xs text-gray-500">Puan</p><p className="text-xl font-bold text-amber-600 flex items-center gap-1"><Star size={16} className="fill-amber-400 text-amber-400" />{product.score > 0 ? product.score.toFixed(1) : "-"}</p></div>
+              <div><p className="text-xs text-text-secondary">Fiyat</p><p className="text-xl font-bold text-text-primary">${product.price_usd.toFixed(2)}</p></div>
+              <div><p className="text-xs text-text-secondary">Satislar</p><p className="text-xl font-bold text-blue-600">{formatCompact(product.sales_volume)}</p></div>
+              <div><p className="text-xs text-text-secondary">GMV</p><p className="text-xl font-bold text-emerald-600">{formatMoney(product.gmv_usd)}</p></div>
+              <div><p className="text-xs text-text-secondary">Puan</p><p className="text-xl font-bold text-amber-600 flex items-center gap-1"><Star size={16} className="fill-amber-400 text-amber-400" />{product.score > 0 ? product.score.toFixed(1) : "-"}</p></div>
             </div>
 
             {/* Actions */}
@@ -403,11 +406,11 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                 <Save size={14} /> Klasore Kaydet
               </button>
               {product.landing_page && (
-                <a href={product.landing_page} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-gray-100 text-gray-700 text-sm font-medium hover:bg-gray-200">
+                <a href={product.landing_page} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-bg-hover text-text-primary text-sm font-medium hover:bg-bg-hover">
                   <ExternalLink size={14} /> TikTok Shop
                 </a>
               )}
-              <a href={`https://www.pipiads.com/tr/tiktok-shop-product/${product.id}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#667eea]/10 text-[#667eea] text-sm font-medium hover:bg-[#667eea]/20">
+              <a href={`https://www.pipiads.com/tr/tiktok-shop-product/${product.id}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-accent/10 text-accent text-sm font-medium hover:bg-accent/20">
                 <ExternalLink size={14} /> PiPiAds
               </a>
             </div>
@@ -415,17 +418,17 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
         </div>
 
         {/* Veri Analizi — inside the header card */}
-        <div className="border-t border-gray-100 mt-6 pt-6">
+        <div className="border-t border-border-default mt-6 pt-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-semibold text-gray-700">Veri Analizi</h3>
-            <div className="flex bg-gray-100 rounded-lg p-0.5">
-              <button onClick={() => setChartPeriod("7")} className={`px-3 py-1 text-xs font-medium rounded-md cursor-pointer ${chartPeriod === "7" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500"}`}>7 Gun</button>
-              <button onClick={() => setChartPeriod("30")} className={`px-3 py-1 text-xs font-medium rounded-md cursor-pointer ${chartPeriod === "30" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500"}`}>30 Gun</button>
+            <h3 className="text-sm font-semibold text-text-primary">Veri Analizi</h3>
+            <div className="flex bg-bg-hover rounded-lg p-0.5">
+              <button onClick={() => setChartPeriod("7")} className={`px-3 py-1 text-xs font-medium rounded-md cursor-pointer ${chartPeriod === "7" ? "bg-bg-card text-text-primary shadow-sm" : "text-text-secondary"}`}>7 Gun</button>
+              <button onClick={() => setChartPeriod("30")} className={`px-3 py-1 text-xs font-medium rounded-md cursor-pointer ${chartPeriod === "30" ? "bg-bg-card text-text-primary shadow-sm" : "text-text-secondary"}`}>30 Gun</button>
             </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="bg-gray-50 rounded-xl p-4">
-              <h4 className="text-xs text-gray-500 mb-1">Satislar</h4>
+            <div className="bg-bg-main rounded-xl p-4">
+              <h4 className="text-xs text-text-secondary mb-1">Satislar</h4>
               <p className="text-xl font-bold text-blue-600 mb-3">{formatCompact(chartPeriod === "7" ? product.day7_sales : product.day30_sales)}</p>
               <ResponsiveContainer width="100%" height={140}>
                 <BarChart data={salesChartData}>
@@ -437,8 +440,8 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                 </BarChart>
               </ResponsiveContainer>
             </div>
-            <div className="bg-gray-50 rounded-xl p-4">
-              <h4 className="text-xs text-gray-500 mb-1">GMV</h4>
+            <div className="bg-bg-main rounded-xl p-4">
+              <h4 className="text-xs text-text-secondary mb-1">GMV</h4>
               <p className="text-xl font-bold text-emerald-600 mb-3">{formatMoney(chartPeriod === "7" ? product.day7_gmv_usd : product.day30_gmv_usd)}</p>
               <ResponsiveContainer width="100%" height={140}>
                 <BarChart data={gmvChartData}>
@@ -456,7 +459,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
 
       {/* ═══ SECTION 3: Reklam Analizi ═══ */}
       <div className="mb-6">
-        <h2 className="text-lg font-bold text-gray-900 mb-4">Reklam Analizi</h2>
+        <h2 className="text-lg font-bold text-text-primary mb-4">Reklam Analizi</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3">
           <MetricCard label="Satislar" value={formatCompact(product.sales_volume)} color="blue" icon={<ShoppingBag size={14} />} />
           <MetricCard label="GMV" value={formatMoney(product.gmv_usd)} color="emerald" icon={<TrendingUp size={14} />} />
@@ -476,7 +479,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-bold text-gray-900">
             TikTok Reklamlari
-            {allVideos.length > 0 && <span className="text-sm font-normal text-gray-400 ml-2">({allVideos.length})</span>}
+            {allVideos.length > 0 && <span className="text-sm font-normal text-text-muted ml-2">({allVideos.length})</span>}
           </h2>
           {allVideos.length > 0 && (
             <select
@@ -485,7 +488,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                 const [s, t] = e.target.value.split("_");
                 changeVideoSort(Number(s), t);
               }}
-              className="py-1.5 px-3 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#667eea]/30"
+              className="py-1.5 px-3 border border-border-default rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/30"
             >
               {VIDEO_DETAIL_SORT_OPTIONS.map((opt) => (
                 <option key={`${opt.sort}_${opt.type}`} value={`${opt.sort}_${opt.type}`}>{opt.label}</option>
@@ -496,13 +499,13 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
 
         {videosLoading && (
           <div className="flex items-center gap-2 py-8 justify-center">
-            <Loader2 size={20} className="animate-spin text-[#667eea]" />
-            <span className="text-sm text-gray-500">Videolar yukleniyor...</span>
+            <Loader2 size={20} className="animate-spin text-accent" />
+            <span className="text-sm text-text-secondary">Videolar yukleniyor...</span>
           </div>
         )}
 
         {!videosLoading && videos.length === 0 && (
-          <div className="text-center py-8 text-gray-400 bg-white rounded-xl border border-gray-200">
+          <div className="text-center py-8 text-text-muted bg-bg-card rounded-[14px] border border-border-default">
             <Play size={32} className="mx-auto mb-2 opacity-30" />
             <p className="text-sm">Bu urun icin video bulunamadi</p>
           </div>
@@ -512,36 +515,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
           <>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {videos.map((video, i) => (
-              <div key={video.id || i} className="bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
-                <div className="relative aspect-[9/16] bg-gray-100">
-                  {(video.cover_image || video.image) ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={video.cover_image || video.image} alt={video.hook || video.title} className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-gray-300"><Play size={32} /></div>
-                  )}
-                  {video.video_url && (
-                    <a href={video.video_url} target="_blank" rel="noopener noreferrer" className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 hover:opacity-100 transition-opacity">
-                      <div className="w-11 h-11 rounded-full bg-white/90 flex items-center justify-center"><Play size={18} className="text-gray-900 ml-0.5" /></div>
-                    </a>
-                  )}
-                  {video.region && <div className="absolute top-2 left-2 text-sm drop-shadow">{FLAG[video.region.toUpperCase()] || ""}</div>}
-                  {(video.hot_value || 0) > 0 && <div className="absolute top-2 right-2"><HotBadge value={video.hot_value || 0} /></div>}
-                  {(video.duration || 0) > 0 && (
-                    <div className="absolute bottom-2 left-2">
-                      <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-black/60 text-white flex items-center gap-1"><Clock size={10} />{formatDuration(video.duration || 0)}</span>
-                    </div>
-                  )}
-                </div>
-                <div className="p-2.5">
-                  <p className="text-xs font-semibold text-gray-900 line-clamp-2 mb-1">{video.hook || video.product_name || video.title || "-"}</p>
-                  <p className="text-[10px] text-gray-400 mb-1 truncate">{video.shop_name || video.shop_handle || ""}</p>
-                  <div className="flex items-center gap-3 text-[10px] text-gray-500">
-                    <span>{"\u25B6\uFE0F"} {formatCompact(video.play_count)}</span>
-                    <span>{"\u2764\uFE0F"} {formatCompact(video.like_count)}</span>
-                  </div>
-                </div>
-              </div>
+              <ProductVideoCard key={video.id || i} video={video} onDetail={setDetailVideo} />
             ))}
           </div>
 
@@ -551,7 +525,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
               <button
                 onClick={() => goToVideoPage(videoPage - 1)}
                 disabled={videoPage <= 1}
-                className="px-3 py-1.5 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 disabled:opacity-30 cursor-pointer"
+                className="px-3 py-1.5 rounded-lg border border-border-default text-sm text-text-secondary hover:bg-bg-hover disabled:opacity-30 cursor-pointer"
               >
                 <ChevronLeft size={16} />
               </button>
@@ -561,8 +535,8 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                   onClick={() => goToVideoPage(p)}
                   className={`w-8 h-8 rounded-lg text-sm font-medium cursor-pointer ${
                     p === videoPage
-                      ? "bg-[#667eea] text-white"
-                      : "border border-gray-200 text-gray-600 hover:bg-gray-50"
+                      ? "bg-accent text-white"
+                      : "border border-border-default text-text-secondary hover:bg-bg-hover"
                   }`}
                 >
                   {p}
@@ -571,7 +545,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
               <button
                 onClick={() => goToVideoPage(videoPage + 1)}
                 disabled={videoPage >= totalVideoPages}
-                className="px-3 py-1.5 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 disabled:opacity-30 cursor-pointer"
+                className="px-3 py-1.5 rounded-lg border border-border-default text-sm text-text-secondary hover:bg-bg-hover disabled:opacity-30 cursor-pointer"
               >
                 <ChevronRight size={16} />
               </button>
@@ -584,21 +558,21 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
       {/* ═══ SECTION 6: Pazarlama Acilari (Marketing Angles) ═══ */}
       {(hookAnalysis.length > 0 || tagAnalysis.length > 0) && (
         <div className="mb-6">
-          <h2 className="text-lg font-bold text-gray-900 mb-4">Pazarlama Acilari</h2>
+          <h2 className="text-lg font-bold text-text-primary mb-4">Pazarlama Acilari</h2>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Hooks */}
             {hookAnalysis.length > 0 && (
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
-                <h3 className="text-sm font-semibold text-gray-700 mb-3">En Cok Kullanilan Hook&apos;lar</h3>
+              <div className="bg-bg-card rounded-[14px] shadow-sm border border-border-default p-5">
+                <h3 className="text-sm font-semibold text-text-primary mb-3">En Cok Kullanilan Hook&apos;lar</h3>
                 <div className="space-y-3">
                   {hookAnalysis.map((h, i) => (
                     <div key={i} className="flex items-start gap-3">
-                      <span className="text-xs font-bold text-[#667eea] bg-[#667eea]/10 w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <span className="text-xs font-bold text-accent bg-accent/10 w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
                         {i + 1}
                       </span>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm text-gray-800 leading-snug">&quot;{h.hook}&quot;</p>
-                        <div className="flex items-center gap-3 mt-1 text-[11px] text-gray-400">
+                        <p className="text-sm text-text-primary leading-snug">&quot;{h.hook}&quot;</p>
+                        <div className="flex items-center gap-3 mt-1 text-[11px] text-text-muted">
                           <span>{h.count} video</span>
                           <span>Ort. {formatCompact(h.avgPlays)} goruntulenme</span>
                         </div>
@@ -611,8 +585,8 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
 
             {/* Tags */}
             {tagAnalysis.length > 0 && (
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
-                <h3 className="text-sm font-semibold text-gray-700 mb-3">Populer Etiketler</h3>
+              <div className="bg-bg-card rounded-[14px] shadow-sm border border-border-default p-5">
+                <h3 className="text-sm font-semibold text-text-primary mb-3">Populer Etiketler</h3>
                 <div className="flex flex-wrap gap-2">
                   {tagAnalysis.map((t, i) => (
                     <span key={t.tag} className={`text-xs px-2.5 py-1 rounded-full font-medium ${TAG_COLORS[i % TAG_COLORS.length]}`}>
@@ -629,25 +603,25 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
       {/* ═══ SAVE MODAL ═══ */}
       {showSave && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setShowSave(false)}>
-          <div className="bg-white rounded-xl p-6 w-full max-w-md mx-4 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-bg-card rounded-[14px] p-6 w-full max-w-md mx-4 shadow-2xl" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold text-gray-900">Klasore Kaydet</h3>
-              <button onClick={() => setShowSave(false)} className="text-gray-400 hover:text-gray-600 cursor-pointer"><X size={20} /></button>
+              <h3 className="font-semibold text-text-primary">Klasore Kaydet</h3>
+              <button onClick={() => setShowSave(false)} className="text-text-muted hover:text-text-secondary cursor-pointer"><X size={20} /></button>
             </div>
-            <p className="text-sm text-gray-500 mb-4">&quot;{product.title}&quot;</p>
+            <p className="text-sm text-text-secondary mb-4">&quot;{product.title}&quot;</p>
             {folders.length > 0 && (
               <div className="mb-4">
-                <label className="block text-xs font-medium text-gray-500 mb-1">Mevcut Klasor</label>
-                <select value={selectedFolder} onChange={(e) => setSelectedFolder(e.target.value)} className="w-full py-2 px-3 border border-gray-200 rounded-lg text-sm">
+                <label className="block text-xs font-medium text-text-secondary mb-1">Mevcut Klasor</label>
+                <select value={selectedFolder} onChange={(e) => setSelectedFolder(e.target.value)} className="w-full py-2 px-3 border border-border-default rounded-lg text-sm">
                   {folders.map((f) => <option key={f} value={f}>{f}</option>)}
                 </select>
               </div>
             )}
             <div className="mb-4">
-              <label className="block text-xs font-medium text-gray-500 mb-1">veya Yeni Klasor</label>
+              <label className="block text-xs font-medium text-text-secondary mb-1">veya Yeni Klasor</label>
               <div className="flex gap-2">
-                <input value={newFolderName} onChange={(e) => setNewFolderName(e.target.value)} placeholder="Yeni klasor adi..." className="flex-1 py-2 px-3 border border-gray-200 rounded-lg text-sm" />
-                <button onClick={async () => { if (!newFolderName.trim()) return; await createFolder(newFolderName.trim(), user?.userId); setFolders(p => [...p, newFolderName.trim()]); setSelectedFolder(newFolderName.trim()); setNewFolderName(""); }} className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm hover:bg-gray-200 cursor-pointer">Olustur</button>
+                <input value={newFolderName} onChange={(e) => setNewFolderName(e.target.value)} placeholder="Yeni klasor adi..." className="flex-1 py-2 px-3 border border-border-default rounded-lg text-sm" />
+                <button onClick={async () => { if (!newFolderName.trim()) return; await createFolder(newFolderName.trim(), user?.userId); setFolders(p => [...p, newFolderName.trim()]); setSelectedFolder(newFolderName.trim()); setNewFolderName(""); }} className="px-3 py-2 bg-bg-hover text-text-primary rounded-lg text-sm hover:bg-bg-hover cursor-pointer">Olustur</button>
               </div>
             </div>
             {saveMsg && <p className="text-sm text-green-600 mb-3">{saveMsg}</p>}
@@ -655,6 +629,66 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+/* ── Product Video Card (inline play + popup) ── */
+function ProductVideoCard({ video, onDetail }: { video: TTSProduct; onDetail: (v: TTSProduct) => void }) {
+  const [playing, setPlaying] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  function handleVideoClick(e: React.MouseEvent) {
+    e.stopPropagation();
+    if (playing) { videoRef.current?.pause(); setPlaying(false); }
+    else { videoRef.current?.play(); setPlaying(true); }
+  }
+
+  return (
+    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
+      {/* Video area — click plays inline */}
+      <div className="relative aspect-[9/16] bg-gray-100">
+        {video.video_url ? (
+          <div className="w-full h-full cursor-pointer" onClick={handleVideoClick}>
+            {playing ? (
+              <video ref={videoRef} src={video.video_url} poster={video.cover_image || video.image} className="w-full h-full object-cover" autoPlay loop playsInline />
+            ) : (
+              <>
+                {(video.cover_image || video.image) ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={video.cover_image || video.image} alt={video.hook || video.title} className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-gray-300"><Play size={32} /></div>
+                )}
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <div className="w-11 h-11 rounded-full bg-black/30 flex items-center justify-center"><Play size={18} className="text-white ml-0.5" fill="white" /></div>
+                </div>
+              </>
+            )}
+            {(video.duration || 0) > 0 && !playing && (
+              <div className="absolute bottom-2 left-2"><span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-black/60 text-white flex items-center gap-1"><Clock size={10} />{formatDuration(video.duration || 0)}</span></div>
+            )}
+          </div>
+        ) : (video.cover_image || video.image) ? (
+          <div className="w-full h-full cursor-pointer" onClick={() => onDetail(video)}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={video.cover_image || video.image} alt="" className="w-full h-full object-cover" />
+          </div>
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-gray-300 cursor-pointer" onClick={() => onDetail(video)}><Play size={32} /></div>
+        )}
+        {video.region && <div className="absolute top-2 left-2 text-sm drop-shadow pointer-events-none">{FLAG[video.region.toUpperCase()] || ""}</div>}
+        {(video.hot_value || 0) > 0 && <div className="absolute top-2 right-2 pointer-events-none"><HotBadge value={video.hot_value || 0} /></div>}
+      </div>
+      {/* Info area — click opens popup */}
+      <div className="p-2.5 cursor-pointer" onClick={() => onDetail(video)}>
+        <p className="text-xs font-semibold text-gray-900 line-clamp-2 mb-1">{video.hook || video.product_name || video.title || "-"}</p>
+        <p className="text-[10px] text-gray-400 mb-1 truncate">{video.shop_name || video.shop_handle || ""}</p>
+        <div className="flex items-center gap-3 text-[10px] text-gray-500">
+          <span>{"\u25B6\uFE0F"} {formatCompact(video.play_count)}</span>
+          <span>{"\u2764\uFE0F"} {formatCompact(video.like_count)}</span>
+        </div>
+      </div>
     </div>
   );
 }
