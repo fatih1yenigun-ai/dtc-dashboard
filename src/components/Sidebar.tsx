@@ -27,14 +27,15 @@ import { loadFolders, getAllSavedCount } from "@/lib/supabase";
 import { useAuth } from "@/context/AuthContext";
 
 const navItems = [
-  { href: "/reklam-tara", label: "Reklam Tara", icon: Radar },
-  { href: "/amazon", label: "Pazar Talebi", icon: BarChart3 },
   { href: "/storeleads", label: "Marka Pusulası", icon: Store },
-  { href: "/kombine", label: "Çoklu Analiz", icon: Layers },
-  { href: "/tools", label: "Araçlar", icon: Wrench },
+  { href: "/reklam-tara", label: "Reklam Tara", icon: Radar },
+  { href: "/kombine", label: "Çoklu Analiz (Beta)", icon: Layers },
+  { href: "/amazon", label: "Pazar Talebi", icon: BarChart3 },
   { href: "/saved", label: "Arşivim", icon: Bookmark },
-  { href: "/research", label: "AI ile Araştır", icon: Search },
-  { href: "/brands", label: "Marka Tarayıcı (beta)", icon: Globe },
+  { href: "/research", label: "AI ile Araştır (Beta)", icon: Search },
+  { href: "/brands", label: "Marka X-Ray (Beta)", icon: Globe },
+  { href: "/tools", label: "Araçlar", icon: Wrench },
+  { href: "/pano", label: "Pano (Beta)", icon: Megaphone },
 ];
 
 export default function Sidebar() {
