@@ -27,14 +27,14 @@ import { loadFolders, getAllSavedCount } from "@/lib/supabase";
 import { useAuth } from "@/context/AuthContext";
 
 const navItems = [
-  { href: "/storeleads", label: "Website", icon: Store },
   { href: "/reklam-tara", label: "Reklam Tara", icon: Radar },
-  { href: "/amazon", label: "Hacimler", icon: BarChart3 },
-  { href: "/kombine", label: "Kombine Aratıcı", icon: Layers },
-  { href: "/saved", label: "Kaydedilenler", icon: Bookmark },
-  { href: "/research", label: "AI Marka Aratıcı (beta)", icon: Search },
+  { href: "/amazon", label: "Pazar Talebi", icon: BarChart3 },
+  { href: "/storeleads", label: "Marka Pusulası", icon: Store },
+  { href: "/kombine", label: "Çoklu Analiz", icon: Layers },
+  { href: "/tools", label: "Araçlar", icon: Wrench },
+  { href: "/saved", label: "Arşivim", icon: Bookmark },
+  { href: "/research", label: "AI ile Araştır", icon: Search },
   { href: "/brands", label: "Marka Tarayıcı (beta)", icon: Globe },
-  { href: "/tools", label: "Teknik Araçlar", icon: Wrench },
 ];
 
 export default function Sidebar() {
@@ -97,7 +97,7 @@ export default function Sidebar() {
           }`}
         >
           <BookOpen size={18} />
-          Uzman Arşivleri
+          Uzman Arşivi
         </Link>
 
         {/* Expert archive - expert/admin only */}
