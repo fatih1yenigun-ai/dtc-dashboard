@@ -137,16 +137,19 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
 
     // 3. Fallback: search by ID or shop name via PiPiAds API
     async function fetchProduct() {
+      const token = localStorage.getItem("token");
+      const apiHeaders: Record<string, string> = {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      };
+
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      async function searchProducts(keyword: string): Promise<any[]> {
-        const token = localStorage.getItem("token");
+      async function searchProducts(keyword: string, shopId?: string): Promise<any[]> {
         const res = await fetch("/api/tiktok-shop", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
-          },
-          body: JSON.stringify({ keyword, searchMode: "product", page: 1, pageSize: 20, productSort: 4, sortType: "desc" }),
+          headers: apiHeaders,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          body: JSON.stringify({ keyword, searchMode: "product", page: 1, pageSize: 20, productSort: 4, sortType: "desc", ...(shopId ? { shopId } : {}) } as any),
         });
         const data = await res.json();
         return data.result?.data || data.data?.list || data.list || [];
@@ -170,25 +173,35 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
       }
 
       try {
-        // Strategy 1: Search by ID as keyword (works for PiPiAds product IDs)
-        let list = await searchProducts(id);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        let match = list.find((item: any) => String(item.id) === id || String(item.shop_id) === id);
+        let match: any = null;
+        let list: any[] = []; // eslint-disable-line @typescript-eslint/no-explicit-any
 
-        // Strategy 2: Search by shop name from sessionStorage (works when coming from video popup)
+        // Strategy 1: Search by ID as keyword
+        list = await searchProducts(id);
+        match = list.find((item: any) => String(item.id) === id); // eslint-disable-line @typescript-eslint/no-explicit-any
+
+        // Strategy 2: Search store's products by shop_id filter (from store detail page)
+        if (!match) {
+          let storeId: string | null = null;
+          try { storeId = sessionStorage.getItem(`tts_store_id_${id}`); } catch { /* ignore */ }
+          if (storeId) {
+            list = await searchProducts("", storeId);
+            match = list.find((item: any) => String(item.id) === id); // eslint-disable-line @typescript-eslint/no-explicit-any
+          }
+        }
+
+        // Strategy 3: Search by shop name (from video popup)
         if (!match) {
           let shopName: string | null = null;
           try { shopName = sessionStorage.getItem(`tts_shop_name_${id}`); } catch { /* ignore */ }
           if (shopName) {
             list = await searchProducts(shopName);
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            match = list.find((item: any) => String(item.shop_id) === id);
-            // If no exact shop_id match, use first result from shop name search
-            if (!match && list.length > 0) match = list[0];
+            match = list.find((item: any) => String(item.id) === id) || list[0]; // eslint-disable-line @typescript-eslint/no-explicit-any
           }
         }
 
-        // Strategy 3: Use first result from initial search if any
+        // Strategy 4: Use first result from initial search
         if (!match && list.length > 0) {
           match = list[0];
         }
