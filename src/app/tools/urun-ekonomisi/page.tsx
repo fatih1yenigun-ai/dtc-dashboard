@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect, useCallback } from "react";
-import { ArrowLeft, HelpCircle, Plus, Trash2, Lock, Unlock, RotateCcw, Calculator, Save, List } from "lucide-react";
+import { ArrowLeft, HelpCircle, Plus, Trash2, Calculator, Save, List } from "lucide-react";
 import Link from "next/link";
 import SegmentedButton from "@/components/tools/SegmentedButton";
 import SaveModal from "@/components/tools/SaveModal";
@@ -38,10 +38,9 @@ export default function UrunEkonomisiPage() {
   const [kdvEnabled, setKdvEnabled] = useState(false);
   const [kdvOrani, setKdvOrani] = useState(20);
   const [karHedefleri, setKarHedefleri] = useState([15, 20, 25, 30, 35]);
-  const [birimMaliyet, setBirimMaliyet] = useState<number>(0);
   const [bundles, setBundles] = useState<BundleRow[]>([
-    { adet: 2, satisFiyati: 0, cogsOverride: null },
-    { adet: 4, satisFiyati: 0, cogsOverride: null },
+    { adet: 2, satisFiyati: 0, cogsOverride: 0 },
+    { adet: 4, satisFiyati: 0, cogsOverride: 0 },
   ]);
 
   // --- Save/Load ---
@@ -63,7 +62,7 @@ export default function UrunEkonomisiPage() {
   const handleSave = async (name: string) => {
     if (!user) return;
     setSaving(true);
-    const data = { currency, islemUcreti, kdvEnabled, kdvOrani, karHedefleri, birimMaliyet, bundles };
+    const data = { currency, islemUcreti, kdvEnabled, kdvOrani, karHedefleri, bundles };
     await saveToolData(user.userId, "urun-ekonomisi", name, data as unknown as Record<string, unknown>);
     setSaving(false);
     setSaveOpen(false);
@@ -79,7 +78,6 @@ export default function UrunEkonomisiPage() {
     setKdvEnabled((d.kdvEnabled as boolean) || false);
     setKdvOrani((d.kdvOrani as number) || 20);
     setKarHedefleri((d.karHedefleri as number[]) || [15, 20, 25, 30, 35]);
-    setBirimMaliyet((d.birimMaliyet as number) || 0);
     setBundles((d.bundles as BundleRow[]) || []);
     setSavedOpen(false);
   };
@@ -92,14 +90,14 @@ export default function UrunEkonomisiPage() {
 
   // --- Calculations (real-time) ---
   const inputs: UrunEkonomisiInputs = useMemo(
-    () => ({ islemUcreti, kdvEnabled, kdvOrani, karHedefleri, birimMaliyet, bundles, currency }),
-    [islemUcreti, kdvEnabled, kdvOrani, karHedefleri, birimMaliyet, bundles, currency]
+    () => ({ islemUcreti, kdvEnabled, kdvOrani, karHedefleri, birimMaliyet: 0, bundles, currency }),
+    [islemUcreti, kdvEnabled, kdvOrani, karHedefleri, bundles, currency]
   );
 
   const results: BundleResult[] = useMemo(() => {
-    if (!birimMaliyet || bundles.some((b) => !b.satisFiyati)) return [];
+    if (bundles.some((b) => !b.satisFiyati)) return [];
     return calculateAll(inputs);
-  }, [inputs, birimMaliyet, bundles]);
+  }, [inputs, bundles]);
 
   const sym = CURRENCY_SYMBOLS[currency];
 
@@ -111,7 +109,7 @@ export default function UrunEkonomisiPage() {
   const addBundle = () => {
     if (bundles.length >= 6) return;
     const lastAdet = bundles[bundles.length - 1]?.adet || 1;
-    setBundles((prev) => [...prev, { adet: lastAdet + 2, satisFiyati: 0, cogsOverride: null }]);
+    setBundles((prev) => [...prev, { adet: lastAdet + 2, satisFiyati: 0, cogsOverride: 0 }]);
   };
 
   const removeBundle = (idx: number) => {
@@ -237,29 +235,11 @@ export default function UrunEkonomisiPage() {
 
           {/* Bundle rows */}
           <div className="bg-bg-card rounded-[14px] border border-border-default p-5">
-            <h2 className="text-sm font-semibold text-text-primary mb-1">Birim Maliyet (COGS)</h2>
-            <p className="text-[11px] text-text-muted mb-3">Her paketin maliyeti otomatik hesaplanır</p>
-
-            <div className="mb-5">
-              <div className="relative">
-                <input
-                  type="number"
-                  value={birimMaliyet || ""}
-                  onChange={(e) => setBirimMaliyet(Number(e.target.value))}
-                  placeholder="Birim maliyet"
-                  className="w-full py-2 px-3 pr-8 border border-border-default rounded-lg text-sm bg-bg-input text-text-primary focus:outline-none focus:ring-2 focus:ring-accent/30"
-                />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted text-sm">{sym}</span>
-              </div>
-            </div>
+            <h2 className="text-sm font-semibold text-text-primary mb-1">Paket Satırları</h2>
+            <p className="text-[11px] text-text-muted mb-3">Her paket için adet, satış fiyatı ve maliyeti girin</p>
 
             <div className="space-y-3">
-              {bundles.map((bundle, idx) => {
-                const autoCogs = birimMaliyet * bundle.adet;
-                const isOverridden = bundle.cogsOverride !== null;
-                const displayCogs = isOverridden ? bundle.cogsOverride! : autoCogs;
-
-                return (
+              {bundles.map((bundle, idx) => (
                   <div key={idx} className="p-3 rounded-xl bg-bg-main border border-border-subtle">
                     <div className="flex items-center gap-2 mb-2">
                       <span className="text-[11px] font-medium text-text-muted">Paket {idx + 1}</span>
@@ -290,37 +270,18 @@ export default function UrunEkonomisiPage() {
                         />
                       </div>
                       <div>
-                        <label className="block text-[10px] text-text-muted mb-1 flex items-center gap-1">
-                          COGS
-                          {isOverridden ? <Lock size={9} className="text-amber-500" /> : <Unlock size={9} />}
-                        </label>
-                        <div className="relative">
-                          <input
-                            type="number"
-                            value={displayCogs || ""}
-                            onChange={(e) => updateBundle(idx, { cogsOverride: Number(e.target.value) })}
-                            className={`w-full py-1.5 px-2 border border-border-default rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-accent/30 ${
-                              isOverridden ? "bg-amber-500/5 text-text-primary" : "bg-bg-input text-text-muted"
-                            }`}
-                            readOnly={!isOverridden}
-                            onClick={() => {
-                              if (!isOverridden) updateBundle(idx, { cogsOverride: autoCogs });
-                            }}
-                          />
-                        </div>
-                        {isOverridden && (
-                          <button
-                            onClick={() => updateBundle(idx, { cogsOverride: null })}
-                            className="text-[10px] text-accent hover:underline mt-0.5 flex items-center gap-0.5"
-                          >
-                            <RotateCcw size={9} /> Sıfırla
-                          </button>
-                        )}
+                        <label className="block text-[10px] text-text-muted mb-1">COGS</label>
+                        <input
+                          type="number"
+                          value={bundle.cogsOverride || ""}
+                          onChange={(e) => updateBundle(idx, { cogsOverride: Number(e.target.value) })}
+                          placeholder={sym}
+                          className="w-full py-1.5 px-2 border border-border-default rounded-lg text-xs bg-bg-input text-text-primary focus:outline-none focus:ring-2 focus:ring-accent/30"
+                        />
                       </div>
                     </div>
                   </div>
-                );
-              })}
+              ))}
             </div>
 
             {bundles.length < 6 && (
