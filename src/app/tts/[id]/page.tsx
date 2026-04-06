@@ -477,7 +477,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
       {/* ═══ SECTION 4: TikTok Reklamlari (Videos) ═══ */}
       <div className="mb-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-bold text-gray-900">
+          <h2 className="text-lg font-bold text-text-primary">
             TikTok Reklamlari
             {allVideos.length > 0 && <span className="text-sm font-normal text-text-muted ml-2">({allVideos.length})</span>}
           </h2>
@@ -600,6 +600,113 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
         </div>
       )}
 
+      {/* ═══ VIDEO DETAIL POPUP ═══ */}
+      {detailVideo && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setDetailVideo(null)}>
+          <div className="bg-white rounded-xl w-full max-w-5xl mx-4 shadow-2xl max-h-[90vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+            {/* Header with shop info */}
+            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 flex-shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
+                  <span className="text-sm font-bold text-gray-600">{(detailVideo.shop_name || "?")[0]?.toUpperCase()}</span>
+                </div>
+                <div>
+                  <p className="font-semibold text-gray-900 text-sm">{detailVideo.shop_name || "Bilinmeyen"}</p>
+                  {detailVideo.shop_handle && (
+                    <a href={`https://www.tiktok.com/@${detailVideo.shop_handle}`} target="_blank" rel="noopener noreferrer" className="text-xs text-[#667eea] hover:underline">{detailVideo.shop_handle}</a>
+                  )}
+                </div>
+                {product?.shop_id && (
+                  <button onClick={() => window.open(`/tts-store/${product.shop_id}`, "_blank")} className="ml-2 text-xs bg-blue-50 text-blue-600 px-2.5 py-1 rounded-lg hover:bg-blue-100 cursor-pointer flex items-center gap-1">
+                    <ShoppingBag size={12} /> Magaza
+                  </button>
+                )}
+              </div>
+              <button onClick={() => setDetailVideo(null)} className="text-gray-400 hover:text-gray-600 cursor-pointer"><X size={20} /></button>
+            </div>
+
+            <div className="flex flex-col md:flex-row flex-1 min-h-0">
+              {/* Left: Video */}
+              <div className="md:w-[40%] bg-black flex flex-col flex-shrink-0">
+                <div className="flex-1 flex items-center justify-center min-h-0">
+                  {detailVideo.video_url ? (
+                    <video src={detailVideo.video_url} poster={detailVideo.cover_image || detailVideo.image} controls autoPlay className="w-full h-full object-contain max-h-[75vh]" playsInline />
+                  ) : (detailVideo.cover_image || detailVideo.image) ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={detailVideo.cover_image || detailVideo.image} alt="" className="w-full h-full object-contain max-h-[75vh]" />
+                  ) : (
+                    <div className="py-32 text-gray-500"><Play size={48} /></div>
+                  )}
+                </div>
+                <div className="bg-black/80 px-4 py-2 flex items-center gap-4 text-sm text-white/80 flex-shrink-0">
+                  <span>{"\u2764\uFE0F"} {formatCompact(detailVideo.like_count)}</span>
+                  <span>{"\uD83D\uDCAC"} {formatCompact(detailVideo.comment_count)}</span>
+                  <span><Share2 size={12} className="inline" /> {formatCompact(detailVideo.share_count)}</span>
+                </div>
+              </div>
+
+              {/* Right: Details */}
+              <div className="md:w-[60%] overflow-y-auto p-5 space-y-4">
+                <div>
+                  <p className="text-xs font-medium text-gray-500 mb-1">Reklam Metni</p>
+                  <p className="text-sm text-gray-800 leading-relaxed line-clamp-3">{detailVideo.hook || detailVideo.title || "-"}</p>
+                </div>
+
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="border border-blue-100 rounded-lg p-2.5 text-center">
+                    <p className="text-base font-bold text-blue-700">{formatCompact(detailVideo.play_count)}</p>
+                    <p className="text-[10px] text-blue-500">Gosterim</p>
+                  </div>
+                  <div className="border border-purple-100 rounded-lg p-2.5 text-center">
+                    <p className="text-base font-bold text-purple-700">{detailVideo.put_days || 0}</p>
+                    <p className="text-[10px] text-purple-500">Sure</p>
+                  </div>
+                  <div className="border border-pink-100 rounded-lg p-2.5 text-center">
+                    <p className="text-base font-bold text-pink-700">{detailVideo.play_count > 0 ? ((detailVideo.like_count / detailVideo.play_count) * 100).toFixed(2) : "0.00"}%</p>
+                    <p className="text-[10px] text-pink-500">Begeni Orani</p>
+                  </div>
+                </div>
+
+                <div className="space-y-2 text-sm">
+                  {detailVideo.region && (
+                    <div className="flex items-center"><span className="text-gray-500 w-32 flex-shrink-0">Ulke/Bolge:</span><span className="font-medium text-gray-800">{FLAG[detailVideo.region.toUpperCase()] || ""} {detailVideo.region}</span></div>
+                  )}
+                  {(detailVideo.ad_create_time || 0) > 0 && (
+                    <div className="flex items-center"><span className="text-gray-500 w-32 flex-shrink-0">Olusturma Tarihi:</span><span className="font-medium text-gray-800">{new Date((detailVideo.ad_create_time || 0) * 1000).toLocaleDateString("tr-TR", { day: "2-digit", month: "short", year: "numeric" })}</span></div>
+                  )}
+                </div>
+
+                {/* Product card — click closes popup (already on product page) */}
+                {product && (
+                  <div className="border border-gray-200 rounded-lg p-3 flex items-center gap-3 cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => setDetailVideo(null)}>
+                    {product.image && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={product.image} alt={product.title} className="w-14 h-14 rounded-lg object-cover flex-shrink-0" />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-900 truncate">{product.title}</p>
+                      <div className="flex items-center gap-3 mt-1">
+                        <span className="text-[10px] bg-orange-50 text-orange-600 px-1.5 py-0.5 rounded font-medium">TikTok Shop</span>
+                        {product.price_usd > 0 && <span className="text-xs font-bold text-orange-600">${product.price_usd.toFixed(2)}</span>}
+                        {product.sales_volume > 0 && <span className="text-xs text-red-500 font-medium">Satildi: {formatCompact(product.sales_volume)}</span>}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex flex-wrap gap-2 pt-1">
+                  {detailVideo.video_url && (
+                    <a href={`https://www.tiktok.com/@${detailVideo.shop_handle || ""}/video/${detailVideo.id}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-gray-100 text-gray-700 text-sm font-medium hover:bg-gray-200">
+                      <ExternalLink size={14} /> TikTok
+                    </a>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ═══ SAVE MODAL ═══ */}
       {showSave && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setShowSave(false)}>
@@ -645,9 +752,9 @@ function ProductVideoCard({ video, onDetail }: { video: TTSProduct; onDetail: (v
   }
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
+    <div className="bg-bg-card rounded-[14px] border border-border-default overflow-hidden hover:shadow-md transition-shadow">
       {/* Video area — click plays inline */}
-      <div className="relative aspect-[9/16] bg-gray-100">
+      <div className="relative aspect-[9/16] bg-bg-hover">
         {video.video_url ? (
           <div className="w-full h-full cursor-pointer" onClick={handleVideoClick}>
             {playing ? (
@@ -658,7 +765,7 @@ function ProductVideoCard({ video, onDetail }: { video: TTSProduct; onDetail: (v
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={video.cover_image || video.image} alt={video.hook || video.title} className="w-full h-full object-cover" />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-gray-300"><Play size={32} /></div>
+                  <div className="w-full h-full flex items-center justify-center text-text-muted"><Play size={32} /></div>
                 )}
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                   <div className="w-11 h-11 rounded-full bg-black/30 flex items-center justify-center"><Play size={18} className="text-white ml-0.5" fill="white" /></div>
@@ -675,16 +782,16 @@ function ProductVideoCard({ video, onDetail }: { video: TTSProduct; onDetail: (v
             <img src={video.cover_image || video.image} alt="" className="w-full h-full object-cover" />
           </div>
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-gray-300 cursor-pointer" onClick={() => onDetail(video)}><Play size={32} /></div>
+          <div className="w-full h-full flex items-center justify-center text-text-muted cursor-pointer" onClick={() => onDetail(video)}><Play size={32} /></div>
         )}
         {video.region && <div className="absolute top-2 left-2 text-sm drop-shadow pointer-events-none">{FLAG[video.region.toUpperCase()] || ""}</div>}
         {(video.hot_value || 0) > 0 && <div className="absolute top-2 right-2 pointer-events-none"><HotBadge value={video.hot_value || 0} /></div>}
       </div>
       {/* Info area — click opens popup */}
       <div className="p-2.5 cursor-pointer" onClick={() => onDetail(video)}>
-        <p className="text-xs font-semibold text-gray-900 line-clamp-2 mb-1">{video.hook || video.product_name || video.title || "-"}</p>
-        <p className="text-[10px] text-gray-400 mb-1 truncate">{video.shop_name || video.shop_handle || ""}</p>
-        <div className="flex items-center gap-3 text-[10px] text-gray-500">
+        <p className="text-xs font-semibold text-text-primary line-clamp-2 mb-1">{video.hook || video.product_name || video.title || "-"}</p>
+        <p className="text-[10px] text-text-muted mb-1 truncate">{video.shop_name || video.shop_handle || ""}</p>
+        <div className="flex items-center gap-3 text-[10px] text-text-secondary">
           <span>{"\u25B6\uFE0F"} {formatCompact(video.play_count)}</span>
           <span>{"\u2764\uFE0F"} {formatCompact(video.like_count)}</span>
         </div>
