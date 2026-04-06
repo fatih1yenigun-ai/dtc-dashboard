@@ -511,7 +511,7 @@ export default function StoreDetailPage({ params }: { params: Promise<{ id: stri
                   <div
                     key={item.product_id || i}
                     onClick={() => {
-                      try { sessionStorage.setItem(`tts_product_${item.product_id}`, JSON.stringify({ id: item.product_id, image: storeImg(item.image), sales_volume: item.sales_volume, shop_name: store.title })); } catch {}
+                      try { sessionStorage.setItem(`tts_shop_name_${item.product_id}`, store?.title || ""); } catch {}
                       window.open(`/tts/${item.product_id}`, "_blank");
                     }}
                     className="bg-gray-50 rounded-lg p-3 cursor-pointer hover:shadow-md transition-shadow border border-gray-100"
@@ -592,7 +592,7 @@ export default function StoreDetailPage({ params }: { params: Promise<{ id: stri
                       <tr
                         key={p.id || i}
                         onClick={() => {
-                          try { sessionStorage.setItem(`tts_product_${p.id}`, JSON.stringify(p)); } catch {}
+                          try { sessionStorage.setItem(`tts_shop_name_${p.id}`, store?.title || ""); } catch {}
                           window.open(`/tts/${p.id}`, "_blank");
                         }}
                         className="border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors"
