@@ -695,8 +695,8 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
                 )}
 
                 <div className="flex flex-wrap gap-2 pt-1">
-                  {detailVideo.video_url && (
-                    <a href={`https://www.tiktok.com/@${detailVideo.shop_handle || ""}/video/${detailVideo.id}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-gray-100 text-gray-700 text-sm font-medium hover:bg-gray-200">
+                  {detailVideo.shop_handle && (
+                    <a href={`https://www.tiktok.com/@${detailVideo.shop_handle}`} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-gray-100 text-gray-700 text-sm font-medium hover:bg-gray-200">
                       <ExternalLink size={14} /> TikTok
                     </a>
                   )}
