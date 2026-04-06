@@ -1555,7 +1555,7 @@ function StoreTable({ results }: { results: StoreResult[] }) {
           </thead>
           <tbody>
             {results.map((store, i) => (
-              <tr key={store.id || i} className="border-b border-gray-100 hover:bg-gray-50/50 transition-colors">
+              <tr key={store.id || i} className="border-b border-gray-100 hover:bg-gray-50/50 transition-colors cursor-pointer" onClick={() => window.open(`/tts-store/${store.id}`, "_blank")}>
                 <td className="py-3 px-4 text-gray-400 text-xs">{i + 1}</td>
                 {/* Store info */}
                 <td className="py-3 px-4">

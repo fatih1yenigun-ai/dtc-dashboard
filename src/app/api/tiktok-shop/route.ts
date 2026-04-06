@@ -170,7 +170,8 @@ async function searchProducts(
   page: number,
   pageSize: number,
   sort: number = 2,
-  sortType: string = "desc"
+  sortType: string = "desc",
+  shopId?: string
 ) {
   const params = new URLSearchParams({
     keyword,
@@ -179,6 +180,7 @@ async function searchProducts(
     current_page: String(page),
     page_size: String(pageSize),
   });
+  if (shopId) params.set("shop_id", shopId);
   const url = `https://www.pipiads.com/v3/api/tiktok-shop/product?${params}`;
   console.log("[TTS Product Search] v3 GET:", url);
 
@@ -258,6 +260,20 @@ async function searchStores(
   return json;
 }
 
+// Store detail endpoint
+async function getStoreDetail(token: string, storeId: string) {
+  const url = `https://www.pipiads.com/v1/api/tiktok-shop/shop/detail?id=${storeId}`;
+  console.log("[TTS Store Detail]", url);
+  const res = await fetch(url, { method: "GET", headers: buildHeaders(token) });
+  if (res.status === 401) {
+    cachedToken = null;
+    tokenExpiry = 0;
+    const newToken = await pipiadsLogin();
+    return (await fetch(url, { method: "GET", headers: buildHeaders(newToken) })).json();
+  }
+  return res.json();
+}
+
 export async function POST(request: NextRequest) {
   try {
     // Auth verification
@@ -277,9 +293,10 @@ export async function POST(request: NextRequest) {
       sortType = "desc",
       productSort = 2,
       filters,
+      shopId,
     } = await request.json();
 
-    if (!keyword) {
+    if (!keyword && searchMode !== "product") {
       return new Response(
         JSON.stringify({ error: "Keyword is required" }),
         { status: 400, headers: { "Content-Type": "application/json" } }
@@ -291,8 +308,11 @@ export async function POST(request: NextRequest) {
 
     // Call appropriate search endpoint — queued to avoid hammering PiPiAds
     let data;
-    if (searchMode === "product") {
-      data = await enqueue(() => searchProducts(token, keyword, page, pageSize, productSort, sortType));
+    if (searchMode === "storeDetail") {
+      // keyword is used as storeId for detail lookup
+      data = await enqueue(() => getStoreDetail(token, keyword));
+    } else if (searchMode === "product") {
+      data = await enqueue(() => searchProducts(token, keyword || "", page, pageSize, productSort, sortType, shopId));
     } else if (searchMode === "store") {
       data = await enqueue(() => searchStores(token, keyword, page, pageSize, productSort, sortType));
     } else {
