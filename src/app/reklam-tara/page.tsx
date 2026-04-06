@@ -399,12 +399,18 @@ export default function ReklamTaraPage() {
     setDetailVideo(v);
   }
 
-  function goToProductFromVideo(productId: string, shopName?: string) {
-    if (!shopName && !productId) return;
-    // Navigate to Reklam Tara in "Tiktok Urunler" mode with shop name as search query
-    // This searches PiPiAds for all products from this shop
-    const query = shopName || productId;
-    window.open(`/reklam-tara?mode=tts_products&q=${encodeURIComponent(query)}`, "_blank");
+  function goToProductFromVideo(productId: string, shopName?: string, shopHandle?: string) {
+    if (!productId) return;
+    // Store video context so product detail page can use it
+    try {
+      sessionStorage.setItem(`tts_video_context_${productId}`, JSON.stringify({
+        shopName: shopName || "",
+        shopHandle: shopHandle || "",
+        shopId: productId,
+        tiktokShopUrl: `https://shop.tiktok.com/view/product/${productId}`,
+      }));
+    } catch { /* ignore */ }
+    window.open(`/tts/${productId}`, "_blank");
   }
 
   /* ── Derived sort direction for arrows ── */
@@ -1033,7 +1039,7 @@ export default function ReklamTaraPage() {
                 {detailVideo.product_id && (
                   <div
                     className="border border-gray-200 rounded-lg p-3 flex items-center gap-3 cursor-pointer hover:bg-gray-50 transition-colors"
-                    onClick={() => goToProductFromVideo(detailVideo.product_id, detailVideo.shop_name)}
+                    onClick={() => goToProductFromVideo(detailVideo.product_id, detailVideo.shop_name, detailVideo.shop_handle)}
                   >
                     {detailVideo.product_image ? (
                       // eslint-disable-next-line @next/next/no-img-element

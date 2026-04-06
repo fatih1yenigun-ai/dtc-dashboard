@@ -257,12 +257,57 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
   }
 
   if (!product) {
+    // Try to get video context from sessionStorage (when coming from video popup)
+    let videoContext: { shopName?: string; shopHandle?: string; shopId?: string; tiktokShopUrl?: string } = {};
+    try {
+      const ctx = sessionStorage.getItem(`tts_video_context_${id}`);
+      if (ctx) videoContext = JSON.parse(ctx);
+    } catch { /* ignore */ }
+
     return (
-      <div className="text-center py-32">
-        <p className="text-lg text-gray-500 mb-4">Urun bulunamadi</p>
-        <button onClick={() => router.push("/tts")} className="text-[#667eea] hover:underline cursor-pointer">
-          TikTok Shop&apos;a don
-        </button>
+      <div className="max-w-lg mx-auto py-16">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8 text-center">
+          <div className="w-16 h-16 rounded-full bg-[#667eea]/10 flex items-center justify-center mx-auto mb-4">
+            <ShoppingBag size={28} className="text-[#667eea]" />
+          </div>
+          <h2 className="text-lg font-bold text-gray-900 mb-2">
+            {videoContext.shopName ? `${videoContext.shopName}` : "Urun Detayi"}
+          </h2>
+          {videoContext.shopHandle && (
+            <p className="text-sm text-gray-500 mb-4">@{videoContext.shopHandle}</p>
+          )}
+          <p className="text-sm text-gray-500 mb-6">
+            Bu urun PiPiAds veritabaninda bulunamadi. TikTok Shop&apos;tan dogrudan gorebilirsiniz.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            {videoContext.tiktokShopUrl && (
+              <a
+                href={videoContext.tiktokShopUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg gradient-accent text-white text-sm font-medium hover:opacity-90"
+              >
+                <ExternalLink size={14} /> TikTok Shop&apos;ta Gor
+              </a>
+            )}
+            {videoContext.shopHandle && (
+              <a
+                href={`https://www.tiktok.com/@${videoContext.shopHandle}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-gray-100 text-gray-700 text-sm font-medium hover:bg-gray-200"
+              >
+                <ExternalLink size={14} /> TikTok Profili
+              </a>
+            )}
+            <button
+              onClick={() => router.push("/reklam-tara")}
+              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg border border-gray-200 text-gray-600 text-sm font-medium hover:bg-gray-50 cursor-pointer"
+            >
+              <ArrowLeft size={14} /> Reklam Tara&apos;ya Don
+            </button>
+          </div>
+        </div>
       </div>
     );
   }
