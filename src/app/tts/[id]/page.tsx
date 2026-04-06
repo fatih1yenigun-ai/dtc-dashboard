@@ -135,22 +135,33 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
       }
     } catch { /* ignore */ }
 
-    // 3. Fallback: search by ID
+    // 3. Fallback: search by ID or shop_id via PiPiAds API
     async function fetchProduct() {
       try {
         const token = localStorage.getItem("token");
+        const headers: Record<string, string> = {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        };
+
+        // Try searching with the ID as keyword (works for PiPiAds IDs and TikTok shop IDs)
         const res = await fetch("/api/tiktok-shop", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
-          },
-          body: JSON.stringify({ keyword: id, searchMode: "product", page: 1, pageSize: 5, sortKey: "gmv" }),
+          headers,
+          body: JSON.stringify({ keyword: id, searchMode: "product", page: 1, pageSize: 20, productSort: 4, sortType: "desc" }),
         });
         const data = await res.json();
         const list = data.result?.data || data.data?.list || data.list || [];
+
+        // Match by PiPiAds id OR by TikTok shop_id
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const match = list.find((item: any) => String(item.id) === id);
+        let match = list.find((item: any) => String(item.id) === id || String(item.shop_id) === id);
+
+        // If no exact match but we got results, use the first one (keyword search likely found it)
+        if (!match && list.length > 0) {
+          match = list[0];
+        }
+
         if (match) {
           const p: TTSProduct = {
             id: match.id || "", title: match.title || "", image: match.image || "",
