@@ -135,47 +135,66 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
       }
     } catch { /* ignore */ }
 
-    // 3. Fallback: search by ID or shop_id via PiPiAds API
+    // 3. Fallback: search by ID or shop name via PiPiAds API
     async function fetchProduct() {
-      try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      async function searchProducts(keyword: string): Promise<any[]> {
         const token = localStorage.getItem("token");
-        const headers: Record<string, string> = {
-          "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        };
-
-        // Try searching with the ID as keyword (works for PiPiAds IDs and TikTok shop IDs)
         const res = await fetch("/api/tiktok-shop", {
           method: "POST",
-          headers,
-          body: JSON.stringify({ keyword: id, searchMode: "product", page: 1, pageSize: 20, productSort: 4, sortType: "desc" }),
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify({ keyword, searchMode: "product", page: 1, pageSize: 20, productSort: 4, sortType: "desc" }),
         });
         const data = await res.json();
-        const list = data.result?.data || data.data?.list || data.list || [];
+        return data.result?.data || data.data?.list || data.list || [];
+      }
 
-        // Match by PiPiAds id OR by TikTok shop_id
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      function toProduct(match: any): TTSProduct {
+        return {
+          id: match.id || "", title: match.title || "", image: match.image || "",
+          image_list: match.image_list || [], landing_page: match.landing_page || "",
+          price_usd: match.price_usd || match.price || 0, sales_volume: match.sales_volume || 0,
+          gmv_usd: match.gmv_usd || match.gmv || 0, score: match.score || 0,
+          shop_name: match.shop_name || "", shop_image: match.shop_image || "", shop_id: match.shop_id || "",
+          video_count: match.video_count || 0, play_count: match.play_count || 0,
+          like_count: match.like_count || 0, share_count: match.share_count || 0, comment_count: match.comment_count || 0,
+          region: match.region || "", person_count: match.person_count || 0,
+          commission_rate: match.commission_rate || 0, seller_location: match.seller_location || "",
+          found_time: match.found_time || 0, day7_gmv_usd: match.day7?.gmv_usd || 0, day7_sales: match.day7?.sales_volume || 0,
+          day30_gmv_usd: match.day30?.gmv_usd || 0, day30_sales: match.day30?.sales_volume || 0, put_days: match.put_days || 0,
+        };
+      }
+
+      try {
+        // Strategy 1: Search by ID as keyword (works for PiPiAds product IDs)
+        let list = await searchProducts(id);
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         let match = list.find((item: any) => String(item.id) === id || String(item.shop_id) === id);
 
-        // If no exact match but we got results, use the first one (keyword search likely found it)
+        // Strategy 2: Search by shop name from sessionStorage (works when coming from video popup)
+        if (!match) {
+          let shopName: string | null = null;
+          try { shopName = sessionStorage.getItem(`tts_shop_name_${id}`); } catch { /* ignore */ }
+          if (shopName) {
+            list = await searchProducts(shopName);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            match = list.find((item: any) => String(item.shop_id) === id);
+            // If no exact shop_id match, use first result from shop name search
+            if (!match && list.length > 0) match = list[0];
+          }
+        }
+
+        // Strategy 3: Use first result from initial search if any
         if (!match && list.length > 0) {
           match = list[0];
         }
 
         if (match) {
-          const p: TTSProduct = {
-            id: match.id || "", title: match.title || "", image: match.image || "",
-            image_list: match.image_list || [], landing_page: match.landing_page || "",
-            price_usd: match.price_usd || match.price || 0, sales_volume: match.sales_volume || 0,
-            gmv_usd: match.gmv_usd || match.gmv || 0, score: match.score || 0,
-            shop_name: match.shop_name || "", shop_image: match.shop_image || "", shop_id: match.shop_id || "",
-            video_count: match.video_count || 0, play_count: match.play_count || 0,
-            like_count: match.like_count || 0, share_count: match.share_count || 0, comment_count: match.comment_count || 0,
-            region: match.region || "", person_count: match.person_count || 0,
-            commission_rate: match.commission_rate || 0, seller_location: match.seller_location || "",
-            found_time: match.found_time || 0, day7_gmv_usd: match.day7?.gmv_usd || 0, day7_sales: match.day7?.sales_volume || 0,
-            day30_gmv_usd: match.day30?.gmv_usd || 0, day30_sales: match.day30?.sales_volume || 0, put_days: match.put_days || 0,
-          };
+          const p = toProduct(match);
           setProduct(p);
           setMainImage(p.image_list?.[0] || p.image || "");
         }

@@ -372,8 +372,11 @@ export default function ReklamTaraPage() {
     setDetailVideo(v);
   }
 
-  function goToProductFromVideo(productId: string) {
+  function goToProductFromVideo(productId: string, shopName?: string) {
     if (!productId) return;
+    if (shopName) {
+      try { sessionStorage.setItem(`tts_shop_name_${productId}`, shopName); } catch { /* ignore */ }
+    }
     window.open(`/tts/${productId}`, "_blank");
   }
 
@@ -1003,7 +1006,7 @@ export default function ReklamTaraPage() {
                 {detailVideo.product_id && (
                   <div
                     className="border border-gray-200 rounded-lg p-3 flex items-center gap-3 cursor-pointer hover:bg-gray-50 transition-colors"
-                    onClick={() => goToProductFromVideo(detailVideo.product_id)}
+                    onClick={() => goToProductFromVideo(detailVideo.product_id, detailVideo.shop_name)}
                   >
                     {detailVideo.product_image ? (
                       // eslint-disable-next-line @next/next/no-img-element
