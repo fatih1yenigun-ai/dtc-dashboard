@@ -1012,10 +1012,10 @@ export default function ReklamTaraPage() {
                     <a href={`https://www.tiktok.com/@${detailVideo.shop_handle}`} target="_blank" rel="noopener noreferrer" className="text-xs text-accent hover:underline">{detailVideo.shop_handle}</a>
                   )}
                 </div>
-                {detailVideo.shop_name && (
-                  <button onClick={() => goToStoreFromVideo(detailVideo.shop_name)} className="ml-2 text-xs bg-blue-50 text-blue-600 px-2.5 py-1 rounded-lg hover:bg-blue-100 cursor-pointer flex items-center gap-1">
-                    <ShoppingBag size={12} /> Magaza
-                  </button>
+                {detailVideo.shop_handle && (
+                  <a href={`https://www.tiktok.com/@${detailVideo.shop_handle}`} target="_blank" rel="noopener noreferrer" className="ml-2 text-xs bg-blue-50 text-blue-600 px-2.5 py-1 rounded-lg hover:bg-blue-100 cursor-pointer flex items-center gap-1">
+                    <ExternalLink size={12} /> TikTok Profili
+                  </a>
                 )}
               </div>
               <button onClick={() => setDetailVideo(null)} className="text-text-muted hover:text-text-secondary cursor-pointer"><X size={20} /></button>
