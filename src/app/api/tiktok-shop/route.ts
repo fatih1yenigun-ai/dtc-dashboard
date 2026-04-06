@@ -209,6 +209,55 @@ async function searchProducts(
   return json;
 }
 
+// v3 endpoint: GET with numeric sort param for store/shop search
+// sort=1: relevance, sort=2: newest, sort=3: sales, sort=4: GMV, sort=5: views,
+// sort=6: ad_spend, sort=7: video_count, sort=9: product_count, sort=10: avg_price
+async function searchStores(
+  token: string,
+  keyword: string,
+  page: number,
+  pageSize: number,
+  sort: number = 2,
+  sortType: string = "desc"
+) {
+  const params = new URLSearchParams({
+    keyword,
+    sort: String(sort),
+    sort_type: sortType,
+    current_page: String(page),
+    page_size: String(pageSize),
+  });
+  const url = `https://www.pipiads.com/v3/api/tiktok-shop/shop?${params}`;
+  console.log("[TTS Store Search] v3 GET:", url);
+
+  const res = await fetch(url, {
+    method: "GET",
+    headers: buildHeaders(token),
+  });
+
+  if (res.status === 401) {
+    cachedToken = null;
+    tokenExpiry = 0;
+    const newToken = await pipiadsLogin();
+    const retryRes = await fetch(url, {
+      method: "GET",
+      headers: buildHeaders(newToken),
+    });
+    return retryRes.json();
+  }
+
+  const json = await res.json();
+  const items = json?.result?.data || [];
+  if (items.length > 0) {
+    console.log(`[TTS Store Search] First 3 (sort=${sort} ${sortType}):`);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    items.slice(0, 3).forEach((item: any, i: number) => {
+      console.log(`  ${i + 1}. ${(item.shop_name || item.title || "").substring(0, 40)} | sales=${item.sales_volume} gmv=${item.gmv_usd}`);
+    });
+  }
+  return json;
+}
+
 export async function POST(request: NextRequest) {
   try {
     // Auth verification
@@ -244,6 +293,8 @@ export async function POST(request: NextRequest) {
     let data;
     if (searchMode === "product") {
       data = await enqueue(() => searchProducts(token, keyword, page, pageSize, productSort, sortType));
+    } else if (searchMode === "store") {
+      data = await enqueue(() => searchStores(token, keyword, page, pageSize, productSort, sortType));
     } else {
       data = await enqueue(() => searchVideos(token, keyword, page, pageSize, sortBy, filters));
     }

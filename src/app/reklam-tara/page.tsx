@@ -28,6 +28,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useProductSearch, type ProductResult } from "@/hooks/useProductSearch";
 import { useVideoSearch, type VideoResult } from "@/hooks/useVideoSearch";
 import { useMetaAdSearch, type MetaAd, type SortKey } from "@/hooks/useMetaAdSearch";
+import { useStoreSearch, type StoreResult } from "@/hooks/useStoreSearch";
 
 /* ═══ Constants ═══ */
 
@@ -80,6 +81,19 @@ const VIDEO_SORT_OPTIONS = [
   { value: 999, label: "En Populer" },
   { value: 1, label: "En Yeni" },
   { value: 4, label: "En Cok Izlenen" },
+];
+
+const STORE_SORT_OPTIONS = [
+  { value: 2, label: "Son reklam", defaultType: "desc" },
+  { value: 2, label: "Ilk reklam", defaultType: "asc", id: "store_first" },
+  { value: 3, label: "Satislar", defaultType: "desc" },
+  { value: 4, label: "GMV", defaultType: "desc" },
+  { value: 5, label: "Gosterim", defaultType: "desc" },
+  { value: 6, label: "Reklam Harcamasi", defaultType: "desc" },
+  { value: 7, label: "Reklamlar", defaultType: "desc" },
+  { value: 8, label: "Influencers", defaultType: "desc" },
+  { value: 9, label: "Urun Sayisi", defaultType: "desc" },
+  { value: 10, label: "Ortalama fiyat", defaultType: "desc" },
 ];
 
 const META_AD_SORT_OPTIONS: { key: SortKey; label: string }[] = [
@@ -209,6 +223,12 @@ export default function ReklamTaraPage() {
     sentinelRef: metaSentinelRef,
   } = useMetaAdSearch();
 
+  const {
+    stores, allCount: storeAllCount, loading: storeLoading, loadingMore: storeLoadingMore,
+    error: storeError, hasMore: storeHasMore, search: storeSearch, resort: storeResort,
+    sentinelRef: storeSentinelRef,
+  } = useStoreSearch();
+
   // UI state
   const [mode, setMode] = useState<Mode>("tts_products");
   const [keyword, setKeyword] = useState("");
@@ -219,6 +239,10 @@ export default function ReklamTaraPage() {
 
   // TTS Videos sort state
   const [videoSortBy, setVideoSortBy] = useState(6);
+
+  // TTS Stores sort state
+  const [storeSort, setStoreSort] = useState(4); // default: GMV
+  const [storeSortType, setStoreSortType] = useState<"asc" | "desc">("desc");
 
   // Meta Ads sort state
   const [metaSortKey, setMetaSortKey] = useState<SortKey>("default");
@@ -257,6 +281,8 @@ export default function ReklamTaraPage() {
       setTimeout(() => {
         if (modeParam === "tts_videos") {
           videoSearch(qParam, videoSortBy, {});
+        } else if (modeParam === "tts_shops") {
+          storeSearch(qParam, storeSort, storeSortType);
         } else if (modeParam === "meta_ads") {
           metaSearch(qParam, metaSortKey, metaSortDir);
         } else {
@@ -268,8 +294,8 @@ export default function ReklamTaraPage() {
   }, [searchParams]);
 
   // Derived
-  const loading = mode === "tts_products" ? productLoading : mode === "tts_videos" ? videoLoading : metaLoading;
-  const error = mode === "tts_products" ? productError : mode === "tts_videos" ? videoError : metaError;
+  const loading = mode === "tts_products" ? productLoading : mode === "tts_videos" ? videoLoading : mode === "tts_shops" ? storeLoading : metaLoading;
+  const error = mode === "tts_products" ? productError : mode === "tts_videos" ? videoError : mode === "tts_shops" ? storeError : metaError;
 
   /* ── Search ── */
 
@@ -278,6 +304,8 @@ export default function ReklamTaraPage() {
     const q = keyword.trim();
     if (mode === "tts_products") {
       productSearch(q, productSort, productSortType);
+    } else if (mode === "tts_shops") {
+      storeSearch(q, storeSort, storeSortType);
     } else if (mode === "tts_videos") {
       videoSearch(q, videoSortBy, {});
     } else if (mode === "meta_ads") {
@@ -303,6 +331,15 @@ export default function ReklamTaraPage() {
     }
   }
 
+  function handleStoreSortChange(val: string) {
+    const opt = STORE_SORT_OPTIONS.find((o) => (o.id || String(o.value)) === val);
+    if (!opt) return;
+    const newType = opt.defaultType as "asc" | "desc";
+    setStoreSort(opt.value);
+    setStoreSortType(newType);
+    storeResort(opt.value, newType);
+  }
+
   function handleMetaSortChange(key: SortKey) {
     setMetaSortKey(key);
     metaResort(key, metaSortDir);
@@ -312,6 +349,9 @@ export default function ReklamTaraPage() {
     if (mode === "tts_products") {
       setProductSortType(dir);
       productResort(productSort, dir);
+    } else if (mode === "tts_shops") {
+      setStoreSortType(dir);
+      storeResort(storeSort, dir);
     } else if (mode === "meta_ads") {
       setMetaSortDir(dir);
       metaResort(metaSortKey, dir);
@@ -414,13 +454,15 @@ export default function ReklamTaraPage() {
   }
 
   /* ── Derived sort direction for arrows ── */
-  const currentDir = mode === "tts_products" ? productSortType : metaSortDir;
-  const showAscDesc = mode !== "tts_videos" && mode !== "tts_shops";
+  const currentDir = mode === "tts_products" ? productSortType : mode === "tts_shops" ? storeSortType : metaSortDir;
+  const showAscDesc = mode !== "tts_videos";
 
   /* ── Current sort dropdown value ── */
   const sortDropdownValue =
     mode === "tts_products"
       ? (productSort === 2 && productSortType === "asc" ? "found_time_asc" : String(productSort))
+      : mode === "tts_shops"
+      ? (storeSort === 2 && storeSortType === "asc" ? "store_first" : String(storeSort))
       : mode === "tts_videos"
       ? String(videoSortBy)
       : metaSortKey;
@@ -466,9 +508,12 @@ export default function ReklamTaraPage() {
           Tiktok Urunler
         </button>
         <button
-          disabled
-          title="Yakinda"
-          className="px-4 py-2 text-sm font-medium rounded-lg bg-gray-100 text-gray-400 cursor-not-allowed"
+          onClick={() => setMode("tts_shops")}
+          className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+            mode === "tts_shops"
+              ? "bg-[#667eea] text-white"
+              : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-50"
+          }`}
         >
           Tiktok Magazalar
         </button>
@@ -501,6 +546,7 @@ export default function ReklamTaraPage() {
           value={sortDropdownValue}
           onChange={(e) => {
             if (mode === "tts_products") handleProductSortChange(e.target.value);
+            else if (mode === "tts_shops") handleStoreSortChange(e.target.value);
             else if (mode === "tts_videos") handleVideoSortChange(Number(e.target.value));
             else if (mode === "meta_ads") handleMetaSortChange(e.target.value as SortKey);
           }}
@@ -508,6 +554,11 @@ export default function ReklamTaraPage() {
         >
           {mode === "tts_products" &&
             PRODUCT_SORT_OPTIONS.map((opt) => (
+              <option key={opt.id || opt.value} value={opt.id || opt.value}>{opt.label}</option>
+            ))
+          }
+          {mode === "tts_shops" &&
+            STORE_SORT_OPTIONS.map((opt) => (
               <option key={opt.id || opt.value} value={opt.id || opt.value}>{opt.label}</option>
             ))
           }
@@ -521,7 +572,6 @@ export default function ReklamTaraPage() {
               <option key={opt.key} value={opt.key}>{opt.label}</option>
             ))
           }
-          {mode === "tts_shops" && <option value="">-</option>}
         </select>
 
         {/* Asc/Desc arrows */}
@@ -649,6 +699,26 @@ export default function ReklamTaraPage() {
         </>
       )}
 
+      {/* ═══ STORE RESULTS ═══ */}
+      {mode === "tts_shops" && !storeLoading && stores.length > 0 && (
+        <div>
+          <p className="text-sm text-gray-500 mb-4">{storeAllCount} magaza yuklendi{storeHasMore ? " (devam ediyor...)" : ""}</p>
+
+          <StoreTable results={stores} />
+
+          {storeHasMore && !storeLoadingMore && <div key={stores.length} ref={storeSentinelRef} className="py-8" />}
+          {storeLoadingMore && (
+            <div className="py-8 flex justify-center">
+              <div className="flex items-center gap-2 text-gray-400">
+                <Loader2 size={20} className="animate-spin" />
+                <span className="text-sm">Daha fazla magaza yukleniyor...</span>
+              </div>
+            </div>
+          )}
+          {!storeHasMore && stores.length > 0 && <p className="text-center text-sm text-gray-400 py-8">Tum magazalar yuklendi ({storeAllCount} magaza)</p>}
+        </div>
+      )}
+
       {/* ═══ META AD RESULTS ═══ */}
       {mode === "meta_ads" && !metaLoading && ads.length > 0 && (
         <div>
@@ -682,6 +752,7 @@ export default function ReklamTaraPage() {
       {/* ═══ EMPTY STATES ═══ */}
       {!loading && keyword && (
         (mode === "tts_products" && products.length === 0 && !productError && productAllCount === 0 && !productLoading) ||
+        (mode === "tts_shops" && stores.length === 0 && !storeError && storeAllCount === 0 && !storeLoading) ||
         (mode === "tts_videos" && videoResults.length === 0 && !videoError && videoAllCount === 0 && !videoLoading) ||
         (mode === "meta_ads" && ads.length === 0 && !metaError && metaAllCount === 0 && !metaLoading)
       ) && (
@@ -1457,6 +1528,106 @@ function MetaAdCard({ ad, onDetail, onSave }: {
             </span>
           )}
         </div>
+      </div>
+    </div>
+  );
+}
+
+/* ═══ Store Table (PiPiAds TTS Stores style) ═══ */
+
+function StoreTable({ results }: { results: StoreResult[] }) {
+  return (
+    <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="bg-gray-50 border-b border-gray-200">
+              <th className="text-left py-3 px-4 font-medium text-gray-500 w-12">#</th>
+              <th className="text-left py-3 px-4 font-medium text-gray-500">Magaza</th>
+              <th className="text-left py-3 px-4 font-medium text-gray-500">En Cok Satan Urunler</th>
+              <th className="text-right py-3 px-4 font-medium text-gray-500">Satislar</th>
+              <th className="text-right py-3 px-4 font-medium text-gray-500">GMV</th>
+              <th className="text-right py-3 px-4 font-medium text-gray-500">Reklamlar</th>
+              <th className="text-right py-3 px-4 font-medium text-gray-500">Gosterim</th>
+              <th className="text-right py-3 px-4 font-medium text-gray-500">Influencers</th>
+              <th className="text-center py-3 px-4 font-medium text-gray-500">Reklam Tarihi</th>
+            </tr>
+          </thead>
+          <tbody>
+            {results.map((store, i) => (
+              <tr key={store.id || i} className="border-b border-gray-100 hover:bg-gray-50/50 transition-colors">
+                <td className="py-3 px-4 text-gray-400 text-xs">{i + 1}</td>
+                {/* Store info */}
+                <td className="py-3 px-4">
+                  <div className="flex items-center gap-3 min-w-[200px]">
+                    {store.shopImage ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={store.shopImage} alt={store.shopName} className="w-12 h-12 rounded-lg object-cover flex-shrink-0 border border-gray-100" />
+                    ) : (
+                      <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0">
+                        <ShoppingBag size={16} className="text-gray-300" />
+                      </div>
+                    )}
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-gray-900 truncate">{store.shopName}</p>
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        {store.region.slice(0, 2).map((r) => (
+                          <span key={r} className="text-sm">{FLAG[r.toUpperCase()] || r}</span>
+                        ))}
+                      </div>
+                      {store.categories.length > 0 && (
+                        <span className="text-[10px] bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded mt-0.5 inline-block truncate max-w-[150px]">
+                          {store.categories[0].name}
+                        </span>
+                      )}
+                      <p className="text-[10px] text-gray-400 mt-0.5">Urun: {store.goodsCount}</p>
+                    </div>
+                  </div>
+                </td>
+                {/* Best selling products */}
+                <td className="py-3 px-4">
+                  <div className="flex items-center gap-1.5">
+                    {store.bestSellingGoods.slice(0, 4).map((g, gi) => (
+                      g.image ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img key={gi} src={g.image} alt="" className="w-10 h-10 rounded object-cover border border-gray-100" />
+                      ) : (
+                        <div key={gi} className="w-10 h-10 rounded bg-gray-100" />
+                      )
+                    ))}
+                  </div>
+                </td>
+                {/* Sales */}
+                <td className="py-3 px-4 text-right">
+                  <p className="font-medium text-gray-700">{formatCompact(store.salesVolume)}</p>
+                  {store.avgPriceUsd > 0 && (
+                    <p className="text-[10px] text-gray-400">Ort. fiyat: ${formatCompact(store.avgPriceUsd)}</p>
+                  )}
+                </td>
+                {/* GMV */}
+                <td className="py-3 px-4 text-right font-bold text-emerald-600">{formatMoney(store.gmvUsd)}</td>
+                {/* Ads */}
+                <td className="py-3 px-4 text-right text-gray-600">{formatCompact(store.videoCount)}</td>
+                {/* Views */}
+                <td className="py-3 px-4 text-right text-gray-600">
+                  {formatCompact(store.playCount)}
+                  {(store.minCpm > 0 || store.maxCpm > 0) && (
+                    <p className="text-[10px] text-gray-400">${formatCompact(store.minCpm)}-${formatCompact(store.maxCpm)}</p>
+                  )}
+                </td>
+                {/* Influencers */}
+                <td className="py-3 px-4 text-right text-gray-600">{store.personCount || "-"}</td>
+                {/* Date */}
+                <td className="py-3 px-4 text-center text-xs text-gray-500 whitespace-nowrap">
+                  {store.foundTime ? formatDate(store.foundTime) : "-"}
+                  {store.lastFoundTime ? (
+                    <p className="text-[10px]">- {formatDate(store.lastFoundTime)}</p>
+                  ) : null}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );
