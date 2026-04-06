@@ -116,6 +116,15 @@ function deriveAnalytics(allVideos: TTSProduct[]) {
 
 const VIDEOS_PER_PAGE = 12;
 
+// Sort codes: 3=found_time, 4=play_count, 5=put_days, 6=likes, 999=popularity
+export const VIDEO_DETAIL_SORT_OPTIONS = [
+  { sort: 3, type: "asc", label: "Ilk gorulme" },
+  { sort: 3, type: "desc", label: "Son gorulme" },
+  { sort: 4, type: "desc", label: "Reklam Gosterimi" },
+  { sort: 5, type: "desc", label: "Gun" },
+  { sort: 999, type: "desc", label: "Populerlik" },
+];
+
 export function useProductVideos(productTitle: string | undefined) {
   const [allVideos, setAllVideos] = useState<TTSProduct[]>([]);
   const [loading, setLoading] = useState(false);
@@ -124,16 +133,20 @@ export function useProductVideos(productTitle: string | undefined) {
   const [hookAnalysis, setHookAnalysis] = useState<HookAnalysis[]>([]);
   const [tagAnalysis, setTagAnalysis] = useState<TagAnalysis[]>([]);
   const [videoPage, setVideoPage] = useState(1);
+  const [currentSort, setCurrentSort] = useState(4);
+  const [currentSortType, setCurrentSortType] = useState("desc");
   const fetched = useRef(false);
+  const titleRef = useRef(productTitle);
+  titleRef.current = productTitle;
 
-  const fetchAll = useCallback(async () => {
-    if (!productTitle) return;
+  const fetchVideos = useCallback(async (sortBy: number, sortType: string) => {
+    const title = titleRef.current;
+    if (!title) return;
     setLoading(true);
     setError("");
 
     try {
       const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
-      // Fetch 50 videos sorted by popularity (sortBy: 4 = most viewed)
       const res = await fetch("/api/tiktok-shop", {
         method: "POST",
         headers: {
@@ -141,9 +154,9 @@ export function useProductVideos(productTitle: string | undefined) {
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
         body: JSON.stringify({
-          keyword: productTitle,
+          keyword: title,
           searchMode: "video",
-          sortBy: 4, // Most viewed / Popularity
+          sortBy,
           page: 1,
           pageSize: 50,
         }),
@@ -158,6 +171,7 @@ export function useProductVideos(productTitle: string | undefined) {
       const mapped = rawList.map(mapVideoItem);
 
       setAllVideos(mapped);
+      setVideoPage(1);
       const analytics = deriveAnalytics(mapped);
       setInfluencers(analytics.influencers);
       setHookAnalysis(analytics.hookAnalysis);
@@ -167,13 +181,19 @@ export function useProductVideos(productTitle: string | undefined) {
     } finally {
       setLoading(false);
     }
-  }, [productTitle]);
+  }, []);
 
   useEffect(() => {
     if (!productTitle || fetched.current) return;
     fetched.current = true;
-    fetchAll();
-  }, [productTitle, fetchAll]);
+    fetchVideos(4, "desc");
+  }, [productTitle, fetchVideos]);
+
+  const changeSort = useCallback((sortBy: number, sortType: string) => {
+    setCurrentSort(sortBy);
+    setCurrentSortType(sortType);
+    fetchVideos(sortBy, sortType);
+  }, [fetchVideos]);
 
   // Client-side pagination
   const totalPages = Math.max(1, Math.ceil(allVideos.length / VIDEOS_PER_PAGE));
@@ -194,5 +214,8 @@ export function useProductVideos(productTitle: string | undefined) {
     videoPage,
     totalVideoPages: totalPages,
     goToVideoPage,
+    changeSort,
+    currentSort,
+    currentSortType,
   };
 }

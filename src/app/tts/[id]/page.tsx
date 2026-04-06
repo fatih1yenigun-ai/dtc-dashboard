@@ -23,7 +23,7 @@ import {
 import { useTikTokShop, type TTSProduct } from "@/context/TikTokShopContext";
 import { useAuth } from "@/context/AuthContext";
 import { loadFolders, createFolder, saveBrandsBulk, type BrandData } from "@/lib/supabase";
-import { useProductVideos } from "@/hooks/useProductVideos";
+import { useProductVideos, VIDEO_DETAIL_SORT_OPTIONS } from "@/hooks/useProductVideos";
 import {
   BarChart,
   Bar,
@@ -218,7 +218,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
   }, [id, selectedProduct]);
 
   // Fetch videos
-  const { videos, allVideos, loading: videosLoading, hookAnalysis, tagAnalysis, videoPage, totalVideoPages, goToVideoPage } = useProductVideos(product?.title);
+  const { videos, allVideos, loading: videosLoading, hookAnalysis, tagAnalysis, videoPage, totalVideoPages, goToVideoPage, changeSort: changeVideoSort, currentSort: videoSort, currentSortType: videoSortType } = useProductVideos(product?.title);
 
   // Save handlers
   async function openSaveModal() {
@@ -473,10 +473,26 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
 
       {/* ═══ SECTION 4: TikTok Reklamlari (Videos) ═══ */}
       <div className="mb-6">
-        <h2 className="text-lg font-bold text-gray-900 mb-4">
-          TikTok Reklamlari
-          {allVideos.length > 0 && <span className="text-sm font-normal text-gray-400 ml-2">({allVideos.length})</span>}
-        </h2>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-bold text-gray-900">
+            TikTok Reklamlari
+            {allVideos.length > 0 && <span className="text-sm font-normal text-gray-400 ml-2">({allVideos.length})</span>}
+          </h2>
+          {allVideos.length > 0 && (
+            <select
+              value={`${videoSort}_${videoSortType}`}
+              onChange={(e) => {
+                const [s, t] = e.target.value.split("_");
+                changeVideoSort(Number(s), t);
+              }}
+              className="py-1.5 px-3 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#667eea]/30"
+            >
+              {VIDEO_DETAIL_SORT_OPTIONS.map((opt) => (
+                <option key={`${opt.sort}_${opt.type}`} value={`${opt.sort}_${opt.type}`}>{opt.label}</option>
+              ))}
+            </select>
+          )}
+        </div>
 
         {videosLoading && (
           <div className="flex items-center gap-2 py-8 justify-center">
