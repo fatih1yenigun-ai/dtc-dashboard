@@ -63,8 +63,8 @@ export default function TQSPage() {
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">TQS Hesaplayıcı</h1>
-        <p className="text-gray-500 mt-1">
+        <h1 className="text-2xl font-bold text-text-primary">TQS Hesaplayıcı</h1>
+        <p className="text-text-secondary mt-1">
           Trafik kalite puanını hesapla ve gelir tahminle
         </p>
       </div>
@@ -72,27 +72,27 @@ export default function TQSPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Inputs */}
         <div className="lg:col-span-1 space-y-4">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <h2 className="font-semibold text-gray-900 mb-4">Metrikler</h2>
+          <div className="bg-bg-card rounded-[14px] shadow-sm border border-border-default p-6">
+            <h2 className="font-semibold text-text-primary mb-4">Metrikler</h2>
 
             {/* Traffic */}
             <div className="mb-5">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-text-primary mb-1">
                 Aylık Trafik
               </label>
               <input
                 type="number"
                 value={traffic}
                 onChange={(e) => setTraffic(Number(e.target.value))}
-                className="w-full py-2 px-3 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#667eea]/30"
+                className="w-full py-2 px-3 border border-border-default rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/30"
               />
             </div>
 
             {/* Bounce Rate */}
             <div className="mb-5">
               <div className="flex justify-between text-sm mb-1">
-                <span className="font-medium text-gray-700">Bounce Rate</span>
-                <span className="text-[#667eea] font-semibold">{bouncePct}%</span>
+                <span className="font-medium text-text-primary">Bounce Rate</span>
+                <span className="text-accent font-semibold">{bouncePct}%</span>
               </div>
               <input
                 type="range"
@@ -100,9 +100,9 @@ export default function TQSPage() {
                 max={95}
                 value={bouncePct}
                 onChange={(e) => setBouncePct(Number(e.target.value))}
-                className="w-full accent-[#667eea]"
+                className="w-full accent-accent"
               />
-              <div className="flex justify-between text-xs text-gray-400">
+              <div className="flex justify-between text-xs text-text-muted">
                 <span>5%</span>
                 <span>95%</span>
               </div>
@@ -111,8 +111,8 @@ export default function TQSPage() {
             {/* Pages per Visit */}
             <div className="mb-5">
               <div className="flex justify-between text-sm mb-1">
-                <span className="font-medium text-gray-700">Sayfa/Ziyaret</span>
-                <span className="text-[#667eea] font-semibold">
+                <span className="font-medium text-text-primary">Sayfa/Ziyaret</span>
+                <span className="text-accent font-semibold">
                   {pagesPerVisit.toFixed(1)}
                 </span>
               </div>
@@ -123,9 +123,9 @@ export default function TQSPage() {
                 step={0.5}
                 value={pagesPerVisit}
                 onChange={(e) => setPagesPerVisit(Number(e.target.value))}
-                className="w-full accent-[#667eea]"
+                className="w-full accent-accent"
               />
-              <div className="flex justify-between text-xs text-gray-400">
+              <div className="flex justify-between text-xs text-text-muted">
                 <span>1</span>
                 <span>15</span>
               </div>
@@ -134,8 +134,8 @@ export default function TQSPage() {
             {/* Session Duration */}
             <div className="mb-5">
               <div className="flex justify-between text-sm mb-1">
-                <span className="font-medium text-gray-700">Oturum Süresi</span>
-                <span className="text-[#667eea] font-semibold">
+                <span className="font-medium text-text-primary">Oturum Süresi</span>
+                <span className="text-accent font-semibold">
                   {formatMinSec(sessionSeconds)}
                 </span>
               </div>
@@ -146,9 +146,9 @@ export default function TQSPage() {
                 step={10}
                 value={sessionSeconds}
                 onChange={(e) => setSessionSeconds(Number(e.target.value))}
-                className="w-full accent-[#667eea]"
+                className="w-full accent-accent"
               />
-              <div className="flex justify-between text-xs text-gray-400">
+              <div className="flex justify-between text-xs text-text-muted">
                 <span>10sn</span>
                 <span>15dk</span>
               </div>
@@ -156,26 +156,26 @@ export default function TQSPage() {
 
             {/* AOV */}
             <div className="mb-5">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-text-primary mb-1">
                 AOV ($)
               </label>
               <input
                 type="number"
                 value={aov}
                 onChange={(e) => setAov(Number(e.target.value))}
-                className="w-full py-2 px-3 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#667eea]/30"
+                className="w-full py-2 px-3 border border-border-default rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/30"
               />
             </div>
 
             {/* Niche */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-text-primary mb-1">
                 Niş
               </label>
               <select
                 value={niche}
                 onChange={(e) => setNiche(e.target.value)}
-                className="w-full py-2 px-3 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#667eea]/30"
+                className="w-full py-2 px-3 border border-border-default rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/30"
               >
                 {Object.entries(NICHE_LABELS).map(([key, label]) => (
                   <option key={key} value={key}>
@@ -190,8 +190,8 @@ export default function TQSPage() {
         {/* Results */}
         <div className="lg:col-span-2 space-y-6">
           {/* TQS Gauge */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <h2 className="font-semibold text-gray-900 mb-4">
+          <div className="bg-bg-card rounded-[14px] shadow-sm border border-border-default p-6">
+            <h2 className="font-semibold text-text-primary mb-4">
               TQS (Traffic Quality Score)
             </h2>
 
@@ -207,17 +207,17 @@ export default function TQSPage() {
                   >
                     {tqs}
                   </span>
-                  <span className="text-gray-400 text-sm block">/10</span>
+                  <span className="text-text-muted text-sm block">/10</span>
                 </div>
               </div>
             </div>
 
             {/* Sub-scores */}
             <div className="grid grid-cols-3 gap-4">
-              <div className="text-center p-3 bg-gray-50 rounded-lg">
-                <p className="text-xs text-gray-500 mb-1">Bounce Score</p>
-                <p className="text-xl font-bold text-gray-900">{bs}</p>
-                <div className="w-full bg-gray-200 rounded-full h-1.5 mt-2">
+              <div className="text-center p-3 bg-bg-main rounded-lg">
+                <p className="text-xs text-text-secondary mb-1">Bounce Score</p>
+                <p className="text-xl font-bold text-text-primary">{bs}</p>
+                <div className="w-full bg-bg-hover rounded-full h-1.5 mt-2">
                   <div
                     className="h-1.5 rounded-full"
                     style={{
@@ -227,10 +227,10 @@ export default function TQSPage() {
                   />
                 </div>
               </div>
-              <div className="text-center p-3 bg-gray-50 rounded-lg">
-                <p className="text-xs text-gray-500 mb-1">Pages Score</p>
-                <p className="text-xl font-bold text-gray-900">{ps}</p>
-                <div className="w-full bg-gray-200 rounded-full h-1.5 mt-2">
+              <div className="text-center p-3 bg-bg-main rounded-lg">
+                <p className="text-xs text-text-secondary mb-1">Pages Score</p>
+                <p className="text-xl font-bold text-text-primary">{ps}</p>
+                <div className="w-full bg-bg-hover rounded-full h-1.5 mt-2">
                   <div
                     className="h-1.5 rounded-full"
                     style={{
@@ -240,10 +240,10 @@ export default function TQSPage() {
                   />
                 </div>
               </div>
-              <div className="text-center p-3 bg-gray-50 rounded-lg">
-                <p className="text-xs text-gray-500 mb-1">Duration Score</p>
-                <p className="text-xl font-bold text-gray-900">{ds}</p>
-                <div className="w-full bg-gray-200 rounded-full h-1.5 mt-2">
+              <div className="text-center p-3 bg-bg-main rounded-lg">
+                <p className="text-xs text-text-secondary mb-1">Duration Score</p>
+                <p className="text-xl font-bold text-text-primary">{ds}</p>
+                <div className="w-full bg-bg-hover rounded-full h-1.5 mt-2">
                   <div
                     className="h-1.5 rounded-full"
                     style={{
@@ -258,41 +258,41 @@ export default function TQSPage() {
 
           {/* Revenue Estimates */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
-              <p className="text-xs text-gray-500 mb-1">Dönüşüm Oranı</p>
-              <p className="text-2xl font-bold text-[#667eea]">{convRate}%</p>
-              <p className="text-xs text-gray-400 mt-1">
+            <div className="bg-bg-card rounded-[14px] shadow-sm border border-border-default p-5">
+              <p className="text-xs text-text-secondary mb-1">Dönüşüm Oranı</p>
+              <p className="text-2xl font-bold text-accent">{convRate}%</p>
+              <p className="text-xs text-text-muted mt-1">
                 {NICHE_LABELS[niche]} nişi
               </p>
             </div>
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
-              <p className="text-xs text-gray-500 mb-1">Aylık Gelir Tahmini</p>
+            <div className="bg-bg-card rounded-[14px] shadow-sm border border-border-default p-5">
+              <p className="text-xs text-text-secondary mb-1">Aylık Gelir Tahmini</p>
               <p className="text-2xl font-bold text-[#27AE60]">
                 {formatMoney(monthlyRev)}
               </p>
-              <p className="text-xs text-gray-400 mt-1">
+              <p className="text-xs text-text-muted mt-1">
                 {traffic.toLocaleString()} ziyaret x {convRate}% x ${aov}
               </p>
             </div>
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
-              <p className="text-xs text-gray-500 mb-1">Yıllık Gelir Tahmini</p>
+            <div className="bg-bg-card rounded-[14px] shadow-sm border border-border-default p-5">
+              <p className="text-xs text-text-secondary mb-1">Yıllık Gelir Tahmini</p>
               <p className="text-2xl font-bold text-[#27AE60]">
                 {formatMoney(yearlyRev)}
               </p>
-              <p className="text-xs text-gray-400 mt-1">Aylık x 12</p>
+              <p className="text-xs text-text-muted mt-1">Aylık x 12</p>
             </div>
           </div>
 
           {/* Niche Conversion Table */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <h2 className="font-semibold text-gray-900 mb-4">
+          <div className="bg-bg-card rounded-[14px] shadow-sm border border-border-default p-6">
+            <h2 className="font-semibold text-text-primary mb-4">
               {NICHE_LABELS[niche]} - Dönüşüm Tablosu
             </h2>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-gray-200">
-                    <th className="py-2 px-3 text-left text-gray-500 font-medium">
+                  <tr className="border-b border-border-default">
+                    <th className="py-2 px-3 text-left text-text-secondary font-medium">
                       TQS
                     </th>
                     {Array.from({ length: 10 }, (_, i) => i + 1).map((t) => (
@@ -300,8 +300,8 @@ export default function TQSPage() {
                         key={t}
                         className={`py-2 px-3 text-center font-medium ${
                           Math.round(tqs) === t
-                            ? "text-[#667eea]"
-                            : "text-gray-500"
+                            ? "text-accent"
+                            : "text-text-secondary"
                         }`}
                       >
                         {t}
@@ -311,7 +311,7 @@ export default function TQSPage() {
                 </thead>
                 <tbody>
                   <tr>
-                    <td className="py-2 px-3 text-gray-700 font-medium">
+                    <td className="py-2 px-3 text-text-primary font-medium">
                       Dönüşüm %
                     </td>
                     {Array.from({ length: 10 }, (_, i) => i + 1).map((t) => (
@@ -319,8 +319,8 @@ export default function TQSPage() {
                         key={t}
                         className={`py-2 px-3 text-center ${
                           Math.round(tqs) === t
-                            ? "bg-[#667eea]/10 text-[#667eea] font-bold rounded"
-                            : "text-gray-600"
+                            ? "bg-accent/10 text-accent font-bold rounded"
+                            : "text-text-secondary"
                         }`}
                       >
                         {nicheTable[t]}%

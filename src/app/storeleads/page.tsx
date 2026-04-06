@@ -206,8 +206,8 @@ export default function StoreleadsPage() {
     <div>
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Storeleads</h1>
-        <p className="text-gray-500 mt-1">
+        <h1 className="text-2xl font-bold text-text-primary">Storeleads</h1>
+        <p className="text-text-secondary mt-1">
           E-ticaret magaza veritabani —{" "}
           {filterOptions
             ? `${filterOptions.counts.total.toLocaleString()} magaza`
@@ -224,7 +224,7 @@ export default function StoreleadsPage() {
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
               region === r
                 ? "gradient-accent text-white shadow-md"
-                : "bg-white border border-gray-200 text-gray-600 hover:border-[#667eea] hover:text-[#667eea]"
+                : "bg-bg-card border border-border-default text-text-secondary hover:border-accent hover:text-accent"
             }`}
           >
             {r === "turkey" && `Turkiye ${filterOptions ? `(${filterOptions.counts.turkey.toLocaleString()})` : ""}`}
@@ -235,7 +235,7 @@ export default function StoreleadsPage() {
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-xl border border-gray-200 p-4 mb-6">
+      <div className="bg-bg-card rounded-[14px] border border-border-default p-4 mb-6">
         {/* Category selectors */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
           <select
@@ -244,7 +244,7 @@ export default function StoreleadsPage() {
               setCategory(e.target.value);
               setSubCategory("");
             }}
-            className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#667eea]/30"
+            className="px-3 py-2 border border-border-default rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/30"
           >
             <option value="">Tum Kategoriler</option>
             {filterOptions?.categories.map((c) => (
@@ -258,7 +258,7 @@ export default function StoreleadsPage() {
             value={subCategory}
             onChange={(e) => setSubCategory(e.target.value)}
             disabled={!category}
-            className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#667eea]/30 disabled:opacity-40"
+            className="px-3 py-2 border border-border-default rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/30 disabled:opacity-40"
           >
             <option value="">Tum Alt Kategoriler</option>
             {category &&
@@ -278,7 +278,7 @@ export default function StoreleadsPage() {
             <div className="relative">
               <Search
                 size={16}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted"
               />
               <input
                 type="text"
@@ -286,7 +286,7 @@ export default function StoreleadsPage() {
                 onChange={(e) => setQuery(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && doSearch(1)}
                 placeholder="Domain, isim veya urun ara..."
-                className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#667eea]/30 focus:border-[#667eea]"
+                className="w-full pl-9 pr-4 py-2 border border-border-default rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent"
               />
             </div>
           </div>
@@ -295,7 +295,7 @@ export default function StoreleadsPage() {
             value={minSales}
             onChange={(e) => setMinSales(e.target.value)}
             placeholder="Min satis ($)"
-            className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#667eea]/30"
+            className="px-3 py-2 border border-border-default rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/30"
           />
           <button
             onClick={() => doSearch(1)}
@@ -310,24 +310,24 @@ export default function StoreleadsPage() {
 
       {/* Results count */}
       <div className="flex items-center justify-between mb-4">
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-text-secondary">
           {total.toLocaleString()} sonuc bulundu
           {totalPages > 1 && ` — Sayfa ${page}/${totalPages}`}
         </p>
       </div>
 
       {/* Results Table */}
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      <div className="bg-bg-card rounded-[14px] border border-border-default overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-gray-100 bg-gray-50/50">
+              <tr className="border-b border-border-default bg-bg-main/50">
                 <th className="w-10 px-2 py-3"></th>
-                <th className="text-left px-4 py-3 font-medium text-gray-500">Magaza</th>
-                <th className="text-left px-3 py-3 font-medium text-gray-500">Platform</th>
-                <th className="text-left px-3 py-3 font-medium text-gray-500">Kategori</th>
+                <th className="text-left px-4 py-3 font-medium text-text-secondary">Magaza</th>
+                <th className="text-left px-3 py-3 font-medium text-text-secondary">Platform</th>
+                <th className="text-left px-3 py-3 font-medium text-text-secondary">Kategori</th>
                 <th
-                  className="text-right px-3 py-3 font-medium text-gray-500 cursor-pointer hover:text-[#667eea] select-none"
+                  className="text-right px-3 py-3 font-medium text-text-secondary cursor-pointer hover:text-accent select-none"
                   onClick={() => handleSort("estimated_sales_usd")}
                 >
                   <span className="inline-flex items-center gap-1">
@@ -336,7 +336,7 @@ export default function StoreleadsPage() {
                   </span>
                 </th>
                 <th
-                  className="text-right px-3 py-3 font-medium text-gray-500 cursor-pointer hover:text-[#667eea] select-none"
+                  className="text-right px-3 py-3 font-medium text-text-secondary cursor-pointer hover:text-accent select-none"
                   onClick={() => handleSort("estimated_page_views")}
                 >
                   <span className="inline-flex items-center gap-1">
@@ -345,7 +345,7 @@ export default function StoreleadsPage() {
                   </span>
                 </th>
                 <th
-                  className="text-right px-3 py-3 font-medium text-gray-500 cursor-pointer hover:text-[#667eea] select-none"
+                  className="text-right px-3 py-3 font-medium text-text-secondary cursor-pointer hover:text-accent select-none"
                   onClick={() => handleSort("product_count")}
                 >
                   <span className="inline-flex items-center gap-1">
@@ -353,20 +353,20 @@ export default function StoreleadsPage() {
                     <ArrowUpDown size={12} />
                   </span>
                 </th>
-                <th className="text-left px-3 py-3 font-medium text-gray-500">Sosyal</th>
+                <th className="text-left px-3 py-3 font-medium text-text-secondary">Sosyal</th>
               </tr>
             </thead>
             <tbody>
               {loading && stores.length === 0 ? (
                 <tr>
                   <td colSpan={8} className="text-center py-12">
-                    <Loader2 size={24} className="animate-spin mx-auto text-[#667eea]" />
-                    <p className="text-gray-400 mt-2">Yukleniyor...</p>
+                    <Loader2 size={24} className="animate-spin mx-auto text-accent" />
+                    <p className="text-text-muted mt-2">Yukleniyor...</p>
                   </td>
                 </tr>
               ) : stores.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="text-center py-12 text-gray-400">
+                  <td colSpan={8} className="text-center py-12 text-text-muted">
                     Sonuc bulunamadi. Filtreleri degistirin.
                   </td>
                 </tr>
@@ -374,7 +374,7 @@ export default function StoreleadsPage() {
                 stores.map((s) => (
                   <tr
                     key={s.id}
-                    className="border-b border-gray-50 hover:bg-gray-50/50 cursor-pointer transition-colors"
+                    className="border-b border-border-default hover:bg-bg-hover/50 cursor-pointer transition-colors"
                     onClick={() => setSelectedStore(s)}
                   >
                     <td className="px-2 py-3 relative" onClick={(e) => e.stopPropagation()}>
@@ -382,8 +382,8 @@ export default function StoreleadsPage() {
                         onClick={() => setSaveDropdownId(saveDropdownId === s.id ? null : s.id)}
                         className={`p-1.5 rounded-lg transition-colors ${
                           saving === s.id
-                            ? "text-[#667eea]"
-                            : "text-gray-300 hover:text-[#667eea] hover:bg-[#667eea]/10"
+                            ? "text-accent"
+                            : "text-text-muted hover:text-accent hover:bg-accent/10"
                         }`}
                         title="Kaydet"
                       >
@@ -394,18 +394,18 @@ export default function StoreleadsPage() {
                         )}
                       </button>
                       {saveDropdownId === s.id && (
-                        <div className="absolute left-0 top-full z-50 mt-1 w-48 bg-white border border-gray-200 rounded-xl shadow-lg py-1">
+                        <div className="absolute left-0 top-full z-50 mt-1 w-48 bg-bg-card border border-border-default rounded-xl shadow-lg py-1">
                           {folders.map((f) => (
                             <button
                               key={f}
                               onClick={() => handleSaveToFolder(s, f)}
-                              className="w-full text-left px-3 py-2 text-sm hover:bg-gray-50 flex items-center gap-2"
+                              className="w-full text-left px-3 py-2 text-sm hover:bg-bg-hover flex items-center gap-2"
                             >
-                              <Bookmark size={13} className="text-gray-400" />
+                              <Bookmark size={13} className="text-text-muted" />
                               {f}
                             </button>
                           ))}
-                          <div className="border-t border-gray-100 mt-1 pt-1 px-2 pb-1">
+                          <div className="border-t border-border-default mt-1 pt-1 px-2 pb-1">
                             <div className="flex gap-1">
                               <input
                                 type="text"
@@ -413,12 +413,12 @@ export default function StoreleadsPage() {
                                 onChange={(e) => setNewFolder(e.target.value)}
                                 onKeyDown={(e) => e.key === "Enter" && handleCreateAndSave(s)}
                                 placeholder="Yeni klasor..."
-                                className="flex-1 px-2 py-1 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#667eea]/30"
+                                className="flex-1 px-2 py-1 text-xs border border-border-default rounded-lg focus:outline-none focus:ring-1 focus:ring-accent/30"
                               />
                               {newFolder.trim() && (
                                 <button
                                   onClick={() => handleCreateAndSave(s)}
-                                  className="p-1 text-[#667eea] hover:bg-[#667eea]/10 rounded"
+                                  className="p-1 text-accent hover:bg-accent/10 rounded"
                                 >
                                   <FolderPlus size={14} />
                                 </button>
@@ -440,7 +440,7 @@ export default function StoreleadsPage() {
                             }}
                           />
                         ) : (
-                          <Store size={16} className="text-gray-300" />
+                          <Store size={16} className="text-text-muted" />
                         )}
                         <div>
                           <a
@@ -448,11 +448,11 @@ export default function StoreleadsPage() {
                             target="_blank"
                             rel="noopener noreferrer"
                             onClick={(e) => e.stopPropagation()}
-                            className="font-medium text-gray-900 hover:text-[#667eea] truncate max-w-[200px] block"
+                            className="font-medium text-text-primary hover:text-accent truncate max-w-[200px] block"
                           >
                             {s.name || s.domain}
                           </a>
-                          <p className="text-xs text-gray-400">{s.domain}</p>
+                          <p className="text-xs text-text-muted">{s.domain}</p>
                         </div>
                       </div>
                     </td>
@@ -463,22 +463,22 @@ export default function StoreleadsPage() {
                             ? "bg-green-100 text-green-700"
                             : s.platform === "WooCommerce"
                             ? "bg-purple-100 text-purple-700"
-                            : "bg-gray-100 text-gray-600"
+                            : "bg-bg-hover text-text-secondary"
                         }`}
                       >
                         {s.platform || "—"}
                       </span>
                     </td>
-                    <td className="px-3 py-3 text-gray-600 text-xs truncate max-w-[150px]">
+                    <td className="px-3 py-3 text-text-secondary text-xs truncate max-w-[150px]">
                       {extractTopCategory(s.categories) || "—"}
                     </td>
-                    <td className="px-3 py-3 text-right font-medium text-gray-900">
+                    <td className="px-3 py-3 text-right font-medium text-text-primary">
                       {formatMoney(s.estimated_sales_usd)}
                     </td>
-                    <td className="px-3 py-3 text-right text-gray-600">
+                    <td className="px-3 py-3 text-right text-text-secondary">
                       {formatNumber(s.estimated_page_views)}
                     </td>
-                    <td className="px-3 py-3 text-right text-gray-600">
+                    <td className="px-3 py-3 text-right text-text-secondary">
                       {s.product_count?.toLocaleString() || "—"}
                     </td>
                     <td className="px-3 py-3">
@@ -501,7 +501,7 @@ export default function StoreleadsPage() {
                             target="_blank"
                             rel="noopener noreferrer"
                             onClick={(e) => e.stopPropagation()}
-                            className="text-gray-800 hover:text-black text-xs"
+                            className="text-text-primary hover:text-black text-xs"
                             title={`${s.tiktok}${s.tiktok_followers ? ` (${formatNumber(s.tiktok_followers)})` : ""}`}
                           >
                             TT
@@ -530,21 +530,21 @@ export default function StoreleadsPage() {
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100">
+          <div className="flex items-center justify-between px-4 py-3 border-t border-border-default">
             <button
               disabled={page <= 1}
               onClick={() => doSearch(page - 1)}
-              className="flex items-center gap-1 px-3 py-1.5 text-sm rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed"
+              className="flex items-center gap-1 px-3 py-1.5 text-sm rounded-lg border border-border-default hover:bg-bg-hover disabled:opacity-30 disabled:cursor-not-allowed"
             >
               <ChevronLeft size={14} /> Onceki
             </button>
-            <span className="text-sm text-gray-500">
+            <span className="text-sm text-text-secondary">
               {page} / {totalPages}
             </span>
             <button
               disabled={page >= totalPages}
               onClick={() => doSearch(page + 1)}
-              className="flex items-center gap-1 px-3 py-1.5 text-sm rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed"
+              className="flex items-center gap-1 px-3 py-1.5 text-sm rounded-lg border border-border-default hover:bg-bg-hover disabled:opacity-30 disabled:cursor-not-allowed"
             >
               Sonraki <ChevronRight size={14} />
             </button>
@@ -572,14 +572,14 @@ export default function StoreleadsPage() {
             className="absolute inset-0 bg-black/20"
             onClick={() => setSelectedStore(null)}
           />
-          <div className="relative w-full max-w-md bg-white shadow-2xl overflow-y-auto animate-in slide-in-from-right">
-            <div className="sticky top-0 bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between">
-              <h2 className="font-bold text-lg text-gray-900 truncate">
+          <div className="relative w-full max-w-md bg-bg-card shadow-2xl overflow-y-auto animate-in slide-in-from-right">
+            <div className="sticky top-0 bg-bg-card border-b border-border-default px-6 py-4 flex items-center justify-between">
+              <h2 className="font-bold text-lg text-text-primary truncate">
                 {selectedStore.name || selectedStore.domain}
               </h2>
               <button
                 onClick={() => setSelectedStore(null)}
-                className="text-gray-400 hover:text-gray-600 p-1"
+                className="text-text-muted hover:text-text-secondary p-1"
               >
                 &times;
               </button>
@@ -591,34 +591,34 @@ export default function StoreleadsPage() {
                 href={selectedStore.domain_url || `https://${selectedStore.domain}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 text-[#667eea] hover:underline text-sm"
+                className="inline-flex items-center gap-1.5 text-accent hover:underline text-sm"
               >
                 {selectedStore.domain} <ExternalLink size={13} />
               </a>
 
               {/* Key metrics */}
               <div className="grid grid-cols-2 gap-3">
-                <div className="bg-gray-50 rounded-lg p-3">
-                  <p className="text-xs text-gray-500">Aylik Satis</p>
-                  <p className="text-lg font-bold text-gray-900">
+                <div className="bg-bg-main rounded-lg p-3">
+                  <p className="text-xs text-text-secondary">Aylik Satis</p>
+                  <p className="text-lg font-bold text-text-primary">
                     {formatMoney(selectedStore.estimated_sales_usd)}
                   </p>
                 </div>
-                <div className="bg-gray-50 rounded-lg p-3">
-                  <p className="text-xs text-gray-500">Aylik Trafik</p>
-                  <p className="text-lg font-bold text-gray-900">
+                <div className="bg-bg-main rounded-lg p-3">
+                  <p className="text-xs text-text-secondary">Aylik Trafik</p>
+                  <p className="text-lg font-bold text-text-primary">
                     {formatNumber(selectedStore.estimated_page_views)}
                   </p>
                 </div>
-                <div className="bg-gray-50 rounded-lg p-3">
-                  <p className="text-xs text-gray-500">Urun Sayisi</p>
-                  <p className="text-lg font-bold text-gray-900">
+                <div className="bg-bg-main rounded-lg p-3">
+                  <p className="text-xs text-text-secondary">Urun Sayisi</p>
+                  <p className="text-lg font-bold text-text-primary">
                     {selectedStore.product_count?.toLocaleString() || "—"}
                   </p>
                 </div>
-                <div className="bg-gray-50 rounded-lg p-3">
-                  <p className="text-xs text-gray-500">Ort. Fiyat</p>
-                  <p className="text-lg font-bold text-gray-900">
+                <div className="bg-bg-main rounded-lg p-3">
+                  <p className="text-xs text-text-secondary">Ort. Fiyat</p>
+                  <p className="text-lg font-bold text-text-primary">
                     {selectedStore.avg_price_usd
                       ? `$${selectedStore.avg_price_usd.toFixed(2)}`
                       : "—"}
@@ -629,22 +629,22 @@ export default function StoreleadsPage() {
               {/* Details */}
               <div className="space-y-3 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-gray-500">Platform</span>
+                  <span className="text-text-secondary">Platform</span>
                   <span className="font-medium">{selectedStore.platform || "—"}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-500">Tema</span>
+                  <span className="text-text-secondary">Tema</span>
                   <span className="font-medium">{selectedStore.theme || "—"}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-500">Yorumlar</span>
+                  <span className="text-text-secondary">Yorumlar</span>
                   <span className="font-medium">
                     {selectedStore.store_reviews?.toLocaleString() || "—"}
                   </span>
                 </div>
                 {selectedStore.tiktok_followers && (
                   <div className="flex justify-between">
-                    <span className="text-gray-500">TikTok Takipci</span>
+                    <span className="text-text-secondary">TikTok Takipci</span>
                     <span className="font-medium">
                       {formatNumber(selectedStore.tiktok_followers)}
                     </span>
@@ -655,7 +655,7 @@ export default function StoreleadsPage() {
               {/* Categories */}
               {selectedStore.categories && (
                 <div>
-                  <p className="text-xs text-gray-500 mb-2">Kategoriler</p>
+                  <p className="text-xs text-text-secondary mb-2">Kategoriler</p>
                   <div className="flex flex-wrap gap-1.5">
                     {selectedStore.categories
                       .split(":")
@@ -664,7 +664,7 @@ export default function StoreleadsPage() {
                       .map((c, i) => (
                         <span
                           key={i}
-                          className="text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded-md"
+                          className="text-xs px-2 py-1 bg-bg-hover text-text-secondary rounded-md"
                         >
                           {c
                             .split("/")
@@ -679,14 +679,14 @@ export default function StoreleadsPage() {
               {/* Recent product */}
               {selectedStore.recent_product && (
                 <div>
-                  <p className="text-xs text-gray-500 mb-1">Son Urun</p>
-                  <p className="text-sm text-gray-700">{selectedStore.recent_product}</p>
+                  <p className="text-xs text-text-secondary mb-1">Son Urun</p>
+                  <p className="text-sm text-text-primary">{selectedStore.recent_product}</p>
                 </div>
               )}
 
               {/* Social links */}
               <div>
-                <p className="text-xs text-gray-500 mb-2">Sosyal Medya</p>
+                <p className="text-xs text-text-secondary mb-2">Sosyal Medya</p>
                 <div className="flex flex-wrap gap-2">
                   {selectedStore.instagram && (
                     <a
@@ -709,7 +709,7 @@ export default function StoreleadsPage() {
                       }
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-xs px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
+                      className="text-xs px-3 py-1.5 bg-bg-hover text-text-primary rounded-lg hover:bg-bg-hover"
                     >
                       {selectedStore.tiktok}
                     </a>

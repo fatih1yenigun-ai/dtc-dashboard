@@ -203,36 +203,36 @@ export default function TTSPage() {
     <div>
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">TikTok Shop</h1>
-        <p className="text-gray-500 mt-1">PiPiAds ile TikTok Shop&apos;ta trend urunleri kesfet</p>
+        <h1 className="text-2xl font-bold text-text-primary">TikTok Shop</h1>
+        <p className="text-text-secondary mt-1">PiPiAds ile TikTok Shop&apos;ta trend urunleri kesfet</p>
       </div>
 
       {/* Search Bar */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+      <div className="bg-bg-card rounded-[14px] shadow-sm border border-border-default p-6 mb-6">
         <div className="flex flex-col md:flex-row gap-4">
           {/* Keyword */}
           <div className="flex-1">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Anahtar Kelime</label>
+            <label className="block text-sm font-medium text-text-primary mb-1">Anahtar Kelime</label>
             <div className="relative">
-              <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" />
               <input
                 type="text" value={localKeyword}
                 onChange={(e) => setLocalKeyword(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleSearch()}
                 placeholder="ornegin: led lamba, cilt bakim, kitchen gadget..."
-                className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#667eea]/30 focus:border-[#667eea]"
+                className="w-full pl-10 pr-4 py-2.5 border border-border-default rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent"
               />
             </div>
           </div>
 
           {/* Mode Toggle */}
           <div className="w-48">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Arama Modu</label>
-            <div className="flex rounded-lg border border-gray-200 overflow-hidden">
-              <button onClick={() => setMode("product")} className={`flex-1 py-2.5 text-sm font-medium transition-colors ${mode === "product" ? "bg-[#667eea] text-white" : "bg-white text-gray-600 hover:bg-gray-50"}`}>
+            <label className="block text-sm font-medium text-text-primary mb-1">Arama Modu</label>
+            <div className="flex rounded-lg border border-border-default overflow-hidden">
+              <button onClick={() => setMode("product")} className={`flex-1 py-2.5 text-sm font-medium transition-colors ${mode === "product" ? "bg-accent text-white" : "bg-bg-card text-text-secondary hover:bg-bg-hover"}`}>
                 Urunler
               </button>
-              <button onClick={() => setMode("video")} className={`flex-1 py-2.5 text-sm font-medium transition-colors ${mode === "video" ? "bg-[#667eea] text-white" : "bg-white text-gray-600 hover:bg-gray-50"}`}>
+              <button onClick={() => setMode("video")} className={`flex-1 py-2.5 text-sm font-medium transition-colors ${mode === "video" ? "bg-accent text-white" : "bg-bg-card text-text-secondary hover:bg-bg-hover"}`}>
                 Videolar
               </button>
             </div>
@@ -240,7 +240,7 @@ export default function TTSPage() {
 
           {/* Sort */}
           <div className={mode === "product" ? "w-52" : "w-44"}>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Siralama</label>
+            <label className="block text-sm font-medium text-text-primary mb-1">Siralama</label>
             {mode === "product" ? (
               <select
                 value={productSort === 2 && productSortType === "asc" ? "found_time_asc" : String(productSort)}
@@ -253,7 +253,7 @@ export default function TTSPage() {
                   setProductSortType(newType);
                   productResort(opt.value, newType);
                 }}
-                className="w-full py-2.5 px-3 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#667eea]/30"
+                className="w-full py-2.5 px-3 border border-border-default rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/30"
               >
                 {PRODUCT_SORT_OPTIONS.map((opt) => (
                   <option key={opt.id || opt.value} value={opt.id || opt.value}>{opt.label}</option>
@@ -263,7 +263,7 @@ export default function TTSPage() {
               <select
                 value={videoSortBy}
                 onChange={(e) => setVideoSortBy(Number(e.target.value))}
-                className="w-full py-2.5 px-3 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#667eea]/30"
+                className="w-full py-2.5 px-3 border border-border-default rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/30"
               >
                 {VIDEO_SORT_OPTIONS.map((opt) => (
                   <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -275,17 +275,17 @@ export default function TTSPage() {
           {/* Asc/Desc toggle (products only) */}
           {mode === "product" && (
             <div className="w-32">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Sira</label>
-              <div className="flex rounded-lg border border-gray-200 overflow-hidden">
+              <label className="block text-sm font-medium text-text-primary mb-1">Sira</label>
+              <div className="flex rounded-lg border border-border-default overflow-hidden">
                 <button
                   onClick={() => { setProductSortType("desc"); productResort(productSort, "desc"); }}
-                  className={`flex-1 py-2.5 text-xs font-medium transition-colors ${productSortType === "desc" ? "bg-[#667eea] text-white" : "bg-white text-gray-600 hover:bg-gray-50"}`}
+                  className={`flex-1 py-2.5 text-xs font-medium transition-colors ${productSortType === "desc" ? "bg-accent text-white" : "bg-bg-card text-text-secondary hover:bg-bg-hover"}`}
                 >
                   Azalan
                 </button>
                 <button
                   onClick={() => { setProductSortType("asc"); productResort(productSort, "asc"); }}
-                  className={`flex-1 py-2.5 text-xs font-medium transition-colors ${productSortType === "asc" ? "bg-[#667eea] text-white" : "bg-white text-gray-600 hover:bg-gray-50"}`}
+                  className={`flex-1 py-2.5 text-xs font-medium transition-colors ${productSortType === "asc" ? "bg-accent text-white" : "bg-bg-card text-text-secondary hover:bg-bg-hover"}`}
                 >
                   Artan
                 </button>
@@ -309,8 +309,8 @@ export default function TTSPage() {
       {/* Loading */}
       {loading && (
         <div className="py-16 flex flex-col items-center">
-          <Loader2 size={32} className="animate-spin text-[#667eea] mb-3" />
-          <p className="text-gray-500 font-medium">
+          <Loader2 size={32} className="animate-spin text-accent mb-3" />
+          <p className="text-text-secondary font-medium">
             {mode === "video" ? "500 video yukleniyor..." : "PiPiAds'ten urunler aliniyor..."}
           </p>
         </div>
@@ -319,7 +319,7 @@ export default function TTSPage() {
       {/* ===== PRODUCT RESULTS ===== */}
       {mode === "product" && !productLoading && products.length > 0 && (
         <div>
-          <p className="text-sm text-gray-500 mb-4">{productAllCount} urun yuklendi{productHasMore ? " (devam ediyor...)" : ""}</p>
+          <p className="text-sm text-text-secondary mb-4">{productAllCount} urun yuklendi{productHasMore ? " (devam ediyor...)" : ""}</p>
 
           <ProductTable
             results={products}
@@ -348,13 +348,13 @@ export default function TTSPage() {
           {productHasMore && !productLoadingMore && <div key={products.length} ref={productSentinelRef} className="py-8" />}
           {productLoadingMore && (
             <div className="py-8 flex justify-center">
-              <div className="flex items-center gap-2 text-gray-400">
+              <div className="flex items-center gap-2 text-text-muted">
                 <Loader2 size={20} className="animate-spin" />
                 <span className="text-sm">Daha fazla urun yukleniyor...</span>
               </div>
             </div>
           )}
-          {!productHasMore && products.length > 0 && <p className="text-center text-sm text-gray-400 py-8">Tum urunler yuklendi ({productAllCount} urun)</p>}
+          {!productHasMore && products.length > 0 && <p className="text-center text-sm text-text-muted py-8">Tum urunler yuklendi ({productAllCount} urun)</p>}
         </div>
       )}
 
@@ -363,27 +363,27 @@ export default function TTSPage() {
         <>
           {/* Tag Analytics */}
           {videoAllCount > 0 && tagAnalytics.length > 0 && (
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 mb-6">
-              <h3 className="text-sm font-semibold text-gray-900 mb-1">Pazarlama Acilari &rarr; Goruntulenme</h3>
-              <p className="text-[11px] text-gray-400 mb-3">{videoAllCount} video analiz edildi</p>
+            <div className="bg-bg-card rounded-[14px] shadow-sm border border-border-default p-5 mb-6">
+              <h3 className="text-sm font-semibold text-text-primary mb-1">Pazarlama Acilari &rarr; Goruntulenme</h3>
+              <p className="text-[11px] text-text-muted mb-3">{videoAllCount} video analiz edildi</p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2 max-h-[320px] overflow-y-auto">
                 {tagAnalytics.slice(0, 20).map((t, i) => {
                   const maxViews = tagAnalytics[0]?.avgViews || 1;
                   const pct = Math.round((t.avgViews / maxViews) * 100);
                   return (
                     <div key={t.tag} className="flex items-center gap-3">
-                      <span className="text-xs text-gray-400 w-5 text-right">{i + 1}</span>
+                      <span className="text-xs text-text-muted w-5 text-right">{i + 1}</span>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between mb-0.5">
-                          <span className="text-xs font-medium text-gray-700 truncate">#{t.tag}</span>
-                          <span className="text-xs text-gray-500 ml-2 flex-shrink-0">{formatCompact(t.avgViews)} ort.</span>
+                          <span className="text-xs font-medium text-text-primary truncate">#{t.tag}</span>
+                          <span className="text-xs text-text-secondary ml-2 flex-shrink-0">{formatCompact(t.avgViews)} ort.</span>
                         </div>
-                        <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                        <div className="h-1.5 bg-bg-hover rounded-full overflow-hidden">
                           <div className="h-full rounded-full bg-gradient-to-r from-[#667eea] to-[#764ba2]" style={{ width: `${pct}%` }} />
                         </div>
                         <div className="flex justify-between mt-0.5">
-                          <span className="text-[10px] text-gray-400">{t.count} video</span>
-                          <span className="text-[10px] text-gray-400">{formatCompact(t.totalViews)} toplam</span>
+                          <span className="text-[10px] text-text-muted">{t.count} video</span>
+                          <span className="text-[10px] text-text-muted">{formatCompact(t.totalViews)} toplam</span>
                         </div>
                       </div>
                     </div>
@@ -396,7 +396,7 @@ export default function TTSPage() {
           {/* Video Grid */}
           {videoResults.length > 0 && (
             <div>
-              <p className="text-sm text-gray-500 mb-4">{videoResults.length} / {videoAllCount} video gosteriliyor</p>
+              <p className="text-sm text-text-secondary mb-4">{videoResults.length} / {videoAllCount} video gosteriliyor</p>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {videoResults.map((video) => (
                   <VideoCard key={video.id} video={video} onSave={() => openSaveModal(undefined, video)} />
@@ -404,7 +404,7 @@ export default function TTSPage() {
               </div>
               {videoHasMore && <div key={videoResults.length} ref={videoSentinelRef} className="py-8" />}
               {!videoHasMore && videoResults.length > 0 && (
-                <p className="text-center text-sm text-gray-400 py-8">Tum sonuclar yuklendi ({videoAllCount} video)</p>
+                <p className="text-center text-sm text-text-muted py-8">Tum sonuclar yuklendi ({videoAllCount} video)</p>
               )}
             </div>
           )}
@@ -416,7 +416,7 @@ export default function TTSPage() {
         (mode === "product" && products.length === 0 && !productError && productAllCount === 0 && localKeyword && !productLoading) ||
         (mode === "video" && videoResults.length === 0 && !videoError && videoAllCount === 0 && localKeyword && !videoLoading)
       ) && (
-        <div className="text-center py-16 text-gray-400">
+        <div className="text-center py-16 text-text-muted">
           <p className="text-lg">Sonuc bulunamadi</p>
           <p className="text-sm mt-1">Farkli bir anahtar kelime deneyin</p>
         </div>
@@ -425,25 +425,25 @@ export default function TTSPage() {
       {/* Save Modal */}
       {showSaveModal && (saveProduct || saveVideo) && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl p-6 w-full max-w-md mx-4 shadow-2xl">
+          <div className="bg-bg-card rounded-[14px] p-6 w-full max-w-md mx-4 shadow-2xl">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold text-gray-900">Klasore Kaydet</h3>
-              <button onClick={() => { setShowSaveModal(false); setSaveProduct(null); setSaveVideo(null); }} className="text-gray-400 hover:text-gray-600"><X size={20} /></button>
+              <h3 className="font-semibold text-text-primary">Klasore Kaydet</h3>
+              <button onClick={() => { setShowSaveModal(false); setSaveProduct(null); setSaveVideo(null); }} className="text-text-muted hover:text-text-secondary"><X size={20} /></button>
             </div>
-            <p className="text-sm text-gray-500 mb-4">&quot;{saveProduct?.title || saveProduct?.shop_name || saveVideo?.hook || saveVideo?.title || saveVideo?.shop_name}&quot;</p>
+            <p className="text-sm text-text-secondary mb-4">&quot;{saveProduct?.title || saveProduct?.shop_name || saveVideo?.hook || saveVideo?.title || saveVideo?.shop_name}&quot;</p>
             {folders.length > 0 && (
               <div className="mb-4">
-                <label className="block text-xs font-medium text-gray-500 mb-1">Mevcut Klasor</label>
-                <select value={selectedFolder} onChange={(e) => setSelectedFolder(e.target.value)} className="w-full py-2 px-3 border border-gray-200 rounded-lg text-sm">
+                <label className="block text-xs font-medium text-text-secondary mb-1">Mevcut Klasor</label>
+                <select value={selectedFolder} onChange={(e) => setSelectedFolder(e.target.value)} className="w-full py-2 px-3 border border-border-default rounded-lg text-sm">
                   {folders.map((f) => <option key={f} value={f}>{f}</option>)}
                 </select>
               </div>
             )}
             <div className="mb-4">
-              <label className="block text-xs font-medium text-gray-500 mb-1">veya Yeni Klasor</label>
+              <label className="block text-xs font-medium text-text-secondary mb-1">veya Yeni Klasor</label>
               <div className="flex gap-2">
-                <input value={newFolderName} onChange={(e) => setNewFolderName(e.target.value)} placeholder="Yeni klasor adi..." className="flex-1 py-2 px-3 border border-gray-200 rounded-lg text-sm" />
-                <button onClick={handleCreateFolder} className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm hover:bg-gray-200">Olustur</button>
+                <input value={newFolderName} onChange={(e) => setNewFolderName(e.target.value)} placeholder="Yeni klasor adi..." className="flex-1 py-2 px-3 border border-border-default rounded-lg text-sm" />
+                <button onClick={handleCreateFolder} className="px-3 py-2 bg-bg-hover text-text-primary rounded-lg text-sm hover:bg-bg-hover">Olustur</button>
               </div>
             </div>
             {saveMsg && <p className="text-sm text-green-600 mb-3">{saveMsg}</p>}
@@ -462,36 +462,36 @@ function ProductTable({ results, onSave, onDetail, sortNum, sortType, onSort }: 
 }) {
   const arrow = (num: number) => sortNum === num ? (sortType === "desc" ? " \u2193" : " \u2191") : "";
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+    <div className="bg-bg-card rounded-[14px] shadow-sm border border-border-default overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="bg-gray-50 border-b border-gray-200">
-              <th className="text-left py-3 px-4 font-medium text-gray-500 w-12">#</th>
-              <th className="text-left py-3 px-4 font-medium text-gray-500">Urun</th>
-              <th className="text-right py-3 px-4 font-medium text-gray-500 cursor-pointer hover:text-[#667eea] select-none" onClick={() => onSort(3)}>Satildi{arrow(3)}</th>
-              <th className="text-right py-3 px-4 font-medium text-gray-500 cursor-pointer hover:text-[#667eea] select-none" onClick={() => onSort(4)}>GMV{arrow(4)}</th>
-              <th className="text-right py-3 px-4 font-medium text-gray-500 cursor-pointer hover:text-[#667eea] select-none" onClick={() => onSort(7)}>Reklamlar{arrow(7)}</th>
-              <th className="text-right py-3 px-4 font-medium text-gray-500 cursor-pointer hover:text-[#667eea] select-none" onClick={() => onSort(5)}>Gosterim / Harcama{arrow(5)}</th>
-              <th className="text-right py-3 px-4 font-medium text-gray-500 cursor-pointer hover:text-[#667eea] select-none" onClick={() => onSort(8)}>Influencers{arrow(8)}</th>
-              <th className="text-center py-3 px-4 font-medium text-gray-500 cursor-pointer hover:text-[#667eea] select-none" onClick={() => onSort(2)}>Reklam Tarihi{arrow(2)}</th>
-              <th className="text-center py-3 px-4 font-medium text-gray-500 w-20">Eylem</th>
+            <tr className="bg-bg-main border-b border-border-default">
+              <th className="text-left py-3 px-4 font-medium text-text-secondary w-12">#</th>
+              <th className="text-left py-3 px-4 font-medium text-text-secondary">Urun</th>
+              <th className="text-right py-3 px-4 font-medium text-text-secondary cursor-pointer hover:text-accent select-none" onClick={() => onSort(3)}>Satildi{arrow(3)}</th>
+              <th className="text-right py-3 px-4 font-medium text-text-secondary cursor-pointer hover:text-accent select-none" onClick={() => onSort(4)}>GMV{arrow(4)}</th>
+              <th className="text-right py-3 px-4 font-medium text-text-secondary cursor-pointer hover:text-accent select-none" onClick={() => onSort(7)}>Reklamlar{arrow(7)}</th>
+              <th className="text-right py-3 px-4 font-medium text-text-secondary cursor-pointer hover:text-accent select-none" onClick={() => onSort(5)}>Gosterim / Harcama{arrow(5)}</th>
+              <th className="text-right py-3 px-4 font-medium text-text-secondary cursor-pointer hover:text-accent select-none" onClick={() => onSort(8)}>Influencers{arrow(8)}</th>
+              <th className="text-center py-3 px-4 font-medium text-text-secondary cursor-pointer hover:text-accent select-none" onClick={() => onSort(2)}>Reklam Tarihi{arrow(2)}</th>
+              <th className="text-center py-3 px-4 font-medium text-text-secondary w-20">Eylem</th>
             </tr>
           </thead>
           <tbody>
             {results.map((p, i) => (
-              <tr key={p.id || i} className="border-b border-gray-100 hover:bg-gray-50/50 transition-colors">
-                <td className="py-3 px-4 text-gray-400 text-xs">{i + 1}</td>
+              <tr key={p.id || i} className="border-b border-border-default hover:bg-bg-hover/50 transition-colors">
+                <td className="py-3 px-4 text-text-muted text-xs">{i + 1}</td>
                 <td className="py-3 px-4">
                   <div className="flex items-center gap-3 min-w-[280px]">
                     {p.image ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={p.image} alt={p.title} className="w-16 h-16 rounded-lg object-cover flex-shrink-0 border border-gray-100" />
+                      <img src={p.image} alt={p.title} className="w-16 h-16 rounded-lg object-cover flex-shrink-0 border border-border-default" />
                     ) : (
-                      <div className="w-16 h-16 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0"><ShoppingBag size={16} className="text-gray-300" /></div>
+                      <div className="w-16 h-16 rounded-lg bg-bg-hover flex items-center justify-center flex-shrink-0"><ShoppingBag size={16} className="text-text-muted" /></div>
                     )}
                     <div className="min-w-0">
-                      <button onClick={() => onDetail(p)} className="text-sm font-medium text-gray-900 hover:text-[#667eea] line-clamp-2 transition-colors text-left cursor-pointer" title={p.title}>
+                      <button onClick={() => onDetail(p)} className="text-sm font-medium text-text-primary hover:text-accent line-clamp-2 transition-colors text-left cursor-pointer" title={p.title}>
                         {p.title?.length > 60 ? p.title.substring(0, 60) + "..." : p.title || "Bilinmeyen"}
                       </button>
                       <div className="flex items-center gap-2 mt-1">
@@ -499,31 +499,31 @@ function ProductTable({ results, onSave, onDetail, sortNum, sortType, onSort }: 
                         <span className="text-xs font-medium text-orange-600">${p.price_usd.toFixed(2)}</span>
                       </div>
                       <div className="flex items-center gap-2 mt-1 flex-wrap">
-                        {p.seller_location && <span className="text-[10px] bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded">{p.seller_location}</span>}
-                        {p.commission_rate > 0 && <span className="text-[10px] text-gray-400">Komisyon: {p.commission_rate}%</span>}
+                        {p.seller_location && <span className="text-[10px] bg-bg-hover text-text-secondary px-1.5 py-0.5 rounded">{p.seller_location}</span>}
+                        {p.commission_rate > 0 && <span className="text-[10px] text-text-muted">Komisyon: {p.commission_rate}%</span>}
                       </div>
                       <div className="flex items-center gap-2 mt-1">
                         {p.shop_image ? (
                           // eslint-disable-next-line @next/next/no-img-element
                           <img src={p.shop_image} alt={p.shop_name} className="w-4 h-4 rounded-full object-cover flex-shrink-0" />
-                        ) : <div className="w-4 h-4 rounded-full bg-gray-200 flex-shrink-0" />}
-                        <span className="text-[11px] text-gray-500 truncate">{p.shop_name || "-"}</span>
+                        ) : <div className="w-4 h-4 rounded-full bg-bg-hover flex-shrink-0" />}
+                        <span className="text-[11px] text-text-secondary truncate">{p.shop_name || "-"}</span>
                       </div>
                     </div>
                   </div>
                 </td>
-                <td className="py-3 px-4 text-right font-medium text-gray-700">{formatCompact(p.sales_volume)}</td>
+                <td className="py-3 px-4 text-right font-medium text-text-primary">{formatCompact(p.sales_volume)}</td>
                 <td className="py-3 px-4 text-right font-bold text-emerald-600">{formatMoney(p.gmv_usd)}</td>
-                <td className="py-3 px-4 text-right text-gray-600">{formatCompact(p.video_count)}</td>
+                <td className="py-3 px-4 text-right text-text-secondary">{formatCompact(p.video_count)}</td>
                 <td className="py-3 px-4 text-right">
-                  <div className="text-gray-700">{formatCompact(p.play_count)}</div>
+                  <div className="text-text-primary">{formatCompact(p.play_count)}</div>
                 </td>
-                <td className="py-3 px-4 text-right text-gray-600">{formatCompact(p.person_count)}</td>
-                <td className="py-3 px-4 text-center text-xs text-gray-500 whitespace-nowrap">{formatDateRange(p.found_time, p.put_days) || "-"}</td>
+                <td className="py-3 px-4 text-right text-text-secondary">{formatCompact(p.person_count)}</td>
+                <td className="py-3 px-4 text-center text-xs text-text-secondary whitespace-nowrap">{formatDateRange(p.found_time, p.put_days) || "-"}</td>
                 <td className="py-3 px-4 text-center">
                   <div className="flex items-center justify-center gap-1">
-                    <button onClick={() => onDetail(p)} className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-50 text-gray-500 hover:text-[#667eea] transition-colors" title="Detay"><Eye size={14} /></button>
-                    <button onClick={() => onSave(p)} className="p-1.5 rounded-lg border border-[#667eea]/30 text-[#667eea] hover:bg-[#667eea]/5 transition-colors" title="Kaydet"><Bookmark size={14} /></button>
+                    <button onClick={() => onDetail(p)} className="p-1.5 rounded-lg border border-border-default hover:bg-bg-hover text-text-secondary hover:text-accent transition-colors" title="Detay"><Eye size={14} /></button>
+                    <button onClick={() => onSave(p)} className="p-1.5 rounded-lg border border-accent/30 text-accent hover:bg-accent/5 transition-colors" title="Kaydet"><Bookmark size={14} /></button>
                   </div>
                 </td>
               </tr>
@@ -539,17 +539,17 @@ function ProductTable({ results, onSave, onDetail, sortNum, sortType, onSort }: 
 function VideoCard({ video, onSave }: { video: VideoResult; onSave: () => void }) {
   const dateRange = formatDateRange(video.ad_create_time, video.put_days);
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow flex flex-col">
-      <div className="relative aspect-[9/16] bg-gray-100 flex-shrink-0">
+    <div className="bg-bg-card rounded-[14px] shadow-sm border border-border-default overflow-hidden hover:shadow-md transition-shadow flex flex-col">
+      <div className="relative aspect-[9/16] bg-bg-hover flex-shrink-0">
         {video.cover_image || video.image ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={video.cover_image || video.image} alt={video.hook || video.title} className="w-full h-full object-cover" loading="lazy" />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-gray-300"><Play size={48} /></div>
+          <div className="w-full h-full flex items-center justify-center text-text-muted"><Play size={48} /></div>
         )}
         {video.video_url && (
           <a href={video.video_url} target="_blank" rel="noopener noreferrer" className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 hover:opacity-100 transition-opacity">
-            <div className="w-14 h-14 rounded-full bg-white/90 flex items-center justify-center"><Play size={24} className="text-gray-900 ml-1" /></div>
+            <div className="w-14 h-14 rounded-full bg-white/90 flex items-center justify-center"><Play size={24} className="text-text-primary ml-1" /></div>
           </a>
         )}
         {video.duration > 0 && (
@@ -561,13 +561,13 @@ function VideoCard({ video, onSave }: { video: VideoResult; onSave: () => void }
         {video.hot_value > 0 && <div className="absolute top-2 right-2"><HotBadge value={video.hot_value} /></div>}
       </div>
       <div className="p-3 flex flex-col flex-1">
-        {dateRange && <p className="text-[10px] text-gray-400 mb-1">{dateRange}</p>}
+        {dateRange && <p className="text-[10px] text-text-muted mb-1">{dateRange}</p>}
         <div className="grid grid-cols-3 gap-1 mb-2">
-          <div className="text-center"><p className="text-sm font-bold text-gray-900">{formatCompact(video.play_count)}</p><p className="text-[10px] text-gray-400">Gosterim</p></div>
-          <div className="text-center"><p className="text-sm font-bold text-gray-900">{video.put_days || 0}</p><p className="text-[10px] text-gray-400">Sure</p></div>
-          <div className="text-center"><p className="text-sm font-bold text-gray-900">{formatCompact(video.like_count)}</p><p className="text-[10px] text-gray-400">Begen</p></div>
+          <div className="text-center"><p className="text-sm font-bold text-text-primary">{formatCompact(video.play_count)}</p><p className="text-[10px] text-text-muted">Gosterim</p></div>
+          <div className="text-center"><p className="text-sm font-bold text-text-primary">{video.put_days || 0}</p><p className="text-[10px] text-text-muted">Sure</p></div>
+          <div className="text-center"><p className="text-sm font-bold text-text-primary">{formatCompact(video.like_count)}</p><p className="text-[10px] text-text-muted">Begen</p></div>
         </div>
-        <p className="text-xs text-gray-700 line-clamp-2 mb-1.5 leading-snug">{video.hook || video.title || ""}</p>
+        <p className="text-xs text-text-primary line-clamp-2 mb-1.5 leading-snug">{video.hook || video.title || ""}</p>
         {video.tags && video.tags.length > 0 && (
           <div className="flex flex-wrap gap-1 mb-2">
             {video.tags.slice(0, 3).map((tag, i) => (
@@ -578,18 +578,18 @@ function VideoCard({ video, onSave }: { video: VideoResult; onSave: () => void }
         <div className="flex-1" />
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-1.5 min-w-0">
-            <span className="text-xs font-medium text-gray-700 truncate">{video.shop_name || "Bilinmeyen"}</span>
+            <span className="text-xs font-medium text-text-primary truncate">{video.shop_name || "Bilinmeyen"}</span>
             {video.shop_handle && (
-              <a href={`https://www.tiktok.com/@${video.shop_handle}`} target="_blank" rel="noopener noreferrer" className="text-[10px] text-[#667eea] hover:underline flex items-center gap-0.5 flex-shrink-0"><ExternalLink size={8} /></a>
+              <a href={`https://www.tiktok.com/@${video.shop_handle}`} target="_blank" rel="noopener noreferrer" className="text-[10px] text-accent hover:underline flex items-center gap-0.5 flex-shrink-0"><ExternalLink size={8} /></a>
             )}
           </div>
           {video.region && <span className="text-xs">{FLAG[video.region.toUpperCase()] || ""}</span>}
         </div>
-        <div className="grid grid-cols-2 gap-x-3 text-[10px] text-gray-400 mb-2">
+        <div className="grid grid-cols-2 gap-x-3 text-[10px] text-text-muted mb-2">
           <span>{"\uD83D\uDCAC"} {formatCompact(video.comment_count)}</span>
           <span className="flex items-center gap-0.5"><Share2 size={9} /> {formatCompact(video.share_count)}</span>
         </div>
-        <button onClick={onSave} className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border border-[#667eea]/30 text-[#667eea] text-xs font-medium hover:bg-[#667eea]/5 transition-colors">
+        <button onClick={onSave} className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border border-accent/30 text-accent text-xs font-medium hover:bg-accent/5 transition-colors">
           <Bookmark size={12} />Kaydet
         </button>
       </div>

@@ -118,8 +118,8 @@ export default function ExpertBrowsePage() {
     <div>
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Uzman Arşivleri</h1>
-        <p className="text-gray-500 mt-1">
+        <h1 className="text-2xl font-bold text-text-primary">Uzman Arşivleri</h1>
+        <p className="text-text-secondary mt-1">
           Uzmanların küratörlüğünde marka koleksiyonları
         </p>
       </div>
@@ -128,9 +128,9 @@ export default function ExpertBrowsePage() {
       {view === "experts" && (
         <>
           {loadingExperts ? (
-            <div className="text-center py-10 text-gray-400">Yükleniyor...</div>
+            <div className="text-center py-10 text-text-muted">Yükleniyor...</div>
           ) : experts.length === 0 ? (
-            <div className="text-center py-16 text-gray-400">
+            <div className="text-center py-16 text-text-muted">
               <Package size={48} className="mx-auto mb-3 opacity-50" />
               <p className="text-base">Henüz uzman yok</p>
             </div>
@@ -140,7 +140,7 @@ export default function ExpertBrowsePage() {
                 <button
                   key={expert.id}
                   onClick={() => handleSelectExpert(expert)}
-                  className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 hover:shadow-lg hover:border-[#667eea]/30 transition-all text-center group"
+                  className="bg-bg-card rounded-2xl shadow-sm border border-border-default p-6 hover:shadow-lg hover:border-[#667eea]/30 transition-all text-center group"
                 >
                   {/* Avatar */}
                   <div className="w-20 h-20 rounded-full mx-auto mb-4 overflow-hidden bg-gradient-to-br from-[#667eea] to-[#764ba2] flex items-center justify-center group-hover:scale-105 transition-transform">
@@ -157,15 +157,15 @@ export default function ExpertBrowsePage() {
                     )}
                   </div>
                   {/* Name */}
-                  <h3 className="text-base font-bold text-gray-900 mb-1">
+                  <h3 className="text-base font-bold text-text-primary mb-1">
                     {expert.username}
                   </h3>
                   {/* Expertise */}
-                  <p className="text-sm text-gray-500 mb-3 line-clamp-2">
+                  <p className="text-sm text-text-secondary mb-3 line-clamp-2">
                     {expert.expertise || "Uzman"}
                   </p>
                   {/* Collection count */}
-                  <span className="inline-block bg-[#667eea]/10 text-[#667eea] px-3 py-1 rounded-full text-xs font-medium">
+                  <span className="inline-block bg-accent/10 text-accent px-3 py-1 rounded-full text-xs font-medium">
                     {expert.collection_count ?? 0} koleksiyon
                   </span>
                 </button>
@@ -181,14 +181,14 @@ export default function ExpertBrowsePage() {
           {/* Back button + expert info */}
           <button
             onClick={goBackToExperts}
-            className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700 mb-6 transition-colors"
+            className="flex items-center gap-2 text-sm text-text-secondary hover:text-text-primary mb-6 transition-colors"
           >
             <ArrowLeft size={16} />
             Tüm Uzmanlar
           </button>
 
           {/* Expert header card */}
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-6 flex items-center gap-5">
+          <div className="bg-bg-card rounded-2xl shadow-sm border border-border-default p-6 mb-6 flex items-center gap-5">
             <div className="w-16 h-16 rounded-full overflow-hidden bg-gradient-to-br from-[#667eea] to-[#764ba2] flex items-center justify-center flex-shrink-0">
               {selectedExpert.avatar_url ? (
                 <img
@@ -203,16 +203,16 @@ export default function ExpertBrowsePage() {
               )}
             </div>
             <div>
-              <h2 className="text-xl font-bold text-gray-900">{selectedExpert.username}</h2>
-              <p className="text-sm text-gray-500">{selectedExpert.expertise || "Uzman"}</p>
+              <h2 className="text-xl font-bold text-text-primary">{selectedExpert.username}</h2>
+              <p className="text-sm text-text-secondary">{selectedExpert.expertise || "Uzman"}</p>
             </div>
           </div>
 
           {/* Collection cards */}
           {loadingCollections ? (
-            <div className="text-center py-10 text-gray-400">Yükleniyor...</div>
+            <div className="text-center py-10 text-text-muted">Yükleniyor...</div>
           ) : collections.length === 0 ? (
-            <div className="text-center py-16 text-gray-400">
+            <div className="text-center py-16 text-text-muted">
               <FolderOpen size={48} className="mx-auto mb-3 opacity-50" />
               <p className="text-base">Bu uzmanın henüz koleksiyonu yok</p>
             </div>
@@ -222,24 +222,24 @@ export default function ExpertBrowsePage() {
                 <button
                   key={collection.id}
                   onClick={() => handleSelectCollection(collection)}
-                  className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 hover:shadow-lg hover:border-[#667eea]/30 transition-all text-center group"
+                  className="bg-bg-card rounded-xl shadow-sm border border-border-default p-5 hover:shadow-lg hover:border-[#667eea]/30 transition-all text-center group"
                 >
                   {/* Folder icon */}
                   <div className="w-14 h-14 rounded-xl bg-amber-50 border border-amber-200 mx-auto mb-3 flex items-center justify-center group-hover:scale-105 transition-transform">
                     <FolderOpen size={28} className="text-amber-500" />
                   </div>
                   {/* Name */}
-                  <h3 className="text-sm font-bold text-gray-900 mb-1 truncate">
+                  <h3 className="text-sm font-bold text-text-primary mb-1 truncate">
                     {collection.name}
                   </h3>
                   {/* Category */}
                   {collection.category && (
-                    <span className="inline-block bg-[#667eea]/10 text-[#667eea] px-2 py-0.5 rounded-full text-[10px] font-medium mb-2">
+                    <span className="inline-block bg-accent/10 text-accent px-2 py-0.5 rounded-full text-[10px] font-medium mb-2">
                       {collection.category}
                     </span>
                   )}
                   {/* Item count */}
-                  <p className="text-xs text-gray-400">
+                  <p className="text-xs text-text-muted">
                     {collection.item_count ?? 0} marka
                   </p>
                 </button>
@@ -255,35 +255,35 @@ export default function ExpertBrowsePage() {
           {/* Back button */}
           <button
             onClick={goBackToCollections}
-            className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700 mb-6 transition-colors"
+            className="flex items-center gap-2 text-sm text-text-secondary hover:text-text-primary mb-6 transition-colors"
           >
             <ArrowLeft size={16} />
             {selectedExpert.username} — Koleksiyonlar
           </button>
 
           {/* Collection header */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-6 flex items-center gap-3">
+          <div className="bg-bg-card rounded-xl shadow-sm border border-border-default p-4 mb-6 flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-amber-50 border border-amber-200 flex items-center justify-center">
               <FolderOpen size={20} className="text-amber-500" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-gray-900">{selectedCollection.name}</h2>
+              <h2 className="text-lg font-bold text-text-primary">{selectedCollection.name}</h2>
               <div className="flex items-center gap-2">
                 {selectedCollection.category && (
-                  <span className="inline-block bg-[#667eea]/10 text-[#667eea] px-2 py-0.5 rounded-full text-[10px] font-medium">
+                  <span className="inline-block bg-accent/10 text-accent px-2 py-0.5 rounded-full text-[10px] font-medium">
                     {selectedCollection.category}
                   </span>
                 )}
-                <span className="text-xs text-gray-400">{items.length} marka</span>
+                <span className="text-xs text-text-muted">{items.length} marka</span>
               </div>
             </div>
           </div>
 
           {/* Items grid */}
           {loadingItems ? (
-            <div className="text-center py-10 text-gray-400">Yükleniyor...</div>
+            <div className="text-center py-10 text-text-muted">Yükleniyor...</div>
           ) : items.length === 0 ? (
-            <div className="text-center py-16 text-gray-400">
+            <div className="text-center py-16 text-text-muted">
               <Package size={48} className="mx-auto mb-3 opacity-50" />
               <p className="text-base">Bu koleksiyon boş</p>
             </div>
@@ -303,11 +303,11 @@ export default function ExpertBrowsePage() {
                 const source = getBrandSource(brand);
 
                 return (
-                  <div key={item.id} className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 hover:shadow-md transition-shadow">
+                  <div key={item.id} className="bg-bg-card rounded-xl shadow-sm border border-border-default p-5 hover:shadow-md transition-shadow">
                     {/* Name + source */}
                     <div className="flex items-start justify-between mb-1">
                       <div className="flex items-center gap-2 min-w-0">
-                        <span className="text-base font-bold text-gray-900 truncate">{name}</span>
+                        <span className="text-base font-bold text-text-primary truncate">{name}</span>
                         <SourceBadge source={source} />
                       </div>
                       {country && (
@@ -332,25 +332,25 @@ export default function ExpertBrowsePage() {
                     {/* Quick metrics */}
                     <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 mb-3">
                       <div>
-                        <span className="text-sm text-gray-500">Ciro: </span>
+                        <span className="text-sm text-text-secondary">Ciro: </span>
                         <span className="text-base font-semibold text-[#27AE60]">{formatRevenue(revenue)}</span>
                       </div>
                       <div>
-                        <span className="text-sm text-gray-500">AOV: </span>
+                        <span className="text-sm text-text-secondary">AOV: </span>
                         <span className="text-base font-semibold text-[#764ba2]">{aov != null ? `$${aov}` : "-"}</span>
                       </div>
                       <div>
-                        <span className="text-sm text-gray-500">Trafik: </span>
+                        <span className="text-sm text-text-secondary">Trafik: </span>
                         <span className="text-base font-semibold text-[#2980B9]">{formatTraffic(traffic)}</span>
                       </div>
                       <div>
-                        <span className="text-sm text-gray-500">TQS: </span>
+                        <span className="text-sm text-text-secondary">TQS: </span>
                         {tqs != null ? (
                           <span className="inline-block bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded text-xs font-semibold">
                             {tqs}
                           </span>
                         ) : (
-                          <span className="text-sm text-gray-300">-</span>
+                          <span className="text-sm text-text-muted">-</span>
                         )}
                       </div>
                     </div>
@@ -358,7 +358,7 @@ export default function ExpertBrowsePage() {
                     {/* Category */}
                     {category && (
                       <div className="mb-2">
-                        <span className="inline-block bg-[#667eea]/10 text-[#667eea] px-2 py-0.5 rounded-full text-xs font-medium">
+                        <span className="inline-block bg-accent/10 text-accent px-2 py-0.5 rounded-full text-xs font-medium">
                           {category}
                         </span>
                       </div>
@@ -374,16 +374,16 @@ export default function ExpertBrowsePage() {
 
                     {/* Insight */}
                     {getBrandInsight(brand) && (
-                      <p className="text-sm text-gray-500 italic line-clamp-2 mb-3">
+                      <p className="text-sm text-text-secondary italic line-clamp-2 mb-3">
                         &ldquo;{getBrandInsight(brand)}&rdquo;
                       </p>
                     )}
 
                     {/* Detail button */}
-                    <div className="pt-2 border-t border-gray-100">
+                    <div className="pt-2 border-t border-border-default">
                       <button
                         onClick={() => setDetailItem(item)}
-                        className="inline-flex items-center gap-1 px-3 py-1.5 bg-[#667eea]/10 text-[#667eea] rounded-lg text-xs font-medium hover:bg-[#667eea]/20 transition-colors"
+                        className="inline-flex items-center gap-1 px-3 py-1.5 bg-accent/10 text-accent rounded-lg text-xs font-medium hover:bg-accent/20 transition-colors"
                       >
                         <Eye size={12} />
                         Detay
@@ -400,8 +400,8 @@ export default function ExpertBrowsePage() {
       {/* Detail Modal */}
       {detailItem && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setDetailItem(null)}>
-          <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[85vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-            <div className="sticky top-0 bg-[#0D1B2A] text-white px-6 py-4 rounded-t-2xl flex items-center justify-between">
+          <div className="bg-bg-card rounded-2xl w-full max-w-2xl max-h-[85vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="sticky top-0 bg-bg-sidebar text-white px-6 py-4 rounded-t-2xl flex items-center justify-between">
               <div>
                 <h2 className="text-lg font-bold">{getBrandName({ brand_data: detailItem.brand_data } as SavedBrand)}</h2>
                 {getBrandWebsite({ brand_data: detailItem.brand_data } as SavedBrand) && (
@@ -415,7 +415,7 @@ export default function ExpertBrowsePage() {
                   </a>
                 )}
               </div>
-              <button onClick={() => setDetailItem(null)} className="text-gray-400 hover:text-white transition-colors">
+              <button onClick={() => setDetailItem(null)} className="text-text-muted hover:text-white transition-colors">
                 <X size={22} />
               </button>
             </div>
@@ -443,16 +443,16 @@ export default function ExpertBrowsePage() {
                   <p className="text-xs text-amber-600 font-medium mb-1">TQS / Dönüşüm</p>
                   <p className="text-2xl font-bold text-amber-700">
                     {getBrandTQS({ brand_data: detailItem.brand_data } as SavedBrand) ?? "-"}{" "}
-                    <span className="text-base font-medium text-gray-500">
+                    <span className="text-base font-medium text-text-secondary">
                       / {getBrandConversion({ brand_data: detailItem.brand_data } as SavedBrand) != null ? `%${getBrandConversion({ brand_data: detailItem.brand_data } as SavedBrand)}` : "-"}
                     </span>
                   </p>
                 </div>
               </div>
               {getBrandInsight({ brand_data: detailItem.brand_data } as SavedBrand) && (
-                <div className="bg-gray-50 rounded-xl p-4">
-                  <p className="text-xs text-gray-500 font-semibold mb-2 uppercase tracking-wide">Öne Çıkan Özellik</p>
-                  <p className="text-sm text-gray-700 leading-relaxed">{getBrandInsight({ brand_data: detailItem.brand_data } as SavedBrand)}</p>
+                <div className="bg-bg-main rounded-xl p-4">
+                  <p className="text-xs text-text-secondary font-semibold mb-2 uppercase tracking-wide">Öne Çıkan Özellik</p>
+                  <p className="text-sm text-text-primary leading-relaxed">{getBrandInsight({ brand_data: detailItem.brand_data } as SavedBrand)}</p>
                 </div>
               )}
             </div>

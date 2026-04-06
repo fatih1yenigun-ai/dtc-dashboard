@@ -45,7 +45,7 @@ export default function HeroSection() {
             <img src="/faycom-logo.png" alt="faycom" className="w-8 h-8 object-contain" />
             <span
               className="text-xl tracking-tight text-gray-900"
-              style={{ fontFamily: "var(--font-body)", fontWeight: 500 }}
+              style={{ fontFamily: "var(--font-jakarta)", fontWeight: 500 }}
             >
               faycom
             </span>
@@ -58,7 +58,7 @@ export default function HeroSection() {
                 key={label}
                 href="#"
                 className="text-sm text-gray-500 hover:text-gray-900 transition-colors cursor-pointer"
-                style={{ fontFamily: "var(--font-body)" }}
+                style={{ fontFamily: "var(--font-jakarta)" }}
               >
                 {label}
               </a>
@@ -70,7 +70,7 @@ export default function HeroSection() {
             <a
               href={CTA_URL}
               className="hidden sm:inline-flex items-center gap-1.5 px-5 py-2 rounded-full bg-gray-900 text-white text-sm font-medium hover:bg-gray-800 transition-colors cursor-pointer"
-              style={{ fontFamily: "var(--font-body)" }}
+              style={{ fontFamily: "var(--font-jakarta)" }}
             >
               Erken erişim al
               <ArrowUpRight size={14} />
@@ -107,7 +107,7 @@ export default function HeroSection() {
               <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
               <span
                 className="text-sm text-gray-600"
-                style={{ fontFamily: "var(--font-body)" }}
+                style={{ fontFamily: "var(--font-jakarta)" }}
               >
                 E-ticaret için Bloomberg — beta&apos;da şimdi
               </span>
@@ -140,7 +140,7 @@ export default function HeroSection() {
               animate="visible"
               variants={fadeUp}
               className="text-lg md:text-xl text-gray-500 mb-10 max-w-xl mx-auto"
-              style={{ fontFamily: "var(--font-body)", fontWeight: 400 }}
+              style={{ fontFamily: "var(--font-jakarta)", fontWeight: 400 }}
             >
               Veri isteyen satıcılar ve marka yatırımcıları için.
             </motion.p>
@@ -156,14 +156,14 @@ export default function HeroSection() {
               <a
                 href={CTA_URL}
                 className="px-8 py-3.5 rounded-xl bg-[#7c6ff7] text-white font-medium text-base hover:bg-[#6b5ce6] transition-all duration-200 shadow-lg shadow-[#7c6ff7]/25 cursor-pointer"
-                style={{ fontFamily: "var(--font-body)" }}
+                style={{ fontFamily: "var(--font-jakarta)" }}
               >
                 Ücretsiz başla
               </a>
               <a
                 href={CTA_URL}
                 className="px-8 py-3.5 rounded-xl border border-gray-300 text-gray-700 font-medium text-base hover:border-[#7c6ff7] hover:text-[#7c6ff7] transition-all duration-200 cursor-pointer"
-                style={{ fontFamily: "var(--font-body)" }}
+                style={{ fontFamily: "var(--font-jakarta)" }}
               >
                 Demo izle
               </a>
@@ -187,7 +187,7 @@ export default function HeroSection() {
               <div className="flex items-center justify-between mb-4">
                 <span
                   className="text-sm text-gray-900"
-                  style={{ fontFamily: "var(--font-body)", fontWeight: 500 }}
+                  style={{ fontFamily: "var(--font-jakarta)", fontWeight: 500 }}
                 >
                   Uzman Klasörleri
                 </span>
@@ -252,7 +252,7 @@ export default function HeroSection() {
                   BH
                 </div>
                 <div>
-                  <p className="text-sm text-gray-900" style={{ fontFamily: "var(--font-body)", fontWeight: 500 }}>
+                  <p className="text-sm text-gray-900" style={{ fontFamily: "var(--font-jakarta)", fontWeight: 500 }}>
                     Bahsbar
                   </p>
                   <p className="text-[11px] text-gray-400">bahsbar.com · Takviye Gıda</p>
@@ -265,7 +265,7 @@ export default function HeroSection() {
                   <p className="text-[10px] text-gray-500 mb-0.5">Web ciro</p>
                   <p
                     className="text-lg text-gray-900"
-                    style={{ fontFamily: "var(--font-body)", fontWeight: 500 }}
+                    style={{ fontFamily: "var(--font-jakarta)", fontWeight: 500 }}
                   >
                     ₺6.8M
                   </p>
@@ -275,7 +275,7 @@ export default function HeroSection() {
                   <p className="text-[10px] text-gray-500 mb-0.5">TT GMV</p>
                   <p
                     className="text-lg text-gray-900"
-                    style={{ fontFamily: "var(--font-body)", fontWeight: 500 }}
+                    style={{ fontFamily: "var(--font-jakarta)", fontWeight: 500 }}
                   >
                     ₺1.2M
                   </p>
@@ -285,7 +285,7 @@ export default function HeroSection() {
                   <p className="text-[10px] text-gray-500 mb-0.5">AMZ BSR</p>
                   <p
                     className="text-lg text-gray-900"
-                    style={{ fontFamily: "var(--font-body)", fontWeight: 500 }}
+                    style={{ fontFamily: "var(--font-jakarta)", fontWeight: 500 }}
                   >
                     #7
                   </p>
@@ -328,7 +328,7 @@ export default function HeroSection() {
                   <div>
                     <p
                       className="text-2xl text-[#7c6ff7]"
-                      style={{ fontFamily: "var(--font-body)", fontWeight: 500 }}
+                      style={{ fontFamily: "var(--font-jakarta)", fontWeight: 500 }}
                     >
                       %35
                     </p>
@@ -358,7 +358,7 @@ export default function HeroSection() {
                   BY
                 </div>
                 <div>
-                  <p className="text-sm text-gray-900" style={{ fontFamily: "var(--font-body)", fontWeight: 500 }}>
+                  <p className="text-sm text-gray-900" style={{ fontFamily: "var(--font-jakarta)", fontWeight: 500 }}>
                     Bearaby
                   </p>
                   <p className="text-[11px] text-gray-400">bearaby.com · Uyku & Ev</p>
@@ -370,14 +370,14 @@ export default function HeroSection() {
                 <div className="flex items-center gap-1.5 bg-blue-50 px-2.5 py-1.5 rounded-lg flex-1">
                   <MetaLogo size={14} weight="light" className="text-blue-500" />
                   <div>
-                    <p className="text-sm text-gray-900" style={{ fontFamily: "var(--font-body)", fontWeight: 500 }}>1.240</p>
+                    <p className="text-sm text-gray-900" style={{ fontFamily: "var(--font-jakarta)", fontWeight: 500 }}>1.240</p>
                     <p className="text-[10px] text-gray-500">reklam</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-1.5 bg-gray-50 px-2.5 py-1.5 rounded-lg flex-1">
                   <TiktokLogo size={14} weight="light" className="text-gray-700" />
                   <div>
-                    <p className="text-sm text-gray-900" style={{ fontFamily: "var(--font-body)", fontWeight: 500 }}>3.219</p>
+                    <p className="text-sm text-gray-900" style={{ fontFamily: "var(--font-jakarta)", fontWeight: 500 }}>3.219</p>
                     <p className="text-[10px] text-gray-500">reklam</p>
                   </div>
                 </div>
@@ -400,7 +400,7 @@ export default function HeroSection() {
                       <span className="text-[11px] text-gray-500 italic">{angle.hook}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="text-sm text-gray-900 w-8" style={{ fontFamily: "var(--font-body)", fontWeight: 500 }}>
+                      <span className="text-sm text-gray-900 w-8" style={{ fontFamily: "var(--font-jakarta)", fontWeight: 500 }}>
                         {angle.count}
                       </span>
                       <div className="flex-1 bg-gray-100 rounded-full h-2 overflow-hidden">
@@ -430,7 +430,7 @@ export default function HeroSection() {
               <div className="flex items-center justify-between mb-4">
                 <span
                   className="text-sm text-gray-900"
-                  style={{ fontFamily: "var(--font-body)", fontWeight: 500 }}
+                  style={{ fontFamily: "var(--font-jakarta)", fontWeight: 500 }}
                 >
                   Kayıtlı Klasörler
                 </span>
@@ -486,7 +486,7 @@ export default function HeroSection() {
             <div
               key={i}
               className="inline-flex items-center gap-2 mx-6"
-              style={{ fontFamily: "var(--font-body)" }}
+              style={{ fontFamily: "var(--font-jakarta)" }}
             >
               <span className="text-sm text-gray-700 font-medium">{item.name}</span>
               <span

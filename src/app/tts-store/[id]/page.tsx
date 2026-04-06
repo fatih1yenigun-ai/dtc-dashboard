@@ -275,8 +275,8 @@ export default function StoreDetailPage({ params }: { params: Promise<{ id: stri
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center py-32">
-        <Loader2 size={32} className="animate-spin text-[#667eea] mb-3" />
-        <p className="text-gray-500 text-sm">Magaza bilgileri yukleniyor...</p>
+        <Loader2 size={32} className="animate-spin text-accent mb-3" />
+        <p className="text-text-secondary text-sm">Magaza bilgileri yukleniyor...</p>
       </div>
     );
   }
@@ -284,15 +284,15 @@ export default function StoreDetailPage({ params }: { params: Promise<{ id: stri
   if (error || !store) {
     return (
       <div className="max-w-lg mx-auto py-16">
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8 text-center">
-          <div className="w-16 h-16 rounded-full bg-[#667eea]/10 flex items-center justify-center mx-auto mb-4">
-            <ShoppingBag size={28} className="text-[#667eea]" />
+        <div className="bg-bg-card rounded-[14px] shadow-sm border border-border-default p-8 text-center">
+          <div className="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-4">
+            <ShoppingBag size={28} className="text-accent" />
           </div>
-          <h2 className="text-lg font-bold text-gray-900 mb-2">Magaza Bulunamadi</h2>
-          <p className="text-sm text-gray-500 mb-6">{error || "Bu magaza PiPiAds veritabaninda bulunamadi."}</p>
+          <h2 className="text-lg font-bold text-text-primary mb-2">Magaza Bulunamadi</h2>
+          <p className="text-sm text-text-secondary mb-6">{error || "Bu magaza PiPiAds veritabaninda bulunamadi."}</p>
           <button
             onClick={() => router.push("/reklam-tara")}
-            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg border border-gray-200 text-gray-600 text-sm font-medium hover:bg-gray-50 cursor-pointer"
+            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg border border-border-default text-text-secondary text-sm font-medium hover:bg-bg-hover cursor-pointer"
           >
             <ArrowLeft size={14} /> Reklam Tara&apos;ya Don
           </button>
@@ -307,13 +307,13 @@ export default function StoreDetailPage({ params }: { params: Promise<{ id: stri
       {/* Back navigation */}
       <button
         onClick={() => router.push("/reklam-tara")}
-        className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 mb-6 cursor-pointer"
+        className="flex items-center gap-2 text-sm text-text-secondary hover:text-text-primary mb-6 cursor-pointer"
       >
         <ArrowLeft size={16} /> TikTok Magaza / Magaza Detayi
       </button>
 
       {/* ═══ HEADER CARD ═══ */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+      <div className="bg-bg-card rounded-[14px] shadow-sm border border-border-default p-6 mb-6">
         <div className="flex flex-col md:flex-row gap-5">
           {/* Store image */}
           <div className="flex-shrink-0">
@@ -322,11 +322,11 @@ export default function StoreDetailPage({ params }: { params: Promise<{ id: stri
               <img
                 src={storeImg(store.image)}
                 alt={store.title}
-                className="w-16 h-16 rounded-lg object-cover border border-gray-100"
+                className="w-16 h-16 rounded-lg object-cover border border-border-default"
               />
             ) : (
-              <div className="w-16 h-16 rounded-lg bg-gray-100 flex items-center justify-center">
-                <ShoppingBag size={28} className="text-gray-300" />
+              <div className="w-16 h-16 rounded-lg bg-bg-hover flex items-center justify-center">
+                <ShoppingBag size={28} className="text-text-muted" />
               </div>
             )}
           </div>
@@ -334,28 +334,28 @@ export default function StoreDetailPage({ params }: { params: Promise<{ id: stri
           {/* Store info */}
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-2">
-              <h1 className="text-xl font-bold text-gray-900">{store.title}</h1>
-              <span className="text-xs bg-[#667eea]/10 text-[#667eea] px-2 py-0.5 rounded-full font-medium">TikTok Shop</span>
+              <h1 className="text-xl font-bold text-text-primary">{store.title}</h1>
+              <span className="text-xs bg-accent/10 text-accent px-2 py-0.5 rounded-full font-medium">TikTok Shop</span>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-1 text-sm text-gray-600">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-1 text-sm text-text-secondary">
               <div className="flex items-center gap-2">
-                <span className="text-gray-400">Ulke/Bolge:</span>
+                <span className="text-text-muted">Ulke/Bolge:</span>
                 <span className="font-medium">{regionDisplay} ({regionCodes.length})</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-gray-400">Ortalama fiyat:</span>
+                <span className="text-text-muted">Ortalama fiyat:</span>
                 <span className="font-medium">{formatMoney(store.avg_price_usd)}</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-gray-400">Puan:</span>
+                <span className="text-text-muted">Puan:</span>
                 <span className="font-medium flex items-center gap-1">
                   <Star size={13} className="fill-amber-400 text-amber-400" />
                   {store.score > 0 ? store.score.toFixed(1) : "-"}
                 </span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-gray-400">Ilk gorulme:</span>
+                <span className="text-text-muted">Ilk gorulme:</span>
                 <span className="font-medium">{formatDate(store.found_time)}</span>
               </div>
             </div>
@@ -366,7 +366,7 @@ export default function StoreDetailPage({ params }: { params: Promise<{ id: stri
                 href={`https://www.pipiads.com/tr/tiktok-shop-store/${store.id}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#667eea]/10 text-[#667eea] text-sm font-medium hover:bg-[#667eea]/20"
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-accent/10 text-accent text-sm font-medium hover:bg-accent/20"
               >
                 <ExternalLink size={14} /> PiPiAds
               </a>
@@ -410,7 +410,7 @@ export default function StoreDetailPage({ params }: { params: Promise<{ id: stri
           className={`px-5 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all ${
             activeTab === "veriler"
               ? "gradient-accent text-white shadow-sm"
-              : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-50"
+              : "bg-bg-card border border-border-default text-text-secondary hover:bg-bg-hover"
           }`}
         >
           <BarChart3 size={14} className="inline mr-1.5 -mt-0.5" />
@@ -421,7 +421,7 @@ export default function StoreDetailPage({ params }: { params: Promise<{ id: stri
           className={`px-5 py-2 rounded-lg text-sm font-medium cursor-pointer transition-all ${
             activeTab === "urunler"
               ? "gradient-accent text-white shadow-sm"
-              : "bg-white border border-gray-200 text-gray-600 hover:bg-gray-50"
+              : "bg-bg-card border border-border-default text-text-secondary hover:bg-bg-hover"
           }`}
         >
           <Package size={14} className="inline mr-1.5 -mt-0.5" />
@@ -433,12 +433,12 @@ export default function StoreDetailPage({ params }: { params: Promise<{ id: stri
       {activeTab === "veriler" && (
         <div className="space-y-6">
           {/* Marketing strategy card */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <h3 className="text-sm font-semibold text-gray-700 mb-4">Pazarlama Stratejisi</h3>
+          <div className="bg-bg-card rounded-[14px] shadow-sm border border-border-default p-6">
+            <h3 className="text-sm font-semibold text-text-primary mb-4">Pazarlama Stratejisi</h3>
             <div className="space-y-3">
-              <div className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-lg">
-                <span className="text-sm font-medium text-gray-700">Siparisler / GMV</span>
-                <span className="text-sm font-bold text-gray-900">
+              <div className="flex items-center justify-between py-2 px-3 bg-bg-main rounded-lg">
+                <span className="text-sm font-medium text-text-primary">Siparisler / GMV</span>
+                <span className="text-sm font-bold text-text-primary">
                   {formatCompact(totalSales)} / {formatMoney(totalGmv)}
                 </span>
               </div>
@@ -459,8 +459,8 @@ export default function StoreDetailPage({ params }: { params: Promise<{ id: stri
 
           {/* Charts */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
-              <h4 className="text-sm font-semibold text-gray-700 mb-1">Satislar</h4>
+            <div className="bg-bg-card rounded-[14px] shadow-sm border border-border-default p-5">
+              <h4 className="text-sm font-semibold text-text-primary mb-1">Satislar</h4>
               <p className="text-xl font-bold text-blue-600 mb-3">{formatCompact(store.sales_volume)}</p>
               <ResponsiveContainer width="100%" height={200}>
                 <BarChart data={salesChartData}>
@@ -472,8 +472,8 @@ export default function StoreDetailPage({ params }: { params: Promise<{ id: stri
                 </BarChart>
               </ResponsiveContainer>
             </div>
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
-              <h4 className="text-sm font-semibold text-gray-700 mb-1">GMV</h4>
+            <div className="bg-bg-card rounded-[14px] shadow-sm border border-border-default p-5">
+              <h4 className="text-sm font-semibold text-text-primary mb-1">GMV</h4>
               <p className="text-xl font-bold text-emerald-600 mb-3">{formatMoney(store.total_gmv_usd)}</p>
               <ResponsiveContainer width="100%" height={200}>
                 <BarChart data={gmvChartData}>
@@ -488,8 +488,8 @@ export default function StoreDetailPage({ params }: { params: Promise<{ id: stri
           </div>
 
           {/* Additional metrics */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <h3 className="text-sm font-semibold text-gray-700 mb-4">Detayli Metrikler</h3>
+          <div className="bg-bg-card rounded-[14px] shadow-sm border border-border-default p-6">
+            <h3 className="text-sm font-semibold text-text-primary mb-4">Detayli Metrikler</h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               <MetricCard label="Goruntulenme" value={formatCompact(store.play_count)} color="cyan" icon={<Eye size={14} />} />
               <MetricCard label="Begenme" value={formatCompact(store.like_count)} color="pink" />
@@ -504,8 +504,8 @@ export default function StoreDetailPage({ params }: { params: Promise<{ id: stri
 
           {/* Best selling goods */}
           {store.best_selling_goods && store.best_selling_goods.length > 0 && (
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <h3 className="text-sm font-semibold text-gray-700 mb-4">En Cok Satan Urunler</h3>
+            <div className="bg-bg-card rounded-[14px] shadow-sm border border-border-default p-6">
+              <h3 className="text-sm font-semibold text-text-primary mb-4">En Cok Satan Urunler</h3>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
                 {store.best_selling_goods.map((item, i) => (
                   <div
@@ -514,7 +514,7 @@ export default function StoreDetailPage({ params }: { params: Promise<{ id: stri
                       try { sessionStorage.setItem(`tts_store_id_${item.product_id}`, id); } catch {}
                       window.open(`/tts/${item.product_id}`, "_blank");
                     }}
-                    className="bg-gray-50 rounded-lg p-3 cursor-pointer hover:shadow-md transition-shadow border border-gray-100"
+                    className="bg-bg-main rounded-lg p-3 cursor-pointer hover:shadow-md transition-shadow border border-border-default"
                   >
                     {item.image ? (
                       // eslint-disable-next-line @next/next/no-img-element
@@ -524,11 +524,11 @@ export default function StoreDetailPage({ params }: { params: Promise<{ id: stri
                         className="w-full aspect-square rounded-lg object-cover mb-2"
                       />
                     ) : (
-                      <div className="w-full aspect-square rounded-lg bg-gray-200 flex items-center justify-center mb-2">
-                        <Package size={24} className="text-gray-400" />
+                      <div className="w-full aspect-square rounded-lg bg-bg-hover flex items-center justify-center mb-2">
+                        <Package size={24} className="text-text-muted" />
                       </div>
                     )}
-                    <p className="text-xs font-medium text-gray-700">
+                    <p className="text-xs font-medium text-text-primary">
                       {formatCompact(item.sales_volume)} satis
                     </p>
                   </div>
@@ -547,7 +547,7 @@ export default function StoreDetailPage({ params }: { params: Promise<{ id: stri
             <select
               value={productSort === 2 && productSortType === "asc" ? "found_time_asc" : String(productSort)}
               onChange={(e) => handleProductSortChange(e.target.value)}
-              className="py-2.5 px-3 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#667eea]/30"
+              className="py-2.5 px-3 border border-border-default rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/30"
             >
               {PRODUCT_SORT_OPTIONS.map((opt) => (
                 <option key={opt.id || opt.value} value={opt.id || opt.value}>{opt.label}</option>
@@ -558,14 +558,14 @@ export default function StoreDetailPage({ params }: { params: Promise<{ id: stri
           {/* Loading */}
           {productsLoading && (
             <div className="flex items-center gap-2 py-12 justify-center">
-              <Loader2 size={20} className="animate-spin text-[#667eea]" />
-              <span className="text-sm text-gray-500">Urunler yukleniyor...</span>
+              <Loader2 size={20} className="animate-spin text-accent" />
+              <span className="text-sm text-text-secondary">Urunler yukleniyor...</span>
             </div>
           )}
 
           {/* Empty state */}
           {!productsLoading && products.length === 0 && (
-            <div className="text-center py-12 text-gray-400 bg-white rounded-xl border border-gray-200">
+            <div className="text-center py-12 text-text-muted bg-bg-card rounded-[14px] border border-border-default">
               <Package size={32} className="mx-auto mb-2 opacity-30" />
               <p className="text-sm">Bu magaza icin urun bulunamadi</p>
             </div>
@@ -573,18 +573,18 @@ export default function StoreDetailPage({ params }: { params: Promise<{ id: stri
 
           {/* Product table */}
           {!productsLoading && products.length > 0 && (
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+            <div className="bg-bg-card rounded-[14px] shadow-sm border border-border-default overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="bg-gray-50 border-b border-gray-200">
-                      <th className="text-left py-3 px-4 text-xs font-semibold text-gray-500 uppercase">Urun</th>
-                      <th className="text-right py-3 px-4 text-xs font-semibold text-gray-500 uppercase">Fiyat</th>
-                      <th className="text-right py-3 px-4 text-xs font-semibold text-gray-500 uppercase">Satislar</th>
-                      <th className="text-right py-3 px-4 text-xs font-semibold text-gray-500 uppercase">GMV</th>
-                      <th className="text-right py-3 px-4 text-xs font-semibold text-gray-500 uppercase">Video</th>
-                      <th className="text-right py-3 px-4 text-xs font-semibold text-gray-500 uppercase">Gosterim</th>
-                      <th className="text-right py-3 px-4 text-xs font-semibold text-gray-500 uppercase">Tarih</th>
+                    <tr className="bg-bg-main border-b border-border-default">
+                      <th className="text-left py-3 px-4 text-xs font-semibold text-text-secondary uppercase">Urun</th>
+                      <th className="text-right py-3 px-4 text-xs font-semibold text-text-secondary uppercase">Fiyat</th>
+                      <th className="text-right py-3 px-4 text-xs font-semibold text-text-secondary uppercase">Satislar</th>
+                      <th className="text-right py-3 px-4 text-xs font-semibold text-text-secondary uppercase">GMV</th>
+                      <th className="text-right py-3 px-4 text-xs font-semibold text-text-secondary uppercase">Video</th>
+                      <th className="text-right py-3 px-4 text-xs font-semibold text-text-secondary uppercase">Gosterim</th>
+                      <th className="text-right py-3 px-4 text-xs font-semibold text-text-secondary uppercase">Tarih</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -595,7 +595,7 @@ export default function StoreDetailPage({ params }: { params: Promise<{ id: stri
                           try { sessionStorage.setItem(`tts_store_id_${p.id}`, id); } catch {}
                           window.open(`/tts/${p.id}`, "_blank");
                         }}
-                        className="border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors"
+                        className="border-b border-border-default hover:bg-bg-hover cursor-pointer transition-colors"
                       >
                         <td className="py-3 px-4">
                           <div className="flex items-center gap-3">
@@ -604,19 +604,19 @@ export default function StoreDetailPage({ params }: { params: Promise<{ id: stri
                               <img
                                 src={storeImg(p.image)}
                                 alt={p.title || ""}
-                                className="w-10 h-10 rounded-lg object-cover flex-shrink-0 border border-gray-100"
+                                className="w-10 h-10 rounded-lg object-cover flex-shrink-0 border border-border-default"
                               />
                             ) : (
-                              <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0">
-                                <Package size={16} className="text-gray-300" />
+                              <div className="w-10 h-10 rounded-lg bg-bg-hover flex items-center justify-center flex-shrink-0">
+                                <Package size={16} className="text-text-muted" />
                               </div>
                             )}
-                            <span className="text-sm font-medium text-gray-900 line-clamp-2 max-w-xs">
+                            <span className="text-sm font-medium text-text-primary line-clamp-2 max-w-xs">
                               {p.title || "-"}
                             </span>
                           </div>
                         </td>
-                        <td className="py-3 px-4 text-right text-sm font-medium text-gray-700">
+                        <td className="py-3 px-4 text-right text-sm font-medium text-text-primary">
                           {p.price_usd ? `$${Number(p.price_usd).toFixed(2)}` : p.price ? `$${Number(p.price).toFixed(2)}` : "-"}
                         </td>
                         <td className="py-3 px-4 text-right text-sm font-bold text-blue-600">
@@ -625,13 +625,13 @@ export default function StoreDetailPage({ params }: { params: Promise<{ id: stri
                         <td className="py-3 px-4 text-right text-sm font-bold text-emerald-600">
                           {formatMoney(p.gmv_usd || p.gmv)}
                         </td>
-                        <td className="py-3 px-4 text-right text-sm text-gray-600">
+                        <td className="py-3 px-4 text-right text-sm text-text-secondary">
                           {formatCompact(p.video_count)}
                         </td>
-                        <td className="py-3 px-4 text-right text-sm text-gray-600">
+                        <td className="py-3 px-4 text-right text-sm text-text-secondary">
                           {formatCompact(p.play_count)}
                         </td>
-                        <td className="py-3 px-4 text-right text-sm text-gray-500">
+                        <td className="py-3 px-4 text-right text-sm text-text-secondary">
                           {formatDate(p.found_time)}
                         </td>
                       </tr>

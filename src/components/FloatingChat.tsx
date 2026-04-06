@@ -95,7 +95,7 @@ export default function FloatingChat() {
         className={`fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full flex items-center justify-center shadow-lg transition-all duration-300 ${
           isOpen
             ? "bg-red-500 hover:bg-red-600 rotate-90"
-            : "bg-[#0D1B2A] hover:bg-[#1a2d45] animate-pulse"
+            : "bg-bg-sidebar hover:bg-[#1a2d45] animate-pulse"
         }`}
         style={{
           boxShadow: isOpen
@@ -127,7 +127,7 @@ export default function FloatingChat() {
               className="w-8 h-8 rounded-full bg-[#43e97b] flex items-center justify-center"
               style={{ boxShadow: "0 0 12px rgba(67,233,123,0.4)" }}
             >
-              <MessageCircle size={16} className="text-[#0D1B2A]" />
+              <MessageCircle size={16} className="text-bg-sidebar" />
             </div>
             <div>
               <p className="text-white font-semibold text-sm">AI Danışman</p>
@@ -147,10 +147,10 @@ export default function FloatingChat() {
                 >
                   <MessageCircle size={28} className="text-[#43e97b]" />
                 </div>
-                <p className="text-gray-400 text-sm">
+                <p className="text-text-muted text-sm">
                   Merhaba! DTC araştırma konusunda
                 </p>
-                <p className="text-gray-400 text-sm">
+                <p className="text-text-muted text-sm">
                   sana nasıl yardımcı olabilirim?
                 </p>
                 <div className="mt-4 space-y-2">
@@ -165,7 +165,7 @@ export default function FloatingChat() {
                         setInput(q);
                         setTimeout(() => handleSend(), 100);
                       }}
-                      className="block w-full text-left px-3 py-2 rounded-lg bg-white/5 text-gray-300 text-xs hover:bg-white/10 transition-colors border border-white/5"
+                      className="block w-full text-left px-3 py-2 rounded-lg bg-white/5 text-text-muted text-xs hover:bg-white/10 transition-colors border border-white/5"
                     >
                       {q}
                     </button>
@@ -182,7 +182,7 @@ export default function FloatingChat() {
                 <div
                   className={`max-w-[85%] px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${
                     msg.role === "user"
-                      ? "bg-[#667eea] text-white rounded-br-md"
+                      ? "bg-accent text-white rounded-br-md"
                       : "bg-white/5 border border-white/10 text-gray-100 rounded-bl-md"
                   }`}
                   style={
@@ -235,7 +235,7 @@ export default function FloatingChat() {
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleSend()}
                 placeholder="Bir şey sor..."
-                className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-gray-500 focus:outline-none focus:border-[#43e97b]/50 focus:ring-1 focus:ring-[#43e97b]/20 transition-colors"
+                className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-text-secondary focus:outline-none focus:border-[#43e97b]/50 focus:ring-1 focus:ring-[#43e97b]/20 transition-colors"
               />
               <button
                 onClick={handleSend}
@@ -244,9 +244,9 @@ export default function FloatingChat() {
                 style={{ boxShadow: "0 0 12px rgba(67,233,123,0.3)" }}
               >
                 {loading ? (
-                  <Loader2 size={16} className="text-[#0D1B2A] animate-spin" />
+                  <Loader2 size={16} className="text-bg-sidebar animate-spin" />
                 ) : (
-                  <Send size={16} className="text-[#0D1B2A]" />
+                  <Send size={16} className="text-bg-sidebar" />
                 )}
               </button>
             </div>

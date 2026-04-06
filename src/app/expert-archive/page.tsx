@@ -216,14 +216,14 @@ export default function ExpertArchivePage() {
     <div>
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Uzman Arşivim</h1>
-        <p className="text-gray-500 mt-1">
+        <h1 className="text-2xl font-bold text-text-primary">Uzman Arşivim</h1>
+        <p className="text-text-secondary mt-1">
           Herkese açık koleksiyonlarınızı yönetin ve notlar ekleyin
         </p>
       </div>
 
       {/* Collection tabs + create */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-6">
+      <div className="bg-bg-card rounded-xl shadow-sm border border-border-default p-4 mb-6">
         <div className="flex flex-wrap items-center gap-2 mb-3">
           {collections.map((c) => (
             <button
@@ -231,15 +231,15 @@ export default function ExpertArchivePage() {
               onClick={() => setActiveCollection(c)}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                 activeCollection?.id === c.id
-                  ? "bg-[#667eea] text-white shadow-sm"
-                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  ? "bg-accent text-white shadow-sm"
+                  : "bg-bg-hover text-text-secondary hover:bg-bg-hover"
               }`}
             >
               <Package size={14} />
               {c.name}
               {c.category && (
                 <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${
-                  activeCollection?.id === c.id ? "bg-white/20" : "bg-gray-200"
+                  activeCollection?.id === c.id ? "bg-bg-card/20" : "bg-bg-hover"
                 }`}>
                   {c.category}
                 </span>
@@ -247,7 +247,7 @@ export default function ExpertArchivePage() {
             </button>
           ))}
           {collections.length === 0 && !loading && (
-            <span className="text-sm text-gray-400">
+            <span className="text-sm text-text-muted">
               Henüz koleksiyon yok. Aşağıdan oluşturun.
             </span>
           )}
@@ -260,7 +260,7 @@ export default function ExpertArchivePage() {
             onChange={(e) => setNewName(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleCreateCollection()}
             placeholder="Koleksiyon adı..."
-            className="flex-1 py-2 px-3 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#667eea]/30"
+            className="flex-1 py-2 px-3 border border-border-default rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/30"
           />
           <input
             type="text"
@@ -268,11 +268,11 @@ export default function ExpertArchivePage() {
             onChange={(e) => setNewCategory(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleCreateCollection()}
             placeholder="Kategori (opsiyonel)"
-            className="w-40 py-2 px-3 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#667eea]/30"
+            className="w-40 py-2 px-3 border border-border-default rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/30"
           />
           <button
             onClick={handleCreateCollection}
-            className="flex items-center gap-1 px-4 py-2 bg-[#667eea] text-white rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
+            className="flex items-center gap-1 px-4 py-2 bg-accent text-white rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
           >
             <FolderPlus size={14} />
             Oluştur
@@ -292,12 +292,12 @@ export default function ExpertArchivePage() {
       {/* Actions bar */}
       {activeCollection && (
         <div className="flex items-center justify-between mb-4">
-          <span className="text-sm font-medium text-gray-700">
+          <span className="text-sm font-medium text-text-primary">
             {items.length} marka
           </span>
           <button
             onClick={openAddModal}
-            className="flex items-center gap-1.5 px-4 py-2 bg-[#667eea] text-white rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
+            className="flex items-center gap-1.5 px-4 py-2 bg-accent text-white rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
           >
             <Plus size={14} />
             Marka Ekle
@@ -307,9 +307,9 @@ export default function ExpertArchivePage() {
 
       {/* Items */}
       {itemsLoading ? (
-        <div className="text-center py-10 text-gray-400">Yükleniyor...</div>
+        <div className="text-center py-10 text-text-muted">Yükleniyor...</div>
       ) : items.length === 0 && activeCollection ? (
-        <div className="text-center py-16 text-gray-400">
+        <div className="text-center py-16 text-text-muted">
           <Package size={48} className="mx-auto mb-3 opacity-50" />
           <p className="text-base">Bu koleksiyonda henüz marka yok</p>
           <p className="text-sm mt-1">Kaydedilenlerden marka ekleyin</p>
@@ -335,12 +335,12 @@ export default function ExpertArchivePage() {
             return (
               <div
                 key={item.id}
-                className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 hover:shadow-md transition-shadow"
+                className="bg-bg-card rounded-xl shadow-sm border border-border-default p-5 hover:shadow-md transition-shadow"
               >
                 {/* Top: name + source + flag */}
                 <div className="flex items-start justify-between mb-1">
                   <div className="flex items-center gap-2 min-w-0">
-                    <span className="text-lg font-bold text-gray-900 truncate">
+                    <span className="text-lg font-bold text-text-primary truncate">
                       {name}
                     </span>
                     <SourceBadge source={source} />
@@ -367,36 +367,36 @@ export default function ExpertArchivePage() {
                 {/* Metrics */}
                 <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 mb-3">
                   <div>
-                    <span className="text-sm text-gray-500">Ciro: </span>
+                    <span className="text-sm text-text-secondary">Ciro: </span>
                     <span className="text-base font-semibold text-[#27AE60]">
                       {formatRevenue(revenue)}
                     </span>
                   </div>
                   <div>
-                    <span className="text-sm text-gray-500">AOV: </span>
+                    <span className="text-sm text-text-secondary">AOV: </span>
                     <span className="text-base font-semibold text-[#764ba2]">
                       {aov != null ? `$${aov}` : "-"}
                     </span>
                   </div>
                   <div>
-                    <span className="text-sm text-gray-500">Trafik: </span>
+                    <span className="text-sm text-text-secondary">Trafik: </span>
                     <span className="text-base font-semibold text-[#2980B9]">
                       {formatTraffic(traffic)}
                     </span>
                   </div>
                   <div>
-                    <span className="text-sm text-gray-500">TQS: </span>
+                    <span className="text-sm text-text-secondary">TQS: </span>
                     {tqs != null ? (
                       <span className="inline-block bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded text-xs font-semibold">
                         {tqs}
                       </span>
                     ) : (
-                      <span className="text-sm text-gray-300">-</span>
+                      <span className="text-sm text-text-muted">-</span>
                     )}
                   </div>
                   <div>
-                    <span className="text-sm text-gray-500">Dönüşüm:</span>
-                    <span className="text-base font-semibold text-gray-700">
+                    <span className="text-sm text-text-secondary">Dönüşüm:</span>
+                    <span className="text-base font-semibold text-text-primary">
                       {conversion != null ? `%${conversion}` : "-"}
                     </span>
                   </div>
@@ -405,7 +405,7 @@ export default function ExpertArchivePage() {
                 {/* Category */}
                 {category && (
                   <div className="mb-2">
-                    <span className="inline-block bg-[#667eea]/10 text-[#667eea] px-2 py-0.5 rounded-full text-xs font-medium">
+                    <span className="inline-block bg-accent/10 text-accent px-2 py-0.5 rounded-full text-xs font-medium">
                       {category}
                     </span>
                   </div>
@@ -413,7 +413,7 @@ export default function ExpertArchivePage() {
 
                 {/* Insight */}
                 {insight && (
-                  <p className="text-sm text-gray-500 italic line-clamp-2 mb-3">
+                  <p className="text-sm text-text-secondary italic line-clamp-2 mb-3">
                     &ldquo;{insight}&rdquo;
                   </p>
                 )}
@@ -449,7 +449,7 @@ export default function ExpertArchivePage() {
                         </button>
                         <button
                           onClick={() => setEditingNoteId(null)}
-                          className="text-gray-400 hover:text-gray-600 p-1"
+                          className="text-text-muted hover:text-text-secondary p-1"
                         >
                           <X size={14} />
                         </button>
@@ -463,10 +463,10 @@ export default function ExpertArchivePage() {
                 </div>
 
                 {/* Actions */}
-                <div className="flex items-center gap-2 pt-2 border-t border-gray-100">
+                <div className="flex items-center gap-2 pt-2 border-t border-border-default">
                   <button
                     onClick={() => setDetailItem(item)}
-                    className="inline-flex items-center gap-1 px-3 py-1.5 bg-[#667eea]/10 text-[#667eea] rounded-lg text-xs font-medium hover:bg-[#667eea]/20 transition-colors"
+                    className="inline-flex items-center gap-1 px-3 py-1.5 bg-accent/10 text-accent rounded-lg text-xs font-medium hover:bg-accent/20 transition-colors"
                   >
                     <Eye size={12} />
                     Detay
@@ -488,13 +488,13 @@ export default function ExpertArchivePage() {
       {/* Add Brands Modal */}
       {showAddModal && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setShowAddModal(false)}>
-          <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[85vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-            <div className="sticky top-0 bg-[#0D1B2A] text-white px-6 py-4 rounded-t-2xl flex items-center justify-between">
+          <div className="bg-bg-card rounded-2xl w-full max-w-2xl max-h-[85vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="sticky top-0 bg-bg-sidebar text-white px-6 py-4 rounded-t-2xl flex items-center justify-between">
               <div>
                 <h2 className="text-lg font-bold">Marka Ekle</h2>
-                <p className="text-xs text-gray-400">Kaydedilenlerden seçin ve not ekleyin</p>
+                <p className="text-xs text-text-muted">Kaydedilenlerden seçin ve not ekleyin</p>
               </div>
-              <button onClick={() => setShowAddModal(false)} className="text-gray-400 hover:text-white transition-colors">
+              <button onClick={() => setShowAddModal(false)} className="text-text-muted hover:text-white transition-colors">
                 <X size={22} />
               </button>
             </div>
@@ -502,7 +502,7 @@ export default function ExpertArchivePage() {
             <div className="p-6">
               {/* Folder selector */}
               <div className="mb-4">
-                <label className="text-sm font-medium text-gray-700 mb-1 block">Klasör Seçin</label>
+                <label className="text-sm font-medium text-text-primary mb-1 block">Klasör Seçin</label>
                 <div className="flex flex-wrap gap-2">
                   {savedFolders.map((f) => (
                     <button
@@ -510,8 +510,8 @@ export default function ExpertArchivePage() {
                       onClick={() => handleFolderChange(f)}
                       className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                         selectedFolder === f
-                          ? "bg-[#667eea] text-white"
-                          : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                          ? "bg-accent text-white"
+                          : "bg-bg-hover text-text-secondary hover:bg-bg-hover"
                       }`}
                     >
                       {f}
@@ -521,27 +521,27 @@ export default function ExpertArchivePage() {
               </div>
 
               {/* Brand list */}
-              <div className="mb-4 max-h-60 overflow-y-auto border border-gray-200 rounded-lg divide-y divide-gray-100">
+              <div className="mb-4 max-h-60 overflow-y-auto border border-border-default rounded-lg divide-y divide-border-default">
                 {folderBrands.map((brand) => {
                   const isSelected = selectedBrandIds.has(brand.id);
                   return (
                     <button
                       key={brand.id}
                       onClick={() => toggleBrandSelection(brand.id)}
-                      className={`w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-50 transition-colors ${
-                        isSelected ? "bg-[#667eea]/5" : ""
+                      className={`w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-bg-main transition-colors ${
+                        isSelected ? "bg-accent/5" : ""
                       }`}
                     >
                       {isSelected ? (
-                        <CheckSquare size={16} className="text-[#667eea] flex-shrink-0" />
+                        <CheckSquare size={16} className="text-accent flex-shrink-0" />
                       ) : (
-                        <Square size={16} className="text-gray-300 flex-shrink-0" />
+                        <Square size={16} className="text-text-muted flex-shrink-0" />
                       )}
                       <div className="min-w-0">
-                        <span className="text-sm font-medium text-gray-900 truncate block">
+                        <span className="text-sm font-medium text-text-primary truncate block">
                           {getBrandName(brand)}
                         </span>
-                        <span className="text-xs text-gray-400">{getBrandCategory(brand)}</span>
+                        <span className="text-xs text-text-muted">{getBrandCategory(brand)}</span>
                       </div>
                       <span className="text-xs text-[#27AE60] font-medium ml-auto">
                         {formatRevenue(getBrandRevenue(brand))}
@@ -550,18 +550,18 @@ export default function ExpertArchivePage() {
                   );
                 })}
                 {folderBrands.length === 0 && (
-                  <p className="text-sm text-gray-400 text-center py-6">Bu klasörde marka yok</p>
+                  <p className="text-sm text-text-muted text-center py-6">Bu klasörde marka yok</p>
                 )}
               </div>
 
               {/* Note */}
               <div className="mb-4">
-                <label className="text-sm font-medium text-gray-700 mb-1 block">Uzman Notu (tüm seçilenler için)</label>
+                <label className="text-sm font-medium text-text-primary mb-1 block">Uzman Notu (tüm seçilenler için)</label>
                 <textarea
                   value={addNote}
                   onChange={(e) => setAddNote(e.target.value)}
                   placeholder="Bu markalar hakkında notunuz..."
-                  className="w-full border border-gray-200 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#667eea]/30 resize-none"
+                  className="w-full border border-border-default rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-accent/30 resize-none"
                   rows={3}
                 />
               </div>
@@ -570,7 +570,7 @@ export default function ExpertArchivePage() {
               <button
                 onClick={handleAddSelectedBrands}
                 disabled={selectedBrandIds.size === 0 || addingBrands}
-                className="w-full py-3 bg-[#667eea] text-white rounded-lg text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-40"
+                className="w-full py-3 bg-accent text-white rounded-lg text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-40"
               >
                 {addingBrands ? "Ekleniyor..." : `${selectedBrandIds.size} Marka Ekle`}
               </button>
@@ -582,8 +582,8 @@ export default function ExpertArchivePage() {
       {/* Detail Modal */}
       {detailItem && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setDetailItem(null)}>
-          <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[85vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-            <div className="sticky top-0 bg-[#0D1B2A] text-white px-6 py-4 rounded-t-2xl flex items-center justify-between">
+          <div className="bg-bg-card rounded-2xl w-full max-w-2xl max-h-[85vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="sticky top-0 bg-bg-sidebar text-white px-6 py-4 rounded-t-2xl flex items-center justify-between">
               <div>
                 <h2 className="text-lg font-bold">{getBrandName({ brand_data: detailItem.brand_data } as SavedBrand)}</h2>
                 {getBrandWebsite({ brand_data: detailItem.brand_data } as SavedBrand) && (
@@ -597,7 +597,7 @@ export default function ExpertArchivePage() {
                   </a>
                 )}
               </div>
-              <button onClick={() => setDetailItem(null)} className="text-gray-400 hover:text-white transition-colors">
+              <button onClick={() => setDetailItem(null)} className="text-text-muted hover:text-white transition-colors">
                 <X size={22} />
               </button>
             </div>
@@ -628,7 +628,7 @@ export default function ExpertArchivePage() {
                   <p className="text-xs text-amber-600 font-medium mb-1">TQS / Dönüşüm</p>
                   <p className="text-2xl font-bold text-amber-700">
                     {getBrandTQS({ brand_data: detailItem.brand_data } as SavedBrand) ?? "-"}{" "}
-                    <span className="text-base font-medium text-gray-500">
+                    <span className="text-base font-medium text-text-secondary">
                       / {getBrandConversion({ brand_data: detailItem.brand_data } as SavedBrand) != null ? `%${getBrandConversion({ brand_data: detailItem.brand_data } as SavedBrand)}` : "-"}
                     </span>
                   </p>
@@ -637,9 +637,9 @@ export default function ExpertArchivePage() {
 
               {/* Insight */}
               {getBrandInsight({ brand_data: detailItem.brand_data } as SavedBrand) && (
-                <div className="bg-gray-50 rounded-xl p-4">
-                  <p className="text-xs text-gray-500 font-semibold mb-2 uppercase tracking-wide">Öne Çıkan Özellik</p>
-                  <p className="text-sm text-gray-700 leading-relaxed">{getBrandInsight({ brand_data: detailItem.brand_data } as SavedBrand)}</p>
+                <div className="bg-bg-main rounded-xl p-4">
+                  <p className="text-xs text-text-secondary font-semibold mb-2 uppercase tracking-wide">Öne Çıkan Özellik</p>
+                  <p className="text-sm text-text-primary leading-relaxed">{getBrandInsight({ brand_data: detailItem.brand_data } as SavedBrand)}</p>
                 </div>
               )}
             </div>

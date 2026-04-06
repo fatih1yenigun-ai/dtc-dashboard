@@ -1,6 +1,7 @@
 "use client";
 
 import { useAuth } from "@/context/AuthContext";
+import { useTheme } from "@/context/ThemeContext";
 import { usePathname } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import LoginPage from "@/app/login/page";
@@ -13,6 +14,7 @@ import { MetaAdsProvider } from "@/context/MetaAdsContext";
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
+  const { theme } = useTheme();
   const pathname = usePathname();
 
   // Landing page: render without auth wrapper
@@ -23,10 +25,10 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   // Loading state — full screen
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0D1B2A] flex items-center justify-center">
+      <div className="min-h-screen bg-bg-main flex items-center justify-center">
         <div className="text-center">
-          <Loader2 size={40} className="animate-spin text-[#667eea] mx-auto mb-4" />
-          <p className="text-gray-400 text-sm">Yükleniyor...</p>
+          <Loader2 size={40} className="animate-spin text-accent mx-auto mb-4" />
+          <p className="text-text-muted text-sm">Yükleniyor...</p>
         </div>
       </div>
     );
@@ -45,7 +47,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           <MetaAdsProvider>
           <div className="flex min-h-screen">
             <Sidebar />
-            <main className="flex-1 min-h-screen bg-[#f8f9fa] w-0">
+            <main className={`flex-1 min-h-screen bg-bg-main w-0 ${theme === "dark" ? "bg-grid-dark" : ""}`}>
               <div className="p-3 pt-14 md:pt-8 md:p-8 max-w-7xl mx-auto">{children}</div>
             </main>
             <FloatingChat />

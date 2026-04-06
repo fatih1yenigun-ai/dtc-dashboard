@@ -110,7 +110,7 @@ export default function ToolsSection() {
           viewport={{ once: true, margin: "-100px" }}
           transition={{ duration: 0.5 }}
           className="text-center text-sm tracking-widest uppercase text-[#7c6ff7] mb-4"
-          style={{ fontFamily: "var(--font-body)", fontWeight: 500 }}
+          style={{ fontFamily: "var(--font-jakarta)", fontWeight: 500 }}
         >
           Araçlar
         </motion.p>
@@ -142,7 +142,7 @@ export default function ToolsSection() {
           viewport={{ once: true, margin: "-100px" }}
           transition={{ duration: 0.5, delay: 0.1 }}
           className="text-center text-gray-400 text-base md:text-lg max-w-2xl mx-auto mb-16"
-          style={{ fontFamily: "var(--font-body)", fontWeight: 400 }}
+          style={{ fontFamily: "var(--font-jakarta)", fontWeight: 400 }}
         >
           Her araç birbiriyle konuşur. Veriler birleşir, kararlar kolaylaşır.
         </motion.p>
@@ -182,7 +182,7 @@ export default function ToolsSection() {
               {/* Title */}
               <h3
                 className="text-lg text-white mb-2"
-                style={{ fontFamily: "var(--font-body)", fontWeight: 500 }}
+                style={{ fontFamily: "var(--font-jakarta)", fontWeight: 500 }}
               >
                 {tool.title}
               </h3>
@@ -190,7 +190,7 @@ export default function ToolsSection() {
               {/* Description */}
               <p
                 className="text-sm text-gray-400 leading-relaxed"
-                style={{ fontFamily: "var(--font-body)", fontWeight: 400 }}
+                style={{ fontFamily: "var(--font-jakarta)", fontWeight: 400 }}
               >
                 {tool.description}
               </p>

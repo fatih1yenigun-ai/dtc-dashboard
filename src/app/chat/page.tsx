@@ -84,14 +84,14 @@ export default function ChatPage() {
   return (
     <div className="flex flex-col h-[calc(100vh-4rem)]">
       <div className="mb-4">
-        <h1 className="text-2xl font-bold text-gray-900">Hintli Danisman</h1>
-        <p className="text-gray-500 mt-1">DTC uzmanina sorularini sor</p>
+        <h1 className="text-2xl font-bold text-text-primary">Hintli Danisman</h1>
+        <p className="text-text-secondary mt-1">DTC uzmanina sorularini sor</p>
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-4">
+      <div className="flex-1 overflow-y-auto bg-bg-card rounded-xl shadow-sm border border-border-default p-4 mb-4">
         {messages.length === 0 && (
-          <div className="flex flex-col items-center justify-center h-full text-gray-400">
+          <div className="flex flex-col items-center justify-center h-full text-text-muted">
             <MessageCircle size={48} className="mb-3 opacity-50" />
             <p className="text-lg font-medium">Merhaba!</p>
             <p className="text-sm mt-1">
@@ -116,8 +116,8 @@ export default function ChatPage() {
             <div
               className={`max-w-[70%] px-4 py-3 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap ${
                 msg.role === "user"
-                  ? "bg-[#667eea] text-white rounded-br-md"
-                  : "bg-gray-100 text-gray-800 rounded-bl-md"
+                  ? "bg-accent text-white rounded-br-md"
+                  : "bg-bg-hover text-text-primary rounded-bl-md"
               }`}
             >
               {msg.content}
@@ -125,12 +125,12 @@ export default function ChatPage() {
                 idx === messages.length - 1 &&
                 msg.role === "assistant" &&
                 msg.content === "" && (
-                  <Loader2 size={16} className="animate-spin text-gray-400" />
+                  <Loader2 size={16} className="animate-spin text-text-muted" />
                 )}
             </div>
             {msg.role === "user" && (
-              <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center shrink-0">
-                <User size={14} className="text-gray-600" />
+              <div className="w-8 h-8 rounded-full bg-bg-hover flex items-center justify-center shrink-0">
+                <User size={14} className="text-text-secondary" />
               </div>
             )}
           </div>
@@ -139,7 +139,7 @@ export default function ChatPage() {
       </div>
 
       {/* Input */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3 flex gap-2">
+      <div className="bg-bg-card rounded-xl shadow-sm border border-border-default p-3 flex gap-2">
         <textarea
           ref={inputRef}
           value={input}

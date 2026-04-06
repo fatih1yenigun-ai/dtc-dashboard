@@ -18,6 +18,8 @@ import {
 import { loadFolders, createFolder, saveBrandsBulk, type BrandData } from "@/lib/supabase";
 import { useResearch } from "@/context/ResearchContext";
 import { useAuth } from "@/context/AuthContext";
+import { useTheme } from "@/context/ThemeContext";
+import { getChartColors } from "@/lib/chart-colors";
 
 interface BrandResult {
   brand_name: string;
@@ -231,11 +233,8 @@ export default function HomePage() {
 
   const maxAngleCount = angleStats.length > 0 ? angleStats[0].count : 1;
 
-  // Vibrant neon colors for donut chart
-  const DONUT_COLORS = [
-    "#667eea", "#764ba2", "#f093fb", "#4facfe", "#00f2fe",
-    "#43e97b", "#fa709a", "#fee140", "#a18cd1", "#fbc2eb",
-  ];
+  const { theme } = useTheme();
+  const DONUT_COLORS = getChartColors(theme);
 
   function handleSort(key: SortKey) {
     if (sortKey === key) {
@@ -249,9 +248,9 @@ export default function HomePage() {
   function SortIcon({ col }: { col: SortKey }) {
     if (sortKey !== col) return <ChevronDown size={12} className="opacity-30 ml-1 inline" />;
     return sortAsc ? (
-      <ChevronUp size={12} className="ml-1 inline text-[#667eea]" />
+      <ChevronUp size={12} className="ml-1 inline text-accent" />
     ) : (
-      <ChevronDown size={12} className="ml-1 inline text-[#667eea]" />
+      <ChevronDown size={12} className="ml-1 inline text-accent" />
     );
   }
 
@@ -397,23 +396,23 @@ export default function HomePage() {
 
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Canlı Araştırma</h1>
-        <p className="text-gray-500 mt-1">
+        <h1 className="text-2xl font-bold text-text-primary">Canlı Araştırma</h1>
+        <p className="text-text-secondary mt-1">
           Anahtar kelime ile DTC markaları keşfet
         </p>
       </div>
 
       {/* Search Bar */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+      <div className="bg-bg-card rounded-[14px] shadow-sm border border-border-default p-6 mb-6">
         <div className="flex flex-col md:flex-row gap-4">
           <div className="flex-1">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-text-primary mb-1">
               Anahtar Kelime
             </label>
             <div className="relative">
               <Search
                 size={18}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted"
               />
               <input
                 type="text"
@@ -421,19 +420,19 @@ export default function HomePage() {
                 onChange={(e) => setLocalKeyword(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleSearch()}
                 placeholder="örneğin: protein bar, cilt bakımı..."
-                className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#667eea]/30 focus:border-[#667eea]"
+                className="w-full pl-10 pr-4 py-2.5 border border-border-default rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent"
               />
             </div>
           </div>
 
           <div className="w-32">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-text-primary mb-1">
               Marka Sayısı
             </label>
             <select
               value={count}
               onChange={(e) => setCount(Number(e.target.value))}
-              className="w-full py-2.5 px-3 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#667eea]/30"
+              className="w-full py-2.5 px-3 border border-border-default rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/30"
             >
               <option value={20}>20</option>
               <option value={50}>50</option>
@@ -460,13 +459,13 @@ export default function HomePage() {
         </div>
 
         {/* Filter dropdowns */}
-        <div className="flex flex-wrap gap-4 mt-4 pt-4 border-t border-gray-100">
+        <div className="flex flex-wrap gap-4 mt-4 pt-4 border-t border-border-default">
           <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">Ülke</label>
+            <label className="block text-xs font-medium text-text-secondary mb-1">Ülke</label>
             <select
               value={country}
               onChange={(e) => setCountry(e.target.value)}
-              className="py-1.5 px-3 border border-gray-200 rounded-lg text-xs text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#667eea]/30 bg-gray-50"
+              className="py-1.5 px-3 border border-border-default rounded-lg text-xs text-text-primary focus:outline-none focus:ring-2 focus:ring-accent/30 bg-bg-main"
             >
               <option value="all">Tümü</option>
               <option value="US">ABD</option>
@@ -474,11 +473,11 @@ export default function HomePage() {
             </select>
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">Kuruluş Yılı</label>
+            <label className="block text-xs font-medium text-text-secondary mb-1">Kuruluş Yılı</label>
             <select
               value={foundedAfter}
               onChange={(e) => setFoundedAfter(e.target.value)}
-              className="py-1.5 px-3 border border-gray-200 rounded-lg text-xs text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#667eea]/30 bg-gray-50"
+              className="py-1.5 px-3 border border-border-default rounded-lg text-xs text-text-primary focus:outline-none focus:ring-2 focus:ring-accent/30 bg-bg-main"
             >
               <option value="all">Tümü</option>
               <option value="2024">2024+</option>
@@ -489,11 +488,11 @@ export default function HomePage() {
             </select>
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1">Gelir Aralığı</label>
+            <label className="block text-xs font-medium text-text-secondary mb-1">Gelir Aralığı</label>
             <select
               value={revenueRange}
               onChange={(e) => setRevenueRange(e.target.value)}
-              className="py-1.5 px-3 border border-gray-200 rounded-lg text-xs text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#667eea]/30 bg-gray-50"
+              className="py-1.5 px-3 border border-border-default rounded-lg text-xs text-text-primary focus:outline-none focus:ring-2 focus:ring-accent/30 bg-bg-main"
             >
               <option value="all">Tümü</option>
               <option value="below-50k">$50K Altı</option>
@@ -506,7 +505,7 @@ export default function HomePage() {
 
       {/* Error */}
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-6 text-red-700 text-sm">
+        <div className="bg-red-50 border border-red-200 rounded-[14px] p-4 mb-6 text-red-700 text-sm">
           {error}
         </div>
       )}
@@ -515,9 +514,9 @@ export default function HomePage() {
       {loading && (
         <div className="py-8">
           <div className="flex flex-col items-center mb-6">
-            <Loader2 size={32} className="animate-spin text-[#667eea] mb-3" />
-            <p className="text-gray-500 font-medium">Markalar araştırılıyor...</p>
-            <p className="text-gray-400 text-xs mt-1">
+            <Loader2 size={32} className="animate-spin text-accent mb-3" />
+            <p className="text-text-secondary font-medium">Markalar araştırılıyor...</p>
+            <p className="text-text-muted text-xs mt-1">
               {results.length > 0 ? `${results.length} marka bulundu, devam ediyor...` : "Bu işlem 15-30 saniye sürebilir"}
             </p>
           </div>
@@ -532,14 +531,14 @@ export default function HomePage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
             {/* Left: Donut chart - Category & Demand weighted by revenue */}
             <div
-              className="bg-white rounded-xl shadow-sm border border-gray-200 p-6"
+              className="bg-bg-card rounded-[14px] shadow-sm border border-border-default p-6"
               style={{ animation: "fadeSlideUp 0.6s ease-out forwards", animationDelay: "0.1s", opacity: 0 }}
             >
-              <h3 className="text-sm font-semibold text-gray-700 mb-4">Kategori &amp; Talep</h3>
+              <h3 className="text-sm font-semibold text-text-primary mb-4">Kategori &amp; Talep</h3>
               <div className="flex items-center gap-6">
                 {/* SVG Donut */}
                 <div className="relative w-36 h-36 flex-shrink-0">
-                  <svg viewBox="0 0 100 100" className="w-full h-full" style={{ filter: "drop-shadow(0 0 8px rgba(102,126,234,0.3))" }}>
+                  <svg viewBox="0 0 100 100" className="w-full h-full" style={{ filter: theme === "dark" ? "drop-shadow(0 0 8px rgba(102,126,234,0.3))" : "drop-shadow(0 3px 10px rgba(0,0,0,0.18))" }}>
                     {donutSegments.map((seg, i) => (
                       <circle
                         key={seg.name}
@@ -553,7 +552,7 @@ export default function HomePage() {
                         strokeDashoffset={seg.dashOffset}
                         transform="rotate(-90 50 50)"
                         style={{
-                          filter: `drop-shadow(0 0 4px ${seg.color}60)`,
+                          filter: theme === "dark" ? `drop-shadow(0 0 4px ${seg.color}60)` : `drop-shadow(0 2px 4px rgba(0,0,0,0.15))`,
                           animation: `donutGrow 1s ease-out forwards`,
                           animationDelay: `${i * 0.1}s`,
                         }}
@@ -562,8 +561,8 @@ export default function HomePage() {
                   </svg>
                   {/* Center total */}
                   <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <span className="text-[10px] text-gray-400 uppercase tracking-wide">Toplam</span>
-                    <span className="text-sm font-bold text-gray-900">${formatNumber(totalRevenue)}</span>
+                    <span className="text-[10px] text-text-muted uppercase tracking-wide">Toplam</span>
+                    <span className="text-sm font-bold text-text-primary">${formatNumber(totalRevenue)}</span>
                   </div>
                 </div>
                 {/* Legend */}
@@ -572,10 +571,10 @@ export default function HomePage() {
                     <div key={seg.name} className="flex items-center gap-2">
                       <span
                         className="w-3 h-3 rounded-full flex-shrink-0"
-                        style={{ backgroundColor: seg.color, boxShadow: `0 0 6px ${seg.color}80` }}
+                        style={{ backgroundColor: seg.color, boxShadow: theme === "dark" ? `0 0 6px ${seg.color}80` : undefined }}
                       />
-                      <span className="text-gray-700">{seg.name}</span>
-                      <span className="text-gray-400">(%{seg.pct})</span>
+                      <span className="text-text-primary">{seg.name}</span>
+                      <span className="text-text-muted">(%{seg.pct})</span>
                     </div>
                   ))}
                 </div>
@@ -584,20 +583,20 @@ export default function HomePage() {
 
             {/* Right: Marketing angles bar chart */}
             <div
-              className="bg-white rounded-xl shadow-sm border border-gray-200 p-6"
+              className="bg-bg-card rounded-[14px] shadow-sm border border-border-default p-6"
               style={{ animation: "fadeSlideUp 0.6s ease-out forwards", animationDelay: "0.25s", opacity: 0 }}
             >
-              <h3 className="text-sm font-semibold text-gray-700 mb-4">Pazarlama Açıları</h3>
+              <h3 className="text-sm font-semibold text-text-primary mb-4">Pazarlama Açıları</h3>
               {angleStats.length === 0 ? (
-                <p className="text-xs text-gray-400">Veri yok</p>
+                <p className="text-xs text-text-muted">Veri yok</p>
               ) : (
                 <div className="flex flex-col gap-2.5">
                   {angleStats.slice(0, 8).map((angle, i) => (
                     <div key={angle.name} className="flex items-center gap-3">
-                      <span className="text-xs text-gray-600 w-32 flex-shrink-0 truncate" title={angle.name}>
+                      <span className="text-xs text-text-secondary w-32 flex-shrink-0 truncate" title={angle.name}>
                         {angle.name}
                       </span>
-                      <div className="flex-1 bg-gray-100 rounded-full h-6 relative overflow-hidden" style={{ filter: "drop-shadow(0 0 3px rgba(102,126,234,0.2))" }}>
+                      <div className="flex-1 bg-bg-hover rounded-full h-6 relative overflow-hidden" style={{ filter: "drop-shadow(0 0 3px rgba(102,126,234,0.2))" }}>
                         <div
                           className="h-full rounded-full"
                           style={{
@@ -616,7 +615,7 @@ export default function HomePage() {
                         className="text-sm font-semibold text-white flex-shrink-0 px-2 py-0.5 rounded flex items-center gap-1"
                         style={{ backgroundColor: "#1e293b" }}
                       >
-                        <span className="text-[10px] font-medium text-gray-400">AOV</span>
+                        <span className="text-[10px] font-medium text-text-muted">AOV</span>
                         ${angle.avgAov}
                       </span>
                     </div>
@@ -631,16 +630,16 @@ export default function HomePage() {
             <div className="flex items-center gap-3">
               <button
                 onClick={toggleAll}
-                className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900"
+                className="flex items-center gap-2 text-sm text-text-secondary hover:text-text-primary"
               >
                 {selected.size === results.length ? (
-                  <CheckSquare size={16} className="text-[#667eea]" />
+                  <CheckSquare size={16} className="text-accent" />
                 ) : (
                   <Square size={16} />
                 )}
                 Tümünü Seç
               </button>
-              <span className="text-sm text-gray-400">
+              <span className="text-sm text-text-muted">
                 {selected.size} seçili
               </span>
             </div>
@@ -655,7 +654,7 @@ export default function HomePage() {
               </button>
               <button
                 onClick={exportCSV}
-                className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
+                className="flex items-center gap-2 px-4 py-2 bg-bg-card border border-border-default text-text-primary rounded-lg text-sm font-medium hover:bg-bg-hover transition-colors"
               >
                 <Download size={14} />
                 CSV İndir
@@ -664,24 +663,24 @@ export default function HomePage() {
           </div>
 
           {/* Results Table */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+          <div className="bg-bg-card rounded-[14px] shadow-sm border border-border-default overflow-hidden">
             <div className="overflow-x-auto" style={{ scrollBehavior: "smooth" }}>
               <table className="w-full text-sm min-w-[1800px]">
                 <thead>
-                  <tr className="bg-[#0D1B2A] text-white">
+                  <tr className="bg-bg-sidebar text-white">
                     {/* 1. Checkbox */}
-                    <th className="sticky left-0 z-10 bg-[#0D1B2A] px-3 py-3 text-left w-10">
+                    <th className="sticky left-0 z-10 bg-bg-sidebar px-3 py-3 text-left w-10">
                       <button onClick={toggleAll}>
                         {selected.size === results.length ? (
-                          <CheckSquare size={16} className="text-[#667eea]" />
+                          <CheckSquare size={16} className="text-accent" />
                         ) : (
-                          <Square size={16} className="text-gray-400" />
+                          <Square size={16} className="text-text-muted" />
                         )}
                       </button>
                     </th>
                     {/* 2. Marka (clickable link) */}
                     <th
-                      className="sticky left-10 z-10 bg-[#0D1B2A] px-3 py-3 text-left font-semibold cursor-pointer select-none whitespace-nowrap"
+                      className="sticky left-10 z-10 bg-bg-sidebar px-3 py-3 text-left font-semibold cursor-pointer select-none whitespace-nowrap"
                       onClick={() => handleSort("brand_name")}
                     >
                       Marka <SortIcon col="brand_name" />
@@ -742,20 +741,20 @@ export default function HomePage() {
                       <tr
                         key={idx}
                         onClick={() => toggleSelect(origIdx)}
-                        className={`cursor-pointer border-t border-gray-100 transition-colors ${
+                        className={`cursor-pointer border-t border-border-default transition-colors ${
                           selected.has(origIdx)
-                            ? "bg-[#667eea]/5"
+                            ? "bg-accent/5"
                             : idx % 2 === 0
-                            ? "bg-white"
-                            : "bg-gray-50"
-                        } hover:bg-[#667eea]/10`}
+                            ? "bg-bg-card"
+                            : "bg-bg-main"
+                        } hover:bg-accent/10`}
                       >
                         {/* 1. Checkbox */}
                         <td className="sticky left-0 z-10 px-3 py-3" style={{ backgroundColor: "inherit" }}>
                           {selected.has(origIdx) ? (
-                            <CheckSquare size={16} className="text-[#667eea]" />
+                            <CheckSquare size={16} className="text-accent" />
                           ) : (
-                            <Square size={16} className="text-gray-300" />
+                            <Square size={16} className="text-text-muted" />
                           )}
                         </td>
                         {/* 2. Marka (clickable link to website) */}
@@ -765,10 +764,10 @@ export default function HomePage() {
                             target="_blank"
                             rel="noopener noreferrer"
                             onClick={(e) => e.stopPropagation()}
-                            className="font-bold text-gray-900 hover:text-[#667eea] inline-flex items-center gap-1.5 transition-colors"
+                            className="font-bold text-text-primary hover:text-accent inline-flex items-center gap-1.5 transition-colors"
                           >
                             {brand.brand_name}
-                            <ExternalLink size={12} className="text-gray-400" />
+                            <ExternalLink size={12} className="text-text-muted" />
                           </a>
                         </td>
                         {/* 3. Meta Ads */}
@@ -788,7 +787,7 @@ export default function HomePage() {
                               Gör <ExternalLink size={10} />
                             </a>
                           ) : (
-                            <span className="text-gray-300">-</span>
+                            <span className="text-text-muted">-</span>
                           )}
                         </td>
                         {/* 4. Ciro */}
@@ -822,16 +821,16 @@ export default function HomePage() {
                           </div>
                         </td>
                         {/* 7. Kuruluş */}
-                        <td className="px-3 py-3 text-center text-gray-600 whitespace-nowrap">
+                        <td className="px-3 py-3 text-center text-text-secondary whitespace-nowrap">
                           {brand.founded || "-"}
                         </td>
                         {/* 8. AOV */}
-                        <td className="px-3 py-3 text-right font-medium text-gray-900 whitespace-nowrap">
+                        <td className="px-3 py-3 text-right font-medium text-text-primary whitespace-nowrap">
                           ${brand.aov}
                         </td>
                         {/* 9. Kategori */}
                         <td className="px-3 py-3">
-                          <span className="inline-block bg-[#667eea]/10 text-[#667eea] px-2 py-0.5 rounded-full text-xs font-medium whitespace-nowrap">
+                          <span className="inline-block bg-accent/10 text-accent px-2 py-0.5 rounded-full text-xs font-medium whitespace-nowrap">
                             {brand.category}
                           </span>
                         </td>
@@ -842,14 +841,14 @@ export default function HomePage() {
                               {FLAG[brand.country.toUpperCase()] || ""} {brand.country.toUpperCase()}
                             </span>
                           ) : (
-                            <span className="text-gray-300">-</span>
+                            <span className="text-text-muted">-</span>
                           )}
                         </td>
                         {/* 15. Detay */}
                         <td className="px-3 py-3 text-center">
                           <button
                             onClick={(e) => { e.stopPropagation(); setDetailBrand(brand); }}
-                            className="inline-flex items-center gap-1 px-2.5 py-1 bg-[#667eea]/10 text-[#667eea] rounded-md text-xs font-medium hover:bg-[#667eea]/20 transition-colors"
+                            className="inline-flex items-center gap-1 px-2.5 py-1 bg-accent/10 text-accent rounded-md text-xs font-medium hover:bg-accent/20 transition-colors"
                           >
                             <Eye size={12} />
                             Detaylı Gör
@@ -865,16 +864,16 @@ export default function HomePage() {
 
           {/* Niş Özeti Section */}
           {nicheSummaryText && (
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mt-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-3">Niş Özeti</h3>
-              <p className="text-sm text-gray-700 mb-4 leading-relaxed">{nicheSummaryText}</p>
+            <div className="bg-bg-card rounded-[14px] shadow-sm border border-border-default p-6 mt-6">
+              <h3 className="text-lg font-semibold text-text-primary mb-3">Niş Özeti</h3>
+              <p className="text-sm text-text-primary mb-4 leading-relaxed">{nicheSummaryText}</p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {nichePros && nichePros.length > 0 && (
                   <div>
                     <h4 className="text-sm font-semibold text-[#27AE60] mb-2">Avantajlar</h4>
                     <ul className="space-y-1">
                       {nichePros.map((pro, i) => (
-                        <li key={i} className="flex items-start gap-2 text-sm text-gray-700">
+                        <li key={i} className="flex items-start gap-2 text-sm text-text-primary">
                           <span className="text-[#27AE60] mt-0.5 flex-shrink-0">&#x2022;</span>
                           {pro}
                         </li>
@@ -887,7 +886,7 @@ export default function HomePage() {
                     <h4 className="text-sm font-semibold text-[#E74C3C] mb-2">Dezavantajlar</h4>
                     <ul className="space-y-1">
                       {nicheCons.map((con, i) => (
-                        <li key={i} className="flex items-start gap-2 text-sm text-gray-700">
+                        <li key={i} className="flex items-start gap-2 text-sm text-text-primary">
                           <span className="text-[#E74C3C] mt-0.5 flex-shrink-0">&#x2022;</span>
                           {con}
                         </li>
@@ -904,9 +903,9 @@ export default function HomePage() {
       {/* Detail Modal */}
       {detailBrand && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setDetailBrand(null)}>
-          <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[85vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-bg-card rounded-2xl w-full max-w-2xl max-h-[85vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
             {/* Header */}
-            <div className="sticky top-0 bg-[#0D1B2A] text-white px-6 py-4 rounded-t-2xl flex items-center justify-between">
+            <div className="sticky top-0 bg-bg-sidebar text-white px-6 py-4 rounded-t-2xl flex items-center justify-between">
               <div>
                 <h2 className="text-lg font-bold">{detailBrand.brand_name}</h2>
                 <a
@@ -918,7 +917,7 @@ export default function HomePage() {
                   {detailBrand.website} <ExternalLink size={12} />
                 </a>
               </div>
-              <button onClick={() => setDetailBrand(null)} className="text-gray-400 hover:text-white transition-colors">
+              <button onClick={() => setDetailBrand(null)} className="text-text-muted hover:text-white transition-colors">
                 <X size={22} />
               </button>
             </div>
@@ -943,19 +942,19 @@ export default function HomePage() {
               {/* TQS / Conversion */}
               <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
                 <p className="text-xs text-amber-600 font-medium mb-1">TQS / Dönüşüm</p>
-                <p className="text-2xl font-bold text-amber-700">{detailBrand.tqs} <span className="text-base font-medium text-gray-500">/ %{detailBrand.conversion}</span></p>
+                <p className="text-2xl font-bold text-amber-700">{detailBrand.tqs} <span className="text-base font-medium text-text-secondary">/ %{detailBrand.conversion}</span></p>
               </div>
               {/* Country & Founded */}
-              <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
-                <p className="text-xs text-gray-500 font-medium mb-1">Ülke & Kuruluş</p>
-                <p className="text-lg font-bold text-gray-800">
-                  {FLAG[detailBrand.country?.toUpperCase()] || ""} {detailBrand.country?.toUpperCase() || "-"} <span className="text-gray-400 font-normal">|</span> {detailBrand.founded || "-"}
+              <div className="bg-bg-main border border-border-default rounded-xl p-4">
+                <p className="text-xs text-text-secondary font-medium mb-1">Ülke & Kuruluş</p>
+                <p className="text-lg font-bold text-text-primary">
+                  {FLAG[detailBrand.country?.toUpperCase()] || ""} {detailBrand.country?.toUpperCase() || "-"} <span className="text-text-muted font-normal">|</span> {detailBrand.founded || "-"}
                 </p>
               </div>
               {/* Category & Niche */}
-              <div className="bg-[#667eea]/5 border border-[#667eea]/20 rounded-xl p-4">
-                <p className="text-xs text-[#667eea] font-medium mb-1">Kategori / Niş</p>
-                <p className="text-lg font-bold text-gray-800">{detailBrand.category} <span className="text-gray-400 font-normal">|</span> {detailBrand.niche}</p>
+              <div className="bg-accent/5 border border-accent/20 rounded-xl p-4">
+                <p className="text-xs text-accent font-medium mb-1">Kategori / Niş</p>
+                <p className="text-lg font-bold text-text-primary">{detailBrand.category} <span className="text-text-muted font-normal">|</span> {detailBrand.niche}</p>
               </div>
             </div>
 
@@ -963,22 +962,22 @@ export default function HomePage() {
             <div className="px-6 pb-6 space-y-4">
               {/* Insight */}
               {detailBrand.insight && (
-                <div className="bg-gray-50 rounded-xl p-4">
-                  <p className="text-xs text-gray-500 font-semibold mb-2 uppercase tracking-wide">Öne Çıkan Özellik</p>
-                  <p className="text-sm text-gray-700 leading-relaxed">{detailBrand.insight}</p>
+                <div className="bg-bg-main rounded-xl p-4">
+                  <p className="text-xs text-text-secondary font-semibold mb-2 uppercase tracking-wide">Öne Çıkan Özellik</p>
+                  <p className="text-sm text-text-primary leading-relaxed">{detailBrand.insight}</p>
                 </div>
               )}
               {/* History */}
               {detailBrand.history && (
-                <div className="bg-gray-50 rounded-xl p-4">
-                  <p className="text-xs text-gray-500 font-semibold mb-2 uppercase tracking-wide">Marka Hikayesi</p>
-                  <p className="text-sm text-gray-700 leading-relaxed">{detailBrand.history}</p>
+                <div className="bg-bg-main rounded-xl p-4">
+                  <p className="text-xs text-text-secondary font-semibold mb-2 uppercase tracking-wide">Marka Hikayesi</p>
+                  <p className="text-sm text-text-primary leading-relaxed">{detailBrand.history}</p>
                 </div>
               )}
               {/* Growth Method */}
               {detailBrand.growth_method && (
-                <div className="bg-gray-50 rounded-xl p-4">
-                  <p className="text-xs text-gray-500 font-semibold mb-2 uppercase tracking-wide">Büyüme Yöntemi</p>
+                <div className="bg-bg-main rounded-xl p-4">
+                  <p className="text-xs text-text-secondary font-semibold mb-2 uppercase tracking-wide">Büyüme Yöntemi</p>
                   <div className="flex flex-wrap gap-2">
                     {detailBrand.growth_method.split(",").filter(Boolean).map((g, i) => (
                       <span key={i} className="inline-block bg-emerald-100 text-emerald-700 px-2.5 py-1 rounded-lg text-xs font-medium">{g.trim()}</span>
@@ -988,8 +987,8 @@ export default function HomePage() {
               )}
               {/* Marketing Angles */}
               {detailBrand.marketing_angles && (
-                <div className="bg-gray-50 rounded-xl p-4">
-                  <p className="text-xs text-gray-500 font-semibold mb-2 uppercase tracking-wide">Pazarlama Açıları</p>
+                <div className="bg-bg-main rounded-xl p-4">
+                  <p className="text-xs text-text-secondary font-semibold mb-2 uppercase tracking-wide">Pazarlama Açıları</p>
                   <div className="flex flex-wrap gap-2">
                     {detailBrand.marketing_angles.split(",").filter(Boolean).map((a, i) => (
                       <span key={i} className="inline-block bg-purple-100 text-purple-700 px-2.5 py-1 rounded-lg text-xs font-medium">{a.trim()}</span>
@@ -999,8 +998,8 @@ export default function HomePage() {
               )}
               {/* Meta Ads */}
               {detailBrand.meta_ads_url && (
-                <div className="bg-gray-50 rounded-xl p-4">
-                  <p className="text-xs text-gray-500 font-semibold mb-2 uppercase tracking-wide">Meta Ads</p>
+                <div className="bg-bg-main rounded-xl p-4">
+                  <p className="text-xs text-text-secondary font-semibold mb-2 uppercase tracking-wide">Meta Ads</p>
                   <a
                     href={detailBrand.meta_ads_url.startsWith("http") ? detailBrand.meta_ads_url : `https://${detailBrand.meta_ads_url}`}
                     target="_blank"
@@ -1019,12 +1018,12 @@ export default function HomePage() {
       {/* Save Modal */}
       {showSaveModal && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl p-6 w-full max-w-md">
+          <div className="bg-bg-card rounded-[14px] p-6 w-full max-w-md">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-lg font-semibold">Klasöre Kaydet</h2>
               <button
                 onClick={() => setShowSaveModal(false)}
-                className="text-gray-400 hover:text-gray-600 text-xl font-bold"
+                className="text-text-muted hover:text-text-secondary text-xl font-bold"
               >
                 &#x2715;
               </button>
@@ -1041,13 +1040,13 @@ export default function HomePage() {
             ) : (
               <>
                 <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-text-primary mb-1">
                     Klasör Seç
                   </label>
                   <select
                     value={selectedFolder}
                     onChange={(e) => setSelectedFolder(e.target.value)}
-                    className="w-full py-2 px-3 border border-gray-200 rounded-lg text-sm"
+                    className="w-full py-2 px-3 border border-border-default rounded-lg text-sm"
                   >
                     {folders.map((f) => (
                       <option key={f} value={f}>
@@ -1058,7 +1057,7 @@ export default function HomePage() {
                 </div>
 
                 <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-text-primary mb-1">
                     Yeni Klasör
                   </label>
                   <div className="flex gap-2">
@@ -1067,11 +1066,11 @@ export default function HomePage() {
                       value={newFolderName}
                       onChange={(e) => setNewFolderName(e.target.value)}
                       placeholder="Klasör adı..."
-                      className="flex-1 py-2 px-3 border border-gray-200 rounded-lg text-sm"
+                      className="flex-1 py-2 px-3 border border-border-default rounded-lg text-sm"
                     />
                     <button
                       onClick={handleCreateFolder}
-                      className="px-4 py-2 bg-[#667eea] text-white rounded-lg text-sm"
+                      className="px-4 py-2 bg-accent text-white rounded-lg text-sm"
                     >
                       Oluştur
                     </button>
@@ -1081,7 +1080,7 @@ export default function HomePage() {
                 <div className="flex gap-2 justify-end">
                   <button
                     onClick={() => setShowSaveModal(false)}
-                    className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm"
+                    className="px-4 py-2 bg-bg-hover text-text-primary rounded-lg text-sm"
                   >
                     İptal
                   </button>

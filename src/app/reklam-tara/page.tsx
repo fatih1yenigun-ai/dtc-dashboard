@@ -470,17 +470,17 @@ export default function ReklamTaraPage() {
   return (
     <div>
       {/* ═══ SEARCH BAR ═══ */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-4">
+      <div className="bg-bg-card rounded-[14px] shadow-sm border border-border-default p-4 mb-4">
         <div className="flex items-center gap-2">
           <div className="relative flex-1">
-            <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" />
             <input
               type="text"
               value={keyword}
               onChange={(e) => setKeyword(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleSearch()}
               placeholder="Reklam metni, acilis sayfasi URL'si, reklamveren adi, urun adiyla ara"
-              className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#667eea]/30 focus:border-[#667eea]"
+              className="w-full pl-10 pr-4 py-2.5 border border-border-default rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent"
             />
           </div>
           <button
@@ -501,8 +501,8 @@ export default function ReklamTaraPage() {
           onClick={() => setMode("tts_products")}
           className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
             mode === "tts_products"
-              ? "bg-[#667eea] text-white"
-              : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-50"
+              ? "bg-accent text-white"
+              : "bg-bg-card text-text-secondary border border-border-default hover:bg-bg-hover"
           }`}
         >
           Tiktok Urunler
@@ -511,8 +511,8 @@ export default function ReklamTaraPage() {
           onClick={() => setMode("tts_shops")}
           className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
             mode === "tts_shops"
-              ? "bg-[#667eea] text-white"
-              : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-50"
+              ? "bg-accent text-white"
+              : "bg-bg-card text-text-secondary border border-border-default hover:bg-bg-hover"
           }`}
         >
           Tiktok Magazalar
@@ -521,8 +521,8 @@ export default function ReklamTaraPage() {
           onClick={() => setMode("tts_videos")}
           className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
             mode === "tts_videos"
-              ? "bg-[#667eea] text-white"
-              : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-50"
+              ? "bg-accent text-white"
+              : "bg-bg-card text-text-secondary border border-border-default hover:bg-bg-hover"
           }`}
         >
           Tiktok Reklamlar
@@ -531,8 +531,8 @@ export default function ReklamTaraPage() {
           onClick={() => setMode("meta_ads")}
           className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
             mode === "meta_ads"
-              ? "bg-[#667eea] text-white"
-              : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-50"
+              ? "bg-accent text-white"
+              : "bg-bg-card text-text-secondary border border-border-default hover:bg-bg-hover"
           }`}
         >
           Meta Reklamlar
@@ -550,7 +550,7 @@ export default function ReklamTaraPage() {
             else if (mode === "tts_videos") handleVideoSortChange(Number(e.target.value));
             else if (mode === "meta_ads") handleMetaSortChange(e.target.value as SortKey);
           }}
-          className="py-2 px-3 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#667eea]/30"
+          className="py-2 px-3 border border-border-default rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/30"
         >
           {mode === "tts_products" &&
             PRODUCT_SORT_OPTIONS.map((opt) => (
@@ -581,8 +581,8 @@ export default function ReklamTaraPage() {
               onClick={() => handleAscDesc("desc")}
               className={`p-1.5 rounded-lg transition-colors ${
                 currentDir === "desc"
-                  ? "bg-[#667eea] text-white"
-                  : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-50"
+                  ? "bg-accent text-white"
+                  : "bg-bg-card text-text-secondary border border-border-default hover:bg-bg-hover"
               }`}
             >
               <ArrowDown size={16} />
@@ -591,8 +591,8 @@ export default function ReklamTaraPage() {
               onClick={() => handleAscDesc("asc")}
               className={`p-1.5 rounded-lg transition-colors ${
                 currentDir === "asc"
-                  ? "bg-[#667eea] text-white"
-                  : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-50"
+                  ? "bg-accent text-white"
+                  : "bg-bg-card text-text-secondary border border-border-default hover:bg-bg-hover"
               }`}
             >
               <ArrowUp size={16} />
@@ -602,13 +602,13 @@ export default function ReklamTaraPage() {
       </div>
 
       {/* ═══ ERROR ═══ */}
-      {error && <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-6 text-red-700 text-sm">{error}</div>}
+      {error && <div className="bg-red-50 border border-red-200 rounded-[14px] p-4 mb-6 text-red-700 text-sm">{error}</div>}
 
       {/* ═══ LOADING ═══ */}
       {loading && (
         <div className="py-16 flex flex-col items-center">
-          <Loader2 size={32} className="animate-spin text-[#667eea] mb-3" />
-          <p className="text-gray-500 font-medium">
+          <Loader2 size={32} className="animate-spin text-accent mb-3" />
+          <p className="text-text-secondary font-medium">
             {mode === "tts_videos" ? "500 video yukleniyor..." : mode === "meta_ads" ? "PiPiAds'ten reklamlar aliniyor..." : "PiPiAds'ten urunler aliniyor..."}
           </p>
         </div>
@@ -617,7 +617,7 @@ export default function ReklamTaraPage() {
       {/* ═══ TTS PRODUCT RESULTS ═══ */}
       {mode === "tts_products" && !productLoading && products.length > 0 && (
         <div>
-          <p className="text-sm text-gray-500 mb-4">{productAllCount} urun yuklendi{productHasMore ? " (devam ediyor...)" : ""}</p>
+          <p className="text-sm text-text-secondary mb-4">{productAllCount} urun yuklendi{productHasMore ? " (devam ediyor...)" : ""}</p>
 
           <ProductTable
             results={products}
@@ -636,13 +636,13 @@ export default function ReklamTaraPage() {
           {productHasMore && !productLoadingMore && <div key={products.length} ref={productSentinelRef} className="py-8" />}
           {productLoadingMore && (
             <div className="py-8 flex justify-center">
-              <div className="flex items-center gap-2 text-gray-400">
+              <div className="flex items-center gap-2 text-text-muted">
                 <Loader2 size={20} className="animate-spin" />
                 <span className="text-sm">Daha fazla urun yukleniyor...</span>
               </div>
             </div>
           )}
-          {!productHasMore && products.length > 0 && <p className="text-center text-sm text-gray-400 py-8">Tum urunler yuklendi ({productAllCount} urun)</p>}
+          {!productHasMore && products.length > 0 && <p className="text-center text-sm text-text-muted py-8">Tum urunler yuklendi ({productAllCount} urun)</p>}
         </div>
       )}
 
@@ -651,27 +651,27 @@ export default function ReklamTaraPage() {
         <>
           {/* Tag Analytics */}
           {videoAllCount > 0 && tagAnalytics.length > 0 && (
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 mb-6">
-              <h3 className="text-sm font-semibold text-gray-900 mb-1">Pazarlama Acilari &rarr; Goruntulenme</h3>
-              <p className="text-[11px] text-gray-400 mb-3">{videoAllCount} video analiz edildi</p>
+            <div className="bg-bg-card rounded-[14px] shadow-sm border border-border-default p-5 mb-6">
+              <h3 className="text-sm font-semibold text-text-primary mb-1">Pazarlama Acilari &rarr; Goruntulenme</h3>
+              <p className="text-[11px] text-text-muted mb-3">{videoAllCount} video analiz edildi</p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2 max-h-[320px] overflow-y-auto">
                 {tagAnalytics.slice(0, 20).map((t, i) => {
                   const maxViews = tagAnalytics[0]?.avgViews || 1;
                   const pct = Math.round((t.avgViews / maxViews) * 100);
                   return (
                     <div key={t.tag} className="flex items-center gap-3">
-                      <span className="text-xs text-gray-400 w-5 text-right">{i + 1}</span>
+                      <span className="text-xs text-text-muted w-5 text-right">{i + 1}</span>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between mb-0.5">
-                          <span className="text-xs font-medium text-gray-700 truncate">#{t.tag}</span>
-                          <span className="text-xs text-gray-500 ml-2 flex-shrink-0">{formatCompact(t.avgViews)} ort.</span>
+                          <span className="text-xs font-medium text-text-primary truncate">#{t.tag}</span>
+                          <span className="text-xs text-text-secondary ml-2 flex-shrink-0">{formatCompact(t.avgViews)} ort.</span>
                         </div>
-                        <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                        <div className="h-1.5 bg-bg-hover rounded-full overflow-hidden">
                           <div className="h-full rounded-full bg-gradient-to-r from-[#667eea] to-[#764ba2]" style={{ width: `${pct}%` }} />
                         </div>
                         <div className="flex justify-between mt-0.5">
-                          <span className="text-[10px] text-gray-400">{t.count} video</span>
-                          <span className="text-[10px] text-gray-400">{formatCompact(t.totalViews)} toplam</span>
+                          <span className="text-[10px] text-text-muted">{t.count} video</span>
+                          <span className="text-[10px] text-text-muted">{formatCompact(t.totalViews)} toplam</span>
                         </div>
                       </div>
                     </div>
@@ -684,7 +684,7 @@ export default function ReklamTaraPage() {
           {/* Video Grid */}
           {videoResults.length > 0 && (
             <div>
-              <p className="text-sm text-gray-500 mb-4">{videoResults.length} / {videoAllCount} video gosteriliyor</p>
+              <p className="text-sm text-text-secondary mb-4">{videoResults.length} / {videoAllCount} video gosteriliyor</p>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {videoResults.map((video) => (
                   <VideoCard key={video.id} video={video} onSave={() => openSaveModal(undefined, video)} onDetail={openVideoDetail} />
@@ -692,7 +692,7 @@ export default function ReklamTaraPage() {
               </div>
               {videoHasMore && <div key={videoResults.length} ref={videoSentinelRef} className="py-8" />}
               {!videoHasMore && videoResults.length > 0 && (
-                <p className="text-center text-sm text-gray-400 py-8">Tum sonuclar yuklendi ({videoAllCount} video)</p>
+                <p className="text-center text-sm text-text-muted py-8">Tum sonuclar yuklendi ({videoAllCount} video)</p>
               )}
             </div>
           )}
@@ -702,27 +702,27 @@ export default function ReklamTaraPage() {
       {/* ═══ STORE RESULTS ═══ */}
       {mode === "tts_shops" && !storeLoading && stores.length > 0 && (
         <div>
-          <p className="text-sm text-gray-500 mb-4">{storeAllCount} magaza yuklendi{storeHasMore ? " (devam ediyor...)" : ""}</p>
+          <p className="text-sm text-text-secondary mb-4">{storeAllCount} magaza yuklendi{storeHasMore ? " (devam ediyor...)" : ""}</p>
 
           <StoreTable results={stores} />
 
           {storeHasMore && !storeLoadingMore && <div key={stores.length} ref={storeSentinelRef} className="py-8" />}
           {storeLoadingMore && (
             <div className="py-8 flex justify-center">
-              <div className="flex items-center gap-2 text-gray-400">
+              <div className="flex items-center gap-2 text-text-muted">
                 <Loader2 size={20} className="animate-spin" />
                 <span className="text-sm">Daha fazla magaza yukleniyor...</span>
               </div>
             </div>
           )}
-          {!storeHasMore && stores.length > 0 && <p className="text-center text-sm text-gray-400 py-8">Tum magazalar yuklendi ({storeAllCount} magaza)</p>}
+          {!storeHasMore && stores.length > 0 && <p className="text-center text-sm text-text-muted py-8">Tum magazalar yuklendi ({storeAllCount} magaza)</p>}
         </div>
       )}
 
       {/* ═══ META AD RESULTS ═══ */}
       {mode === "meta_ads" && !metaLoading && ads.length > 0 && (
         <div>
-          <p className="text-sm text-gray-500 mb-4">
+          <p className="text-sm text-text-secondary mb-4">
             {metaAllCount} reklam yuklendi{metaHasMore ? " (devam ediyor...)" : ""}
           </p>
 
@@ -735,14 +735,14 @@ export default function ReklamTaraPage() {
           {metaHasMore && !metaLoadingMore && <div key={ads.length} ref={metaSentinelRef} className="py-8" />}
           {metaLoadingMore && (
             <div className="py-8 flex justify-center">
-              <div className="flex items-center gap-2 text-gray-400">
+              <div className="flex items-center gap-2 text-text-muted">
                 <Loader2 size={20} className="animate-spin" />
                 <span className="text-sm">Daha fazla reklam yukleniyor...</span>
               </div>
             </div>
           )}
           {!metaHasMore && ads.length > 0 && (
-            <p className="text-center text-sm text-gray-400 py-8">
+            <p className="text-center text-sm text-text-muted py-8">
               Tum reklamlar yuklendi ({metaAllCount} reklam)
             </p>
           )}
@@ -756,7 +756,7 @@ export default function ReklamTaraPage() {
         (mode === "tts_videos" && videoResults.length === 0 && !videoError && videoAllCount === 0 && !videoLoading) ||
         (mode === "meta_ads" && ads.length === 0 && !metaError && metaAllCount === 0 && !metaLoading)
       ) && (
-        <div className="text-center py-16 text-gray-400">
+        <div className="text-center py-16 text-text-muted">
           <p className="text-lg">Sonuc bulunamadi</p>
           <p className="text-sm mt-1">Farkli bir anahtar kelime deneyin</p>
         </div>
@@ -765,19 +765,19 @@ export default function ReklamTaraPage() {
       {/* ═══ META AD DETAIL POPUP ═══ */}
       {detailAd && (
         <div className="fixed inset-0 bg-black/50 flex items-start justify-center z-50 overflow-y-auto py-8" onClick={() => setDetailAd(null)}>
-          <div className="bg-white rounded-xl w-full max-w-3xl mx-4 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-bg-card rounded-[14px] w-full max-w-3xl mx-4 shadow-2xl" onClick={(e) => e.stopPropagation()}>
             {/* Header */}
-            <div className="flex items-center justify-between p-5 border-b border-gray-100">
+            <div className="flex items-center justify-between p-5 border-b border-border-default">
               <div className="flex items-center gap-3">
                 {detailAd.advertiserProfilePic ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={detailAd.advertiserProfilePic} alt={detailAd.advertiserName} className="w-10 h-10 rounded-full object-cover" />
                 ) : (
-                  <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center"><Megaphone size={18} className="text-gray-400" /></div>
+                  <div className="w-10 h-10 rounded-full bg-bg-hover flex items-center justify-center"><Megaphone size={18} className="text-text-muted" /></div>
                 )}
                 <div>
-                  <p className="font-semibold text-gray-900 text-sm">{detailAd.advertiserName || "Bilinmeyen"}</p>
-                  <div className="flex items-center gap-2 text-xs text-gray-500">
+                  <p className="font-semibold text-text-primary text-sm">{detailAd.advertiserName || "Bilinmeyen"}</p>
+                  <div className="flex items-center gap-2 text-xs text-text-secondary">
                     {detailAd.ecommercePlatform && (
                       <span className="bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded text-[10px] font-medium">{detailAd.ecommercePlatform}</span>
                     )}
@@ -785,18 +785,18 @@ export default function ReklamTaraPage() {
                   </div>
                 </div>
               </div>
-              <button onClick={() => setDetailAd(null)} className="text-gray-400 hover:text-gray-600 cursor-pointer"><X size={20} /></button>
+              <button onClick={() => setDetailAd(null)} className="text-text-muted hover:text-text-secondary cursor-pointer"><X size={20} /></button>
             </div>
 
             <div className="flex flex-col md:flex-row">
               {/* Left: Creative */}
-              <div className="md:w-1/2 p-5 border-r border-gray-100">
+              <div className="md:w-1/2 p-5 border-r border-border-default">
                 {detailAd.mediaFormat === 1 && detailAd.videos.length > 0 ? (
                   <video
                     src={detailAd.videos[0].url}
                     poster={detailAd.videos[0].coverUrl}
                     controls
-                    className="w-full rounded-lg bg-gray-100"
+                    className="w-full rounded-lg bg-bg-hover"
                   />
                 ) : detailAd.mediaFormat === 3 && detailAd.cards.length > 0 ? (
                   <div className="relative">
@@ -835,14 +835,14 @@ export default function ReklamTaraPage() {
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={detailAd.thumbnail} alt="Ad" className="w-full rounded-lg object-cover" />
                 ) : (
-                  <div className="w-full aspect-square bg-gray-100 rounded-lg flex items-center justify-center">
-                    <ImageIcon size={48} className="text-gray-300" />
+                  <div className="w-full aspect-square bg-bg-hover rounded-lg flex items-center justify-center">
+                    <ImageIcon size={48} className="text-text-muted" />
                   </div>
                 )}
 
                 {/* Ad text */}
                 <div className="mt-4 max-h-40 overflow-y-auto">
-                  <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">{detailAd.adContent || "Reklam metni yok"}</p>
+                  <p className="text-sm text-text-primary whitespace-pre-wrap leading-relaxed">{detailAd.adContent || "Reklam metni yok"}</p>
                 </div>
               </div>
 
@@ -850,11 +850,11 @@ export default function ReklamTaraPage() {
               <div className="md:w-1/2 p-5 space-y-4">
                 {/* Country */}
                 <div>
-                  <p className="text-xs font-medium text-gray-500 mb-1">Ulke</p>
+                  <p className="text-xs font-medium text-text-secondary mb-1">Ulke</p>
                   <div className="flex flex-wrap gap-1">
                     {detailAd.country.map((c) => (
                       <span key={c} className="text-sm">
-                        {FLAG[c.toUpperCase()] || c} <span className="text-xs text-gray-500">{c}</span>
+                        {FLAG[c.toUpperCase()] || c} <span className="text-xs text-text-secondary">{c}</span>
                       </span>
                     ))}
                   </div>
@@ -862,20 +862,20 @@ export default function ReklamTaraPage() {
 
                 {/* Landing Page */}
                 <div>
-                  <p className="text-xs font-medium text-gray-500 mb-1">Acilis Sayfasi</p>
+                  <p className="text-xs font-medium text-text-secondary mb-1">Acilis Sayfasi</p>
                   {detailAd.landingPages.map((lp, i) => (
-                    <a key={i} href={lp} target="_blank" rel="noopener noreferrer" className="text-sm text-[#667eea] hover:underline flex items-center gap-1 mb-0.5">
+                    <a key={i} href={lp} target="_blank" rel="noopener noreferrer" className="text-sm text-accent hover:underline flex items-center gap-1 mb-0.5">
                       <ExternalLink size={12} />
                       {lp.length > 60 ? lp.substring(0, 60) + "..." : lp}
                     </a>
                   ))}
-                  {detailAd.landingPages.length === 0 && <span className="text-sm text-gray-400">-</span>}
+                  {detailAd.landingPages.length === 0 && <span className="text-sm text-text-muted">-</span>}
                 </div>
 
                 {/* CTA */}
                 <div>
-                  <p className="text-xs font-medium text-gray-500 mb-1">CTA</p>
-                  <span className="text-sm bg-gray-100 text-gray-700 px-2.5 py-1 rounded-lg">{detailAd.buttonText || "-"}</span>
+                  <p className="text-xs font-medium text-text-secondary mb-1">CTA</p>
+                  <span className="text-sm bg-bg-hover text-text-primary px-2.5 py-1 rounded-lg">{detailAd.buttonText || "-"}</span>
                 </div>
 
                 {/* Metrics Grid */}
@@ -908,16 +908,16 @@ export default function ReklamTaraPage() {
 
                 {/* Product info */}
                 {detailAd.productName && (
-                  <div className="bg-gray-50 rounded-lg p-3">
-                    <p className="text-xs font-medium text-gray-500 mb-2">Urun Bilgisi</p>
+                  <div className="bg-bg-main rounded-lg p-3">
+                    <p className="text-xs font-medium text-text-secondary mb-2">Urun Bilgisi</p>
                     <div className="flex items-center gap-3">
                       {detailAd.productImageUrl && (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img src={detailAd.productImageUrl} alt={detailAd.productName} className="w-12 h-12 rounded-lg object-cover" />
                       )}
                       <div>
-                        <p className="text-sm font-medium text-gray-900">{detailAd.productName}</p>
-                        <p className="text-xs text-gray-500">
+                        <p className="text-sm font-medium text-text-primary">{detailAd.productName}</p>
+                        <p className="text-xs text-text-secondary">
                           ${detailAd.productPriceUsd.toFixed(2)} · {detailAd.productCategoryName}
                         </p>
                       </div>
@@ -927,9 +927,9 @@ export default function ReklamTaraPage() {
 
                 {/* Audience */}
                 {detailAd.adAudience && (
-                  <div className="bg-gray-50 rounded-lg p-3">
-                    <p className="text-xs font-medium text-gray-500 mb-1">Hedef Kitle</p>
-                    <div className="flex items-center gap-3 text-sm text-gray-700">
+                  <div className="bg-bg-main rounded-lg p-3">
+                    <p className="text-xs font-medium text-text-secondary mb-1">Hedef Kitle</p>
+                    <div className="flex items-center gap-3 text-sm text-text-primary">
                       <span>Toplam: {formatCompact(detailAd.adAudience.totalReach)}</span>
                       <span>Cinsiyet: {detailAd.adAudience.genderAudience}</span>
                       <span>Yas: {detailAd.adAudience.ageMin}-{detailAd.adAudience.ageMax}+</span>
@@ -938,7 +938,7 @@ export default function ReklamTaraPage() {
                 )}
 
                 {/* Dates */}
-                <div className="flex items-center gap-4 text-xs text-gray-500">
+                <div className="flex items-center gap-4 text-xs text-text-secondary">
                   <span>Baslangic: {formatDate(detailAd.adStartedAt)}</span>
                   <span>Ilk Gorulme: {formatDate(detailAd.firstDiscoveredAt)}</span>
                   <span>Son Gorulme: {formatDate(detailAd.lastDiscoveredAt)}</span>
@@ -967,7 +967,7 @@ export default function ReklamTaraPage() {
                       href={detailAd.advertiserLink}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-gray-100 text-gray-700 text-sm font-medium hover:bg-gray-200"
+                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-bg-hover text-text-primary text-sm font-medium hover:bg-bg-main"
                     >
                       <ExternalLink size={14} /> Facebook
                     </a>
@@ -977,7 +977,7 @@ export default function ReklamTaraPage() {
                       href={detailAd.storeLink}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-gray-100 text-gray-700 text-sm font-medium hover:bg-gray-200"
+                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-bg-hover text-text-primary text-sm font-medium hover:bg-bg-main"
                     >
                       <ShoppingBag size={14} /> Magaza
                     </a>
@@ -992,21 +992,21 @@ export default function ReklamTaraPage() {
       {/* ═══ VIDEO DETAIL POPUP ═══ */}
       {detailVideo && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setDetailVideo(null)}>
-          <div className="bg-white rounded-xl w-full max-w-5xl mx-4 shadow-2xl max-h-[90vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-bg-card rounded-[14px] w-full max-w-5xl mx-4 shadow-2xl max-h-[90vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
             {/* Header */}
-            <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 flex-shrink-0">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-border-default flex-shrink-0">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
-                  <span className="text-sm font-bold text-gray-600">{(detailVideo.shop_name || "?")[0]?.toUpperCase()}</span>
+                <div className="w-10 h-10 rounded-full bg-bg-hover flex items-center justify-center flex-shrink-0">
+                  <span className="text-sm font-bold text-text-secondary">{(detailVideo.shop_name || "?")[0]?.toUpperCase()}</span>
                 </div>
                 <div>
-                  <p className="font-semibold text-gray-900 text-sm">{detailVideo.shop_name || "Bilinmeyen"}</p>
+                  <p className="font-semibold text-text-primary text-sm">{detailVideo.shop_name || "Bilinmeyen"}</p>
                   {detailVideo.shop_handle && (
-                    <a href={`https://www.tiktok.com/@${detailVideo.shop_handle}`} target="_blank" rel="noopener noreferrer" className="text-xs text-[#667eea] hover:underline">{detailVideo.shop_handle}</a>
+                    <a href={`https://www.tiktok.com/@${detailVideo.shop_handle}`} target="_blank" rel="noopener noreferrer" className="text-xs text-accent hover:underline">{detailVideo.shop_handle}</a>
                   )}
                 </div>
               </div>
-              <button onClick={() => setDetailVideo(null)} className="text-gray-400 hover:text-gray-600 cursor-pointer"><X size={20} /></button>
+              <button onClick={() => setDetailVideo(null)} className="text-text-muted hover:text-text-secondary cursor-pointer"><X size={20} /></button>
             </div>
 
             {/* Body */}
@@ -1027,7 +1027,7 @@ export default function ReklamTaraPage() {
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={detailVideo.cover_image || detailVideo.image} alt="" className="w-full h-full object-contain max-h-[75vh]" />
                   ) : (
-                    <div className="py-32 text-gray-500"><Play size={48} /></div>
+                    <div className="py-32 text-text-secondary"><Play size={48} /></div>
                   )}
                 </div>
                 {/* Engagement bar */}
@@ -1043,10 +1043,10 @@ export default function ReklamTaraPage() {
               <div className="md:w-[60%] overflow-y-auto p-5 space-y-4">
                 {/* Ad text */}
                 <div>
-                  <p className="text-xs font-medium text-gray-500 mb-1">Reklam Metni</p>
-                  <p className="text-sm text-gray-800 leading-relaxed line-clamp-3">{detailVideo.title || detailVideo.hook || "-"}</p>
+                  <p className="text-xs font-medium text-text-secondary mb-1">Reklam Metni</p>
+                  <p className="text-sm text-text-primary leading-relaxed line-clamp-3">{detailVideo.title || detailVideo.hook || "-"}</p>
                   {detailVideo.button_text && (
-                    <span className="inline-block mt-2 text-xs bg-gray-100 text-gray-700 px-2.5 py-1 rounded-lg">{detailVideo.button_text}</span>
+                    <span className="inline-block mt-2 text-xs bg-bg-hover text-text-primary px-2.5 py-1 rounded-lg">{detailVideo.button_text}</span>
                   )}
                 </div>
 
@@ -1069,36 +1069,36 @@ export default function ReklamTaraPage() {
                 {/* Info rows */}
                 <div className="space-y-2 text-sm">
                   <div className="flex items-center">
-                    <span className="text-gray-500 w-32 flex-shrink-0">Ulke/Bolge:</span>
-                    <span className="font-medium text-gray-800">
+                    <span className="text-text-secondary w-32 flex-shrink-0">Ulke/Bolge:</span>
+                    <span className="font-medium text-text-primary">
                       {detailVideo.region ? `${FLAG[detailVideo.region.toUpperCase()] || ""} ${detailVideo.region}` : "-"}
                     </span>
                   </div>
                   {(detailVideo.audience_age_min > 0 || detailVideo.audience_age_max > 0) && (
                     <div className="flex items-center">
-                      <span className="text-gray-500 w-32 flex-shrink-0">Hedef Kitle:</span>
-                      <span className="font-medium text-gray-800">{detailVideo.audience_age_min}-{detailVideo.audience_age_max} {detailVideo.audience_device ? `| ${detailVideo.audience_device}` : ""}</span>
+                      <span className="text-text-secondary w-32 flex-shrink-0">Hedef Kitle:</span>
+                      <span className="font-medium text-text-primary">{detailVideo.audience_age_min}-{detailVideo.audience_age_max} {detailVideo.audience_device ? `| ${detailVideo.audience_device}` : ""}</span>
                     </div>
                   )}
                   <div className="flex items-center">
-                    <span className="text-gray-500 w-32 flex-shrink-0">Olusturma Tarihi:</span>
-                    <span className="font-medium text-gray-800">{detailVideo.ad_create_time ? formatDate(detailVideo.ad_create_time) : "-"}</span>
+                    <span className="text-text-secondary w-32 flex-shrink-0">Olusturma Tarihi:</span>
+                    <span className="font-medium text-text-primary">{detailVideo.ad_create_time ? formatDate(detailVideo.ad_create_time) : "-"}</span>
                   </div>
                   <div className="flex items-center">
-                    <span className="text-gray-500 w-32 flex-shrink-0">First / Last seen:</span>
-                    <span className="font-medium text-gray-800">{detailVideo.first_seen ? formatDate(detailVideo.first_seen) : "-"} - {detailVideo.last_seen > 0 ? formatDate(detailVideo.last_seen) : "Aktif"}</span>
+                    <span className="text-text-secondary w-32 flex-shrink-0">First / Last seen:</span>
+                    <span className="font-medium text-text-primary">{detailVideo.first_seen ? formatDate(detailVideo.first_seen) : "-"} - {detailVideo.last_seen > 0 ? formatDate(detailVideo.last_seen) : "Aktif"}</span>
                   </div>
                 </div>
 
                 {/* Son baglanti */}
                 {(detailVideo.landing_page || detailVideo.product_id) && (
-                  <div className="flex items-center gap-2 bg-gray-50 rounded-lg px-3 py-2.5">
-                    <span className="text-xs text-gray-500 w-24 flex-shrink-0">Son baglanti:</span>
+                  <div className="flex items-center gap-2 bg-bg-main rounded-lg px-3 py-2.5">
+                    <span className="text-xs text-text-secondary w-24 flex-shrink-0">Son baglanti:</span>
                     <a
                       href={detailVideo.landing_page || `https://shop.tiktok.com/view/product/${detailVideo.product_id}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-xs text-[#667eea] hover:underline truncate flex items-center gap-1"
+                      className="text-xs text-accent hover:underline truncate flex items-center gap-1"
                     >
                       <ExternalLink size={10} />
                       {(detailVideo.landing_page || `https://shop.tiktok.com/view/product/${detailVideo.product_id}`).substring(0, 50)}...
@@ -1109,7 +1109,7 @@ export default function ReklamTaraPage() {
                 {/* Product card — shows when shop_id exists */}
                 {detailVideo.product_id && (
                   <div
-                    className="border border-gray-200 rounded-lg p-3 flex items-center gap-3 cursor-pointer hover:bg-gray-50 transition-colors"
+                    className="border border-border-default rounded-lg p-3 flex items-center gap-3 cursor-pointer hover:bg-bg-hover transition-colors"
                     onClick={() => goToProductFromVideo(detailVideo.product_id, detailVideo.shop_name, detailVideo.shop_handle)}
                   >
                     {detailVideo.product_image ? (
@@ -1121,14 +1121,14 @@ export default function ReklamTaraPage() {
                       </div>
                     )}
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900 truncate">{detailVideo.product_name || "TikTok Shop Urun"}</p>
+                      <p className="text-sm font-medium text-text-primary truncate">{detailVideo.product_name || "TikTok Shop Urun"}</p>
                       <div className="flex items-center gap-3 mt-1">
                         <span className="text-[10px] bg-orange-50 text-orange-600 px-1.5 py-0.5 rounded font-medium">TikTok Shop</span>
                         {detailVideo.product_price > 0 && <span className="text-xs font-bold text-orange-600">Fiyat: ${detailVideo.product_price.toFixed(2)}</span>}
                         {detailVideo.product_sold > 0 && <span className="text-xs text-red-500 font-medium">Satildi: {formatCompact(detailVideo.product_sold)}</span>}
                       </div>
                     </div>
-                    <ChevronRight size={16} className="text-gray-400 flex-shrink-0" />
+                    <ChevronRight size={16} className="text-text-muted flex-shrink-0" />
                   </div>
                 )}
 
@@ -1141,7 +1141,7 @@ export default function ReklamTaraPage() {
                     <Save size={14} /> Kaydet
                   </button>
                   {detailVideo.tiktok_post_url && (
-                    <a href={detailVideo.tiktok_post_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-gray-100 text-gray-700 text-sm font-medium hover:bg-gray-200">
+                    <a href={detailVideo.tiktok_post_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-bg-hover text-text-primary text-sm font-medium hover:bg-bg-main">
                       <ExternalLink size={14} /> TikTok
                     </a>
                   )}
@@ -1155,27 +1155,27 @@ export default function ReklamTaraPage() {
       {/* ═══ SAVE MODAL ═══ */}
       {showSaveModal && (saveProduct || saveVideo || saveMetaAd) && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl p-6 w-full max-w-md mx-4 shadow-2xl">
+          <div className="bg-bg-card rounded-[14px] p-6 w-full max-w-md mx-4 shadow-2xl">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold text-gray-900">Klasore Kaydet</h3>
-              <button onClick={() => { setShowSaveModal(false); setSaveProduct(null); setSaveVideo(null); setSaveMetaAd(null); }} className="text-gray-400 hover:text-gray-600 cursor-pointer"><X size={20} /></button>
+              <h3 className="font-semibold text-text-primary">Klasore Kaydet</h3>
+              <button onClick={() => { setShowSaveModal(false); setSaveProduct(null); setSaveVideo(null); setSaveMetaAd(null); }} className="text-text-muted hover:text-text-secondary cursor-pointer"><X size={20} /></button>
             </div>
-            <p className="text-sm text-gray-500 mb-4">
+            <p className="text-sm text-text-secondary mb-4">
               &quot;{saveProduct?.title || saveProduct?.shop_name || saveVideo?.hook || saveVideo?.title || saveVideo?.shop_name || saveMetaAd?.advertiserName || ""}&quot;
             </p>
             {folders.length > 0 && (
               <div className="mb-4">
-                <label className="block text-xs font-medium text-gray-500 mb-1">Mevcut Klasor</label>
-                <select value={selectedFolder} onChange={(e) => setSelectedFolder(e.target.value)} className="w-full py-2 px-3 border border-gray-200 rounded-lg text-sm">
+                <label className="block text-xs font-medium text-text-secondary mb-1">Mevcut Klasor</label>
+                <select value={selectedFolder} onChange={(e) => setSelectedFolder(e.target.value)} className="w-full py-2 px-3 border border-border-default rounded-lg text-sm">
                   {folders.map((f) => <option key={f} value={f}>{f}</option>)}
                 </select>
               </div>
             )}
             <div className="mb-4">
-              <label className="block text-xs font-medium text-gray-500 mb-1">veya Yeni Klasor</label>
+              <label className="block text-xs font-medium text-text-secondary mb-1">veya Yeni Klasor</label>
               <div className="flex gap-2">
-                <input value={newFolderName} onChange={(e) => setNewFolderName(e.target.value)} placeholder="Yeni klasor adi..." className="flex-1 py-2 px-3 border border-gray-200 rounded-lg text-sm" />
-                <button onClick={handleCreateFolder} className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm hover:bg-gray-200 cursor-pointer">Olustur</button>
+                <input value={newFolderName} onChange={(e) => setNewFolderName(e.target.value)} placeholder="Yeni klasor adi..." className="flex-1 py-2 px-3 border border-border-default rounded-lg text-sm" />
+                <button onClick={handleCreateFolder} className="px-3 py-2 bg-bg-hover text-text-primary rounded-lg text-sm hover:bg-bg-main cursor-pointer">Olustur</button>
               </div>
             </div>
             {saveMsg && <p className="text-sm text-green-600 mb-3">{saveMsg}</p>}
@@ -1195,36 +1195,36 @@ function ProductTable({ results, onSave, onDetail, sortNum, sortType, onSort }: 
 }) {
   const arrow = (num: number) => sortNum === num ? (sortType === "desc" ? " \u2193" : " \u2191") : "";
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+    <div className="bg-bg-card rounded-[14px] shadow-sm border border-border-default overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="bg-gray-50 border-b border-gray-200">
-              <th className="text-left py-3 px-4 font-medium text-gray-500 w-12">#</th>
-              <th className="text-left py-3 px-4 font-medium text-gray-500">Urun</th>
-              <th className="text-right py-3 px-4 font-medium text-gray-500 cursor-pointer hover:text-[#667eea] select-none" onClick={() => onSort(3)}>Satildi{arrow(3)}</th>
-              <th className="text-right py-3 px-4 font-medium text-gray-500 cursor-pointer hover:text-[#667eea] select-none" onClick={() => onSort(4)}>GMV{arrow(4)}</th>
-              <th className="text-right py-3 px-4 font-medium text-gray-500 cursor-pointer hover:text-[#667eea] select-none" onClick={() => onSort(7)}>Reklamlar{arrow(7)}</th>
-              <th className="text-right py-3 px-4 font-medium text-gray-500 cursor-pointer hover:text-[#667eea] select-none" onClick={() => onSort(5)}>Gosterim / Harcama{arrow(5)}</th>
-              <th className="text-right py-3 px-4 font-medium text-gray-500 cursor-pointer hover:text-[#667eea] select-none" onClick={() => onSort(8)}>Influencers{arrow(8)}</th>
-              <th className="text-center py-3 px-4 font-medium text-gray-500 cursor-pointer hover:text-[#667eea] select-none" onClick={() => onSort(2)}>Reklam Tarihi{arrow(2)}</th>
-              <th className="text-center py-3 px-4 font-medium text-gray-500 w-20">Eylem</th>
+            <tr className="bg-bg-main border-b border-border-default">
+              <th className="text-left py-3 px-4 font-medium text-text-secondary w-12">#</th>
+              <th className="text-left py-3 px-4 font-medium text-text-secondary">Urun</th>
+              <th className="text-right py-3 px-4 font-medium text-text-secondary cursor-pointer hover:text-accent select-none" onClick={() => onSort(3)}>Satildi{arrow(3)}</th>
+              <th className="text-right py-3 px-4 font-medium text-text-secondary cursor-pointer hover:text-accent select-none" onClick={() => onSort(4)}>GMV{arrow(4)}</th>
+              <th className="text-right py-3 px-4 font-medium text-text-secondary cursor-pointer hover:text-accent select-none" onClick={() => onSort(7)}>Reklamlar{arrow(7)}</th>
+              <th className="text-right py-3 px-4 font-medium text-text-secondary cursor-pointer hover:text-accent select-none" onClick={() => onSort(5)}>Gosterim / Harcama{arrow(5)}</th>
+              <th className="text-right py-3 px-4 font-medium text-text-secondary cursor-pointer hover:text-accent select-none" onClick={() => onSort(8)}>Influencers{arrow(8)}</th>
+              <th className="text-center py-3 px-4 font-medium text-text-secondary cursor-pointer hover:text-accent select-none" onClick={() => onSort(2)}>Reklam Tarihi{arrow(2)}</th>
+              <th className="text-center py-3 px-4 font-medium text-text-secondary w-20">Eylem</th>
             </tr>
           </thead>
           <tbody>
             {results.map((p, i) => (
-              <tr key={p.id || i} className="border-b border-gray-100 hover:bg-gray-50/50 transition-colors">
-                <td className="py-3 px-4 text-gray-400 text-xs">{i + 1}</td>
+              <tr key={p.id || i} className="border-b border-border-default hover:bg-bg-hover/50 transition-colors">
+                <td className="py-3 px-4 text-text-muted text-xs">{i + 1}</td>
                 <td className="py-3 px-4">
                   <div className="flex items-center gap-3 min-w-[280px]">
                     {p.image ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={p.image} alt={p.title} className="w-16 h-16 rounded-lg object-cover flex-shrink-0 border border-gray-100" />
+                      <img src={p.image} alt={p.title} className="w-16 h-16 rounded-lg object-cover flex-shrink-0 border border-border-default" />
                     ) : (
-                      <div className="w-16 h-16 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0"><ShoppingBag size={16} className="text-gray-300" /></div>
+                      <div className="w-16 h-16 rounded-lg bg-bg-hover flex items-center justify-center flex-shrink-0"><ShoppingBag size={16} className="text-text-muted" /></div>
                     )}
                     <div className="min-w-0">
-                      <button onClick={() => onDetail(p)} className="text-sm font-medium text-gray-900 hover:text-[#667eea] line-clamp-2 transition-colors text-left cursor-pointer" title={p.title}>
+                      <button onClick={() => onDetail(p)} className="text-sm font-medium text-text-primary hover:text-accent line-clamp-2 transition-colors text-left cursor-pointer" title={p.title}>
                         {p.title?.length > 60 ? p.title.substring(0, 60) + "..." : p.title || "Bilinmeyen"}
                       </button>
                       <div className="flex items-center gap-2 mt-1">
@@ -1232,31 +1232,31 @@ function ProductTable({ results, onSave, onDetail, sortNum, sortType, onSort }: 
                         <span className="text-xs font-medium text-orange-600">${p.price_usd.toFixed(2)}</span>
                       </div>
                       <div className="flex items-center gap-2 mt-1 flex-wrap">
-                        {p.seller_location && <span className="text-[10px] bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded">{p.seller_location}</span>}
-                        {p.commission_rate > 0 && <span className="text-[10px] text-gray-400">Komisyon: {p.commission_rate}%</span>}
+                        {p.seller_location && <span className="text-[10px] bg-bg-hover text-text-secondary px-1.5 py-0.5 rounded">{p.seller_location}</span>}
+                        {p.commission_rate > 0 && <span className="text-[10px] text-text-muted">Komisyon: {p.commission_rate}%</span>}
                       </div>
                       <div className="flex items-center gap-2 mt-1">
                         {p.shop_image ? (
                           // eslint-disable-next-line @next/next/no-img-element
                           <img src={p.shop_image} alt={p.shop_name} className="w-4 h-4 rounded-full object-cover flex-shrink-0" />
-                        ) : <div className="w-4 h-4 rounded-full bg-gray-200 flex-shrink-0" />}
-                        <span className="text-[11px] text-gray-500 truncate">{p.shop_name || "-"}</span>
+                        ) : <div className="w-4 h-4 rounded-full bg-bg-hover flex-shrink-0" />}
+                        <span className="text-[11px] text-text-secondary truncate">{p.shop_name || "-"}</span>
                       </div>
                     </div>
                   </div>
                 </td>
-                <td className="py-3 px-4 text-right font-medium text-gray-700">{formatCompact(p.sales_volume)}</td>
+                <td className="py-3 px-4 text-right font-medium text-text-primary">{formatCompact(p.sales_volume)}</td>
                 <td className="py-3 px-4 text-right font-bold text-emerald-600">{formatMoney(p.gmv_usd)}</td>
-                <td className="py-3 px-4 text-right text-gray-600">{formatCompact(p.video_count)}</td>
+                <td className="py-3 px-4 text-right text-text-secondary">{formatCompact(p.video_count)}</td>
                 <td className="py-3 px-4 text-right">
-                  <div className="text-gray-700">{formatCompact(p.play_count)}</div>
+                  <div className="text-text-primary">{formatCompact(p.play_count)}</div>
                 </td>
-                <td className="py-3 px-4 text-right text-gray-600">{formatCompact(p.person_count)}</td>
-                <td className="py-3 px-4 text-center text-xs text-gray-500 whitespace-nowrap">{formatDateRange(p.found_time, p.put_days) || "-"}</td>
+                <td className="py-3 px-4 text-right text-text-secondary">{formatCompact(p.person_count)}</td>
+                <td className="py-3 px-4 text-center text-xs text-text-secondary whitespace-nowrap">{formatDateRange(p.found_time, p.put_days) || "-"}</td>
                 <td className="py-3 px-4 text-center">
                   <div className="flex items-center justify-center gap-1">
-                    <button onClick={() => onDetail(p)} className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-50 text-gray-500 hover:text-[#667eea] transition-colors" title="Detay"><Eye size={14} /></button>
-                    <button onClick={() => onSave(p)} className="p-1.5 rounded-lg border border-[#667eea]/30 text-[#667eea] hover:bg-[#667eea]/5 transition-colors" title="Kaydet"><Bookmark size={14} /></button>
+                    <button onClick={() => onDetail(p)} className="p-1.5 rounded-lg border border-border-default hover:bg-bg-hover text-text-secondary hover:text-accent transition-colors" title="Detay"><Eye size={14} /></button>
+                    <button onClick={() => onSave(p)} className="p-1.5 rounded-lg border border-accent/30 text-accent hover:bg-accent/5 transition-colors" title="Kaydet"><Bookmark size={14} /></button>
                   </div>
                 </td>
               </tr>
@@ -1287,9 +1287,9 @@ function VideoCard({ video, onSave, onDetail }: { video: VideoResult; onSave: ()
   }
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow flex flex-col">
+    <div className="bg-bg-card rounded-[14px] shadow-sm border border-border-default overflow-hidden hover:shadow-md transition-shadow flex flex-col">
       {/* Video area — click plays inline */}
-      <div className="relative aspect-[9/16] bg-gray-100 flex-shrink-0">
+      <div className="relative aspect-[9/16] bg-bg-hover flex-shrink-0">
         {video.video_url ? (
           <div className="w-full h-full cursor-pointer" onClick={handleVideoClick}>
             {playing ? (
@@ -1308,7 +1308,7 @@ function VideoCard({ video, onSave, onDetail }: { video: VideoResult; onSave: ()
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={video.cover_image || video.image} alt={video.hook || video.title} className="w-full h-full object-cover" loading="lazy" />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-gray-300"><Play size={48} /></div>
+                  <div className="w-full h-full flex items-center justify-center text-text-muted"><Play size={48} /></div>
                 )}
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                   <div className="w-14 h-14 rounded-full bg-black/30 flex items-center justify-center">
@@ -1329,20 +1329,20 @@ function VideoCard({ video, onSave, onDetail }: { video: VideoResult; onSave: ()
             <img src={video.cover_image || video.image} alt={video.hook || video.title} className="w-full h-full object-cover" loading="lazy" />
           </div>
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-gray-300 cursor-pointer" onClick={() => onDetail(video)}><Play size={48} /></div>
+          <div className="w-full h-full flex items-center justify-center text-text-muted cursor-pointer" onClick={() => onDetail(video)}><Play size={48} /></div>
         )}
         {video.region && <div className="absolute top-2 left-2 text-lg drop-shadow pointer-events-none">{FLAG[video.region.toUpperCase()] || video.region}</div>}
         {video.hot_value > 0 && <div className="absolute top-2 right-2 pointer-events-none"><HotBadge value={video.hot_value} /></div>}
       </div>
       {/* Info area — click opens popup */}
       <div className="p-3 flex flex-col flex-1 cursor-pointer" onClick={() => onDetail(video)}>
-        {dateRange && <p className="text-[10px] text-gray-400 mb-1">{dateRange}</p>}
+        {dateRange && <p className="text-[10px] text-text-muted mb-1">{dateRange}</p>}
         <div className="grid grid-cols-3 gap-1 mb-2">
-          <div className="text-center"><p className="text-sm font-bold text-gray-900">{formatCompact(video.play_count)}</p><p className="text-[10px] text-gray-400">Gosterim</p></div>
-          <div className="text-center"><p className="text-sm font-bold text-gray-900">{video.put_days || 0}</p><p className="text-[10px] text-gray-400">Sure</p></div>
-          <div className="text-center"><p className="text-sm font-bold text-gray-900">{formatCompact(video.like_count)}</p><p className="text-[10px] text-gray-400">Begen</p></div>
+          <div className="text-center"><p className="text-sm font-bold text-text-primary">{formatCompact(video.play_count)}</p><p className="text-[10px] text-text-muted">Gosterim</p></div>
+          <div className="text-center"><p className="text-sm font-bold text-text-primary">{video.put_days || 0}</p><p className="text-[10px] text-text-muted">Sure</p></div>
+          <div className="text-center"><p className="text-sm font-bold text-text-primary">{formatCompact(video.like_count)}</p><p className="text-[10px] text-text-muted">Begen</p></div>
         </div>
-        <p className="text-xs text-gray-700 line-clamp-2 mb-1.5 leading-snug">{video.hook || video.title || ""}</p>
+        <p className="text-xs text-text-primary line-clamp-2 mb-1.5 leading-snug">{video.hook || video.title || ""}</p>
         {video.tags && video.tags.length > 0 && (
           <div className="flex flex-wrap gap-1 mb-2">
             {video.tags.slice(0, 3).map((tag, i) => (
@@ -1353,11 +1353,11 @@ function VideoCard({ video, onSave, onDetail }: { video: VideoResult; onSave: ()
         <div className="flex-1" />
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-1.5 min-w-0">
-            <span className="text-xs font-medium text-gray-700 truncate">{video.shop_name || "Bilinmeyen"}</span>
+            <span className="text-xs font-medium text-text-primary truncate">{video.shop_name || "Bilinmeyen"}</span>
           </div>
           {video.region && <span className="text-xs">{FLAG[video.region.toUpperCase()] || ""}</span>}
         </div>
-        <div className="grid grid-cols-2 gap-x-3 text-[10px] text-gray-400 mb-2">
+        <div className="grid grid-cols-2 gap-x-3 text-[10px] text-text-muted mb-2">
           <span>{"\uD83D\uDCAC"} {formatCompact(video.comment_count)}</span>
           <span className="flex items-center gap-0.5"><Share2 size={9} /> {formatCompact(video.share_count)}</span>
         </div>
@@ -1389,9 +1389,9 @@ function MetaAdCard({ ad, onDetail, onSave }: {
   }
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow flex flex-col">
+    <div className="bg-bg-card rounded-[14px] shadow-sm border border-border-default overflow-hidden hover:shadow-md transition-shadow flex flex-col">
       {/* Creative area */}
-      <div className="relative aspect-[4/5] bg-gray-100 flex-shrink-0">
+      <div className="relative aspect-[4/5] bg-bg-hover flex-shrink-0">
         {ad.mediaFormat === 1 && ad.videos.length > 0 ? (
           <div className="w-full h-full cursor-pointer" onClick={handleVideoClick}>
             {playing ? (
@@ -1460,7 +1460,7 @@ function MetaAdCard({ ad, onDetail, onSave }: {
             <img src={ad.thumbnail} alt="" className="w-full h-full object-cover" loading="lazy" />
           </div>
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-gray-300 cursor-pointer" onClick={() => onDetail(ad)}>
+          <div className="w-full h-full flex items-center justify-center text-text-muted cursor-pointer" onClick={() => onDetail(ad)}>
             <ImageIcon size={48} />
           </div>
         )}
@@ -1481,35 +1481,35 @@ function MetaAdCard({ ad, onDetail, onSave }: {
       {/* Info area */}
       <div className="p-3 flex flex-col flex-1 cursor-pointer" onClick={() => onDetail(ad)}>
         <div className="flex items-center justify-between mb-2">
-          <span className="text-[11px] text-gray-400">{dateRange}</span>
+          <span className="text-[11px] text-text-muted">{dateRange}</span>
           <div className="flex items-center gap-1">
             {ad.adPlatform.map((p) => (
-              <span key={p} className="text-[10px] bg-gray-100 text-gray-500 px-1 py-0.5 rounded">{PLATFORM_LABELS[p] || p}</span>
+              <span key={p} className="text-[10px] bg-bg-hover text-text-secondary px-1 py-0.5 rounded">{PLATFORM_LABELS[p] || p}</span>
             ))}
           </div>
         </div>
 
         <div className="grid grid-cols-3 gap-2 mb-2">
           <div className="text-center">
-            <p className="text-base font-bold text-gray-900">{ad.activeDays}</p>
-            <p className="text-[10px] text-gray-400">Gunler</p>
+            <p className="text-base font-bold text-text-primary">{ad.activeDays}</p>
+            <p className="text-[10px] text-text-muted">Gunler</p>
           </div>
           <div className="text-center">
-            <p className="text-base font-bold text-gray-900">
+            <p className="text-base font-bold text-text-primary">
               {formatCompact(ad.adAudienceReach)}
               {ad.adCost !== null && ad.adCost > 0 && (
-                <span className="text-[10px] font-normal text-gray-400 ml-0.5">({formatMoney(ad.adCost)})</span>
+                <span className="text-[10px] font-normal text-text-muted ml-0.5">({formatMoney(ad.adCost)})</span>
               )}
             </p>
-            <p className="text-[10px] text-gray-400">Erisim (Harcama)</p>
+            <p className="text-[10px] text-text-muted">Erisim (Harcama)</p>
           </div>
           <div className="text-center">
-            <p className="text-base font-bold text-gray-900">{ad.adsetCount}</p>
-            <p className="text-[10px] text-gray-400">Adset</p>
+            <p className="text-base font-bold text-text-primary">{ad.adsetCount}</p>
+            <p className="text-[10px] text-text-muted">Adset</p>
           </div>
         </div>
 
-        <p className="text-xs text-gray-700 line-clamp-2 mb-2 leading-snug min-h-[2rem]">
+        <p className="text-xs text-text-primary line-clamp-2 mb-2 leading-snug min-h-[2rem]">
           {ad.adContent ? (ad.adContent.length > 100 ? ad.adContent.substring(0, 100) + "..." : ad.adContent) : ""}
         </p>
 
@@ -1520,10 +1520,10 @@ function MetaAdCard({ ad, onDetail, onSave }: {
             {ad.country.slice(0, 3).map((c) => (
               <span key={c} className="text-sm" title={c}>{FLAG[c.toUpperCase()] || c}</span>
             ))}
-            {ad.country.length > 3 && <span className="text-[10px] text-gray-400">+{ad.country.length - 3}</span>}
+            {ad.country.length > 3 && <span className="text-[10px] text-text-muted">+{ad.country.length - 3}</span>}
           </div>
           {ad.buttonText && (
-            <span className="text-[11px] bg-gray-100 text-gray-600 px-2.5 py-1 rounded-lg font-medium">
+            <span className="text-[11px] bg-bg-hover text-text-secondary px-2.5 py-1 rounded-lg font-medium">
               {ad.buttonText}
             </span>
           )}
@@ -1537,50 +1537,50 @@ function MetaAdCard({ ad, onDetail, onSave }: {
 
 function StoreTable({ results }: { results: StoreResult[] }) {
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+    <div className="bg-bg-card rounded-[14px] shadow-sm border border-border-default overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="bg-gray-50 border-b border-gray-200">
-              <th className="text-left py-3 px-4 font-medium text-gray-500 w-12">#</th>
-              <th className="text-left py-3 px-4 font-medium text-gray-500">Magaza</th>
-              <th className="text-left py-3 px-4 font-medium text-gray-500">En Cok Satan Urunler</th>
-              <th className="text-right py-3 px-4 font-medium text-gray-500">Satislar</th>
-              <th className="text-right py-3 px-4 font-medium text-gray-500">GMV</th>
-              <th className="text-right py-3 px-4 font-medium text-gray-500">Reklamlar</th>
-              <th className="text-right py-3 px-4 font-medium text-gray-500">Gosterim</th>
-              <th className="text-right py-3 px-4 font-medium text-gray-500">Influencers</th>
-              <th className="text-center py-3 px-4 font-medium text-gray-500">Reklam Tarihi</th>
+            <tr className="bg-bg-main border-b border-border-default">
+              <th className="text-left py-3 px-4 font-medium text-text-secondary w-12">#</th>
+              <th className="text-left py-3 px-4 font-medium text-text-secondary">Magaza</th>
+              <th className="text-left py-3 px-4 font-medium text-text-secondary">En Cok Satan Urunler</th>
+              <th className="text-right py-3 px-4 font-medium text-text-secondary">Satislar</th>
+              <th className="text-right py-3 px-4 font-medium text-text-secondary">GMV</th>
+              <th className="text-right py-3 px-4 font-medium text-text-secondary">Reklamlar</th>
+              <th className="text-right py-3 px-4 font-medium text-text-secondary">Gosterim</th>
+              <th className="text-right py-3 px-4 font-medium text-text-secondary">Influencers</th>
+              <th className="text-center py-3 px-4 font-medium text-text-secondary">Reklam Tarihi</th>
             </tr>
           </thead>
           <tbody>
             {results.map((store, i) => (
-              <tr key={store.id || i} className="border-b border-gray-100 hover:bg-gray-50/50 transition-colors cursor-pointer" onClick={() => window.open(`/tts-store/${store.id}`, "_blank")}>
-                <td className="py-3 px-4 text-gray-400 text-xs">{i + 1}</td>
+              <tr key={store.id || i} className="border-b border-border-default hover:bg-bg-hover/50 transition-colors cursor-pointer" onClick={() => window.open(`/tts-store/${store.id}`, "_blank")}>
+                <td className="py-3 px-4 text-text-muted text-xs">{i + 1}</td>
                 {/* Store info */}
                 <td className="py-3 px-4">
                   <div className="flex items-center gap-3 min-w-[200px]">
                     {store.shopImage ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={store.shopImage} alt={store.shopName} className="w-12 h-12 rounded-lg object-cover flex-shrink-0 border border-gray-100" />
+                      <img src={store.shopImage} alt={store.shopName} className="w-12 h-12 rounded-lg object-cover flex-shrink-0 border border-border-default" />
                     ) : (
-                      <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0">
-                        <ShoppingBag size={16} className="text-gray-300" />
+                      <div className="w-12 h-12 rounded-lg bg-bg-hover flex items-center justify-center flex-shrink-0">
+                        <ShoppingBag size={16} className="text-text-muted" />
                       </div>
                     )}
                     <div className="min-w-0">
-                      <p className="text-sm font-medium text-gray-900 truncate">{store.shopName}</p>
+                      <p className="text-sm font-medium text-text-primary truncate">{store.shopName}</p>
                       <div className="flex items-center gap-1.5 mt-0.5">
                         {store.region.slice(0, 2).map((r) => (
                           <span key={r} className="text-sm">{FLAG[r.toUpperCase()] || r}</span>
                         ))}
                       </div>
                       {store.categories.length > 0 && (
-                        <span className="text-[10px] bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded mt-0.5 inline-block truncate max-w-[150px]">
+                        <span className="text-[10px] bg-bg-hover text-text-secondary px-1.5 py-0.5 rounded mt-0.5 inline-block truncate max-w-[150px]">
                           {store.categories[0].name}
                         </span>
                       )}
-                      <p className="text-[10px] text-gray-400 mt-0.5">Urun: {store.goodsCount}</p>
+                      <p className="text-[10px] text-text-muted mt-0.5">Urun: {store.goodsCount}</p>
                     </div>
                   </div>
                 </td>
@@ -1590,35 +1590,35 @@ function StoreTable({ results }: { results: StoreResult[] }) {
                     {store.bestSellingGoods.slice(0, 4).map((g, gi) => (
                       g.image ? (
                         // eslint-disable-next-line @next/next/no-img-element
-                        <img key={gi} src={g.image} alt="" className="w-10 h-10 rounded object-cover border border-gray-100" />
+                        <img key={gi} src={g.image} alt="" className="w-10 h-10 rounded object-cover border border-border-default" />
                       ) : (
-                        <div key={gi} className="w-10 h-10 rounded bg-gray-100" />
+                        <div key={gi} className="w-10 h-10 rounded bg-bg-hover" />
                       )
                     ))}
                   </div>
                 </td>
                 {/* Sales */}
                 <td className="py-3 px-4 text-right">
-                  <p className="font-medium text-gray-700">{formatCompact(store.salesVolume)}</p>
+                  <p className="font-medium text-text-primary">{formatCompact(store.salesVolume)}</p>
                   {store.avgPriceUsd > 0 && (
-                    <p className="text-[10px] text-gray-400">Ort. fiyat: ${formatCompact(store.avgPriceUsd)}</p>
+                    <p className="text-[10px] text-text-muted">Ort. fiyat: ${formatCompact(store.avgPriceUsd)}</p>
                   )}
                 </td>
                 {/* GMV */}
                 <td className="py-3 px-4 text-right font-bold text-emerald-600">{formatMoney(store.gmvUsd)}</td>
                 {/* Ads */}
-                <td className="py-3 px-4 text-right text-gray-600">{formatCompact(store.videoCount)}</td>
+                <td className="py-3 px-4 text-right text-text-secondary">{formatCompact(store.videoCount)}</td>
                 {/* Views */}
-                <td className="py-3 px-4 text-right text-gray-600">
+                <td className="py-3 px-4 text-right text-text-secondary">
                   {formatCompact(store.playCount)}
                   {(store.minCpm > 0 || store.maxCpm > 0) && (
-                    <p className="text-[10px] text-gray-400">${formatCompact(store.minCpm)}-${formatCompact(store.maxCpm)}</p>
+                    <p className="text-[10px] text-text-muted">${formatCompact(store.minCpm)}-${formatCompact(store.maxCpm)}</p>
                   )}
                 </td>
                 {/* Influencers */}
-                <td className="py-3 px-4 text-right text-gray-600">{store.personCount || "-"}</td>
+                <td className="py-3 px-4 text-right text-text-secondary">{store.personCount || "-"}</td>
                 {/* Date */}
-                <td className="py-3 px-4 text-center text-xs text-gray-500 whitespace-nowrap">
+                <td className="py-3 px-4 text-center text-xs text-text-secondary whitespace-nowrap">
                   {store.foundTime ? formatDate(store.foundTime) : "-"}
                   {store.lastFoundTime ? (
                     <p className="text-[10px]">- {formatDate(store.lastFoundTime)}</p>

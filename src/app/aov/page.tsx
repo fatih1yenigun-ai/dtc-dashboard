@@ -53,8 +53,8 @@ export default function AOVPage() {
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">AOV Tahminleyici</h1>
-        <p className="text-gray-500 mt-1">
+        <h1 className="text-2xl font-bold text-text-primary">AOV Tahminleyici</h1>
+        <p className="text-text-secondary mt-1">
           Ortalama sipariş değerini tahmin et ve konumlandır
         </p>
       </div>
@@ -62,17 +62,17 @@ export default function AOVPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Inputs */}
         <div className="space-y-4">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <h2 className="font-semibold text-gray-900 mb-4">Parametreler</h2>
+          <div className="bg-bg-card rounded-[14px] shadow-sm border border-border-default p-6">
+            <h2 className="font-semibold text-text-primary mb-4">Parametreler</h2>
 
             <div className="mb-5">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-text-primary mb-1">
                 Niş
               </label>
               <select
                 value={niche}
                 onChange={(e) => setNiche(e.target.value)}
-                className="w-full py-2 px-3 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#667eea]/30"
+                className="w-full py-2 px-3 border border-border-default rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/30"
               >
                 {Object.entries(NICHE_LABELS).map(([key, label]) => (
                   <option key={key} value={key}>
@@ -83,23 +83,23 @@ export default function AOVPage() {
             </div>
 
             <div className="mb-5">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-text-primary mb-1">
                 Ürün Fiyatı ($)
               </label>
               <input
                 type="number"
                 value={productPrice}
                 onChange={(e) => setProductPrice(Number(e.target.value))}
-                className="w-full py-2 px-3 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#667eea]/30"
+                className="w-full py-2 px-3 border border-border-default rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/30"
               />
             </div>
 
             <div className="mb-5">
               <div className="flex justify-between text-sm mb-1">
-                <span className="font-medium text-gray-700">
+                <span className="font-medium text-text-primary">
                   Ortalama Bundle Boyutu
                 </span>
-                <span className="text-[#667eea] font-semibold">
+                <span className="text-accent font-semibold">
                   {bundleSize.toFixed(1)}x
                 </span>
               </div>
@@ -110,9 +110,9 @@ export default function AOVPage() {
                 step={0.1}
                 value={bundleSize}
                 onChange={(e) => setBundleSize(Number(e.target.value))}
-                className="w-full accent-[#667eea]"
+                className="w-full accent-accent"
               />
-              <div className="flex justify-between text-xs text-gray-400">
+              <div className="flex justify-between text-xs text-text-muted">
                 <span>1x</span>
                 <span>5x</span>
               </div>
@@ -120,10 +120,10 @@ export default function AOVPage() {
 
             <div className="mb-2">
               <div className="flex justify-between text-sm mb-1">
-                <span className="font-medium text-gray-700">
+                <span className="font-medium text-text-primary">
                   Upsell / Cross-sell Oranı
                 </span>
-                <span className="text-[#667eea] font-semibold">
+                <span className="text-accent font-semibold">
                   {upsellRate}%
                 </span>
               </div>
@@ -133,9 +133,9 @@ export default function AOVPage() {
                 max={50}
                 value={upsellRate}
                 onChange={(e) => setUpsellRate(Number(e.target.value))}
-                className="w-full accent-[#667eea]"
+                className="w-full accent-accent"
               />
-              <div className="flex justify-between text-xs text-gray-400">
+              <div className="flex justify-between text-xs text-text-muted">
                 <span>0%</span>
                 <span>50%</span>
               </div>
@@ -146,13 +146,13 @@ export default function AOVPage() {
         {/* Results */}
         <div className="space-y-4">
           {/* Estimated AOV */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 text-center">
+          <div className="bg-bg-card rounded-[14px] shadow-sm border border-border-default p-6 text-center">
             <DollarSign
               size={32}
               className="mx-auto mb-2"
               style={{ color: positioning.color }}
             />
-            <p className="text-xs text-gray-500 mb-1">Tahmini AOV</p>
+            <p className="text-xs text-text-secondary mb-1">Tahmini AOV</p>
             <p
               className="text-4xl font-bold"
               style={{ color: positioning.color }}
@@ -171,9 +171,9 @@ export default function AOVPage() {
           </div>
 
           {/* Niche Comparison */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-              <Target size={16} className="text-[#667eea]" />
+          <div className="bg-bg-card rounded-[14px] shadow-sm border border-border-default p-6">
+            <h3 className="font-semibold text-text-primary mb-4 flex items-center gap-2">
+              <Target size={16} className="text-accent" />
               {NICHE_LABELS[niche]} Niş Karşılaştırması
             </h3>
 
@@ -193,16 +193,16 @@ export default function AOVPage() {
                 return (
                   <div key={seg.label}>
                     <div className="flex justify-between text-sm mb-1">
-                      <span className="text-gray-600">{seg.label}</span>
+                      <span className="text-text-secondary">{seg.label}</span>
                       <span
                         className={`font-medium ${
-                          isMatch ? "text-[#667eea]" : "text-gray-500"
+                          isMatch ? "text-accent" : "text-text-secondary"
                         }`}
                       >
                         {formatMoney(seg.value)}
                       </span>
                     </div>
-                    <div className="w-full bg-gray-100 rounded-full h-2">
+                    <div className="w-full bg-bg-hover rounded-full h-2">
                       <div
                         className="h-2 rounded-full transition-all"
                         style={{
@@ -216,9 +216,9 @@ export default function AOVPage() {
               })}
 
               {/* Your AOV marker */}
-              <div className="pt-2 border-t border-gray-100">
+              <div className="pt-2 border-t border-border-default">
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-600 font-medium flex items-center gap-1">
+                  <span className="text-text-secondary font-medium flex items-center gap-1">
                     <TrendingUp size={14} className="text-[#27AE60]" />
                     Senin AOV
                   </span>
@@ -226,7 +226,7 @@ export default function AOVPage() {
                     {formatMoney(estimatedAOV)}
                   </span>
                 </div>
-                <div className="w-full bg-gray-100 rounded-full h-2 mt-1">
+                <div className="w-full bg-bg-hover rounded-full h-2 mt-1">
                   <div
                     className="h-2 rounded-full bg-[#27AE60] transition-all"
                     style={{
@@ -239,24 +239,24 @@ export default function AOVPage() {
           </div>
 
           {/* All Niches Table */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <h3 className="font-semibold text-gray-900 mb-4">
+          <div className="bg-bg-card rounded-[14px] shadow-sm border border-border-default p-6">
+            <h3 className="font-semibold text-text-primary mb-4">
               Tüm Niş AOV Aralıkları
             </h3>
             <div className="overflow-x-auto">
               <table className="w-full text-sm table-striped">
                 <thead>
-                  <tr className="border-b border-gray-200">
-                    <th className="py-2 px-3 text-left text-gray-500 font-medium">
+                  <tr className="border-b border-border-default">
+                    <th className="py-2 px-3 text-left text-text-secondary font-medium">
                       Niş
                     </th>
-                    <th className="py-2 px-3 text-right text-gray-500 font-medium">
+                    <th className="py-2 px-3 text-right text-text-secondary font-medium">
                       Düşük
                     </th>
-                    <th className="py-2 px-3 text-right text-gray-500 font-medium">
+                    <th className="py-2 px-3 text-right text-text-secondary font-medium">
                       Orta
                     </th>
-                    <th className="py-2 px-3 text-right text-gray-500 font-medium">
+                    <th className="py-2 px-3 text-right text-text-secondary font-medium">
                       Premium
                     </th>
                   </tr>
@@ -265,17 +265,17 @@ export default function AOVPage() {
                   {Object.entries(NICHE_AOV).map(([key, val]) => (
                     <tr
                       key={key}
-                      className={`border-b border-gray-100 ${
-                        key === niche ? "bg-[#667eea]/5" : ""
+                      className={`border-b border-border-default ${
+                        key === niche ? "bg-accent/5" : ""
                       }`}
                     >
-                      <td className="py-2 px-3 font-medium text-gray-700">
+                      <td className="py-2 px-3 font-medium text-text-primary">
                         {NICHE_LABELS[key]}
                       </td>
-                      <td className="py-2 px-3 text-right text-gray-600">
+                      <td className="py-2 px-3 text-right text-text-secondary">
                         {formatMoney(val.low)}
                       </td>
-                      <td className="py-2 px-3 text-right text-gray-600">
+                      <td className="py-2 px-3 text-right text-text-secondary">
                         {formatMoney(val.mid)}
                       </td>
                       <td className="py-2 px-3 text-right text-[#27AE60] font-medium">

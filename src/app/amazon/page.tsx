@@ -28,6 +28,7 @@ import {
   type TopWebsite,
 } from "@/context/HacimlerContext";
 import { useAuth } from "@/context/AuthContext";
+import { useTheme } from "@/context/ThemeContext";
 import { loadFolders, createFolder, saveBrandsBulk, type BrandData } from "@/lib/supabase";
 import {
   estimateMonthlySales,
@@ -70,25 +71,7 @@ function formatMoney(n: number): string {
   return `$${n.toFixed(0)}`;
 }
 
-// Neon palette for dark charts
-const NEON_COLORS = [
-  "#00f0ff", "#7f5af0", "#2ee89e", "#ff6bcb", "#ffd866",
-  "#4facfe", "#f093fb", "#ff8c42", "#00e676", "#ff5252",
-];
-
-// Glow colors (matching neon but used for shadows)
-const GLOW_MAP: Record<string, string> = {
-  "#00f0ff": "rgba(0,240,255,0.4)",
-  "#7f5af0": "rgba(127,90,240,0.4)",
-  "#2ee89e": "rgba(46,232,158,0.4)",
-  "#ff6bcb": "rgba(255,107,203,0.4)",
-  "#ffd866": "rgba(255,216,102,0.4)",
-  "#4facfe": "rgba(79,172,254,0.4)",
-  "#f093fb": "rgba(240,147,251,0.4)",
-  "#ff8c42": "rgba(255,140,66,0.4)",
-  "#00e676": "rgba(0,230,118,0.4)",
-  "#ff5252": "rgba(255,82,82,0.4)",
-};
+import { getChartColors, getGlowMap } from "@/lib/chart-colors";
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
@@ -107,19 +90,19 @@ const SORT_OPTIONS: { value: SortKey; label: string }[] = [
 // ── Shared Components ──────────────────────────────────────────────────────
 
 function TierBadge({ tier }: { tier: string }) {
-  if (tier === "-") return <span className="text-gray-400 text-xs">-</span>;
+  if (tier === "-") return <span className="text-text-muted text-xs">-</span>;
   return <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${salesTierColor(tier)}`}>{tier}</span>;
 }
 
 function StatCard({ icon: Icon, label, value, sub }: { icon: typeof Package; label: string; value: string; sub?: string }) {
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
+    <div className="bg-bg-card rounded-[14px] border border-border-default p-4 shadow-sm">
       <div className="flex items-center gap-2 mb-1">
-        <Icon size={16} className="text-[#667eea]" />
-        <span className="text-xs text-gray-500">{label}</span>
+        <Icon size={16} className="text-accent" />
+        <span className="text-xs text-text-secondary">{label}</span>
       </div>
-      <p className="text-xl font-bold text-gray-900">{value}</p>
-      {sub && <p className="text-xs text-gray-400 mt-0.5">{sub}</p>}
+      <p className="text-xl font-bold text-text-primary">{value}</p>
+      {sub && <p className="text-xs text-text-muted mt-0.5">{sub}</p>}
     </div>
   );
 }
@@ -128,62 +111,62 @@ function StatCard({ icon: Icon, label, value, sub }: { icon: typeof Package; lab
 
 function ProductRow({ product, rank, selected, onToggle }: { product: AmazonProduct; rank: number; selected?: boolean; onToggle?: () => void }) {
   return (
-    <div className={`bg-white rounded-xl border p-4 shadow-sm hover:shadow-md transition-shadow ${selected ? "ring-2 ring-[#667eea] border-[#667eea]/30 bg-[#667eea]/5" : "border-gray-200"}`}>
+    <div className={`bg-bg-card rounded-[14px] border p-4 shadow-sm hover:shadow-md transition-shadow ${selected ? "ring-2 ring-accent border-accent/30 bg-accent/5" : "border-border-default"}`}>
       <div className="flex gap-4">
         <div className="flex flex-col items-center gap-1 flex-shrink-0">
           {onToggle && (
-            <button onClick={onToggle} className="text-gray-400 hover:text-gray-600">
-              {selected ? <CheckSquare size={16} className="text-[#667eea]" /> : <Square size={16} />}
+            <button onClick={onToggle} className="text-text-muted hover:text-text-secondary">
+              {selected ? <CheckSquare size={16} className="text-accent" /> : <Square size={16} />}
             </button>
           )}
-          <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
-            <span className="text-xs font-bold text-gray-500">#{rank}</span>
+          <div className="w-8 h-8 rounded-full bg-bg-hover flex items-center justify-center">
+            <span className="text-xs font-bold text-text-secondary">#{rank}</span>
           </div>
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
-              <h3 className="text-sm font-medium text-gray-900 line-clamp-2">{product.title}</h3>
+              <h3 className="text-sm font-medium text-text-primary line-clamp-2">{product.title}</h3>
               <div className="flex items-center gap-2 mt-1 flex-wrap">
-                {product.brand && <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded">{product.brand}</span>}
-                {product.asin && <span className="text-[10px] text-gray-400 font-mono">{product.asin}</span>}
+                {product.brand && <span className="text-xs text-text-secondary bg-bg-hover px-2 py-0.5 rounded">{product.brand}</span>}
+                {product.asin && <span className="text-[10px] text-text-muted font-mono">{product.asin}</span>}
                 {product.isPrime && <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded">Prime</span>}
                 <TierBadge tier={product.tier} />
               </div>
             </div>
             {product.url && (
-              <a href={product.url} target="_blank" rel="noopener noreferrer" className="flex-shrink-0 text-gray-400 hover:text-[#667eea] transition-colors">
+              <a href={product.url} target="_blank" rel="noopener noreferrer" className="flex-shrink-0 text-text-muted hover:text-accent transition-colors">
                 <ExternalLink size={16} />
               </a>
             )}
           </div>
           <div className="flex items-center gap-4 mt-3 flex-wrap">
             <div className="text-center">
-              <p className="text-lg font-bold text-gray-900">${product.price.toFixed(2)}</p>
-              <p className="text-[10px] text-gray-400">Fiyat</p>
+              <p className="text-lg font-bold text-text-primary">${product.price.toFixed(2)}</p>
+              <p className="text-[10px] text-text-muted">Fiyat</p>
             </div>
             {product.rating > 0 && (
               <div className="text-center">
                 <p className="text-sm font-bold text-amber-600 flex items-center gap-0.5"><Star size={12} fill="currentColor" /> {product.rating}</p>
-                <p className="text-[10px] text-gray-400">{formatCompact(product.reviewCount)} yorum</p>
+                <p className="text-[10px] text-text-muted">{formatCompact(product.reviewCount)} yorum</p>
               </div>
             )}
             {product.bsr > 0 && (
               <div className="text-center">
-                <p className="text-sm font-bold text-gray-700">#{formatCompact(product.bsr)}</p>
-                <p className="text-[10px] text-gray-400">BSR</p>
+                <p className="text-sm font-bold text-text-primary">#{formatCompact(product.bsr)}</p>
+                <p className="text-[10px] text-text-muted">BSR</p>
               </div>
             )}
             {product.monthlySales > 0 && (
               <div className="text-center">
                 <p className="text-sm font-bold text-emerald-600">{formatCompact(product.monthlySales)}</p>
-                <p className="text-[10px] text-gray-400">Aylik Satis</p>
+                <p className="text-[10px] text-text-muted">Aylik Satis</p>
               </div>
             )}
             {product.monthlyRevenue > 0 && (
               <div className="text-center">
-                <p className="text-sm font-bold text-[#667eea]">{formatMoney(product.monthlyRevenue)}</p>
-                <p className="text-[10px] text-gray-400">Aylik Gelir</p>
+                <p className="text-sm font-bold text-accent">{formatMoney(product.monthlyRevenue)}</p>
+                <p className="text-[10px] text-text-muted">Aylik Gelir</p>
               </div>
             )}
           </div>
@@ -195,20 +178,21 @@ function ProductRow({ product, rank, selected, onToggle }: { product: AmazonProd
 
 // ── Neon Tooltip ───────────────────────────────────────────────────────────
 
-function NeonTooltip({ active, payload }: { active?: boolean; payload?: Array<{ name: string; value: number; payload: { color: string } }> }) {
+function NeonTooltip({ active, payload, theme }: { active?: boolean; payload?: Array<{ name: string; value: number; payload: { color: string } }>; theme?: "dark" | "light" }) {
   if (!active || !payload?.length) return null;
   const { name, value, payload: item } = payload[0];
+  const glowMap = getGlowMap(theme || "dark");
   return (
     <div
       className="rounded-lg px-3 py-2 text-xs"
       style={{
-        background: "rgba(10,10,20,0.95)",
+        background: theme === "light" ? "var(--bg-card)" : "rgba(10,10,20,0.95)",
         border: `1px solid ${item.color}66`,
-        boxShadow: `0 0 12px ${GLOW_MAP[item.color] || item.color + "40"}`,
+        boxShadow: theme === "dark" ? `0 0 12px ${glowMap[item.color] || item.color + "40"}` : "0 2px 8px rgba(0,0,0,0.12)",
       }}
     >
       <p className="font-medium" style={{ color: item.color }}>{name}</p>
-      <p className="text-white/80 font-bold">{formatCompact(value)}</p>
+      <p className="font-bold" style={{ color: "var(--text-primary)" }}>{formatCompact(value)}</p>
     </div>
   );
 }
@@ -220,40 +204,31 @@ function NeonPieChart({ data, centerLabel, centerValue }: {
   centerLabel: string;
   centerValue: string;
 }) {
-  return (
-    <div
-      className="relative rounded-2xl p-5 overflow-hidden"
-      style={{
-        background: "#0a0a14",
-        border: "1px solid rgba(102,126,234,0.25)",
-      }}
-    >
-      {/* Grid overlay */}
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          backgroundImage: "linear-gradient(rgba(102,126,234,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(102,126,234,0.06) 1px, transparent 1px)",
-          backgroundSize: "32px 32px",
-        }}
-      />
+  const { theme } = useTheme();
+  const glowMap = getGlowMap(theme);
+  const isDark = theme === "dark";
 
+  return (
+    <div className="relative p-5">
       {/* Pie */}
       <div className="h-[300px] relative z-10">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
-            <defs>
-              {data.map((entry, i) => (
-                <filter key={`glow-${i}`} id={`neon-glow-${i}-${entry.name.replace(/\s/g, "")}`}>
-                  <feGaussianBlur stdDeviation="3" result="blur1" />
-                  <feGaussianBlur stdDeviation="8" result="blur2" />
-                  <feMerge>
-                    <feMergeNode in="blur2" />
-                    <feMergeNode in="blur1" />
-                    <feMergeNode in="SourceGraphic" />
-                  </feMerge>
-                </filter>
-              ))}
-            </defs>
+            {isDark && (
+              <defs>
+                {data.map((entry, i) => (
+                  <filter key={`glow-${i}`} id={`neon-glow-${i}-${entry.name.replace(/\s/g, "")}`}>
+                    <feGaussianBlur stdDeviation="3" result="blur1" />
+                    <feGaussianBlur stdDeviation="8" result="blur2" />
+                    <feMerge>
+                      <feMergeNode in="blur2" />
+                      <feMergeNode in="blur1" />
+                      <feMergeNode in="SourceGraphic" />
+                    </feMerge>
+                  </filter>
+                ))}
+              </defs>
+            )}
             <Pie
               data={data}
               cx="50%"
@@ -264,40 +239,33 @@ function NeonPieChart({ data, centerLabel, centerValue }: {
               dataKey="value"
               animationBegin={0}
               animationDuration={800}
-              stroke="rgba(10,10,20,0.8)"
+              stroke={isDark ? "rgba(10,10,20,0.8)" : "rgba(255,255,255,0.8)"}
               strokeWidth={2}
             >
               {data.map((entry, i) => (
                 <Cell
                   key={i}
-                  fill={entry.color + "B3"}
-                  style={{
-                    filter: `drop-shadow(0 0 4px ${entry.color}) drop-shadow(0 0 14px ${GLOW_MAP[entry.color] || entry.color + "40"})`,
+                  fill={isDark ? entry.color + "B3" : entry.color}
+                  style={isDark ? {
+                    filter: `drop-shadow(0 0 4px ${entry.color}) drop-shadow(0 0 14px ${glowMap[entry.color] || entry.color + "40"})`,
+                  } : {
+                    filter: "drop-shadow(0 3px 10px rgba(0,0,0,0.18))",
                   }}
                 />
               ))}
             </Pie>
-            <Tooltip content={<NeonTooltip />} />
+            <Tooltip content={<NeonTooltip theme={theme} />} />
           </PieChart>
         </ResponsiveContainer>
 
         {/* Center label */}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
           <div className="text-center">
-            <p className="text-2xl font-bold text-white" style={{ textShadow: "0 0 20px rgba(102,126,234,0.5)" }}>{centerValue}</p>
-            <p className="text-[10px] text-[#888899] uppercase tracking-wider">{centerLabel}</p>
+            <p className="text-[32px] font-bold text-text-primary tabular-nums" style={isDark ? { textShadow: "0 0 20px rgba(102,126,234,0.5)" } : undefined}>{centerValue}</p>
+            <p className="text-[11px] text-text-muted uppercase tracking-[0.06em] font-medium">{centerLabel}</p>
           </div>
         </div>
       </div>
-
-      {/* Bottom pool glow */}
-      <div
-        className="absolute bottom-0 left-1/2 -translate-x-1/2 w-3/4 h-16 rounded-full pointer-events-none"
-        style={{
-          background: `radial-gradient(ellipse, ${data[0]?.color || "#667eea"}20 0%, transparent 70%)`,
-          filter: "blur(20px)",
-        }}
-      />
     </div>
   );
 }
@@ -305,6 +273,10 @@ function NeonPieChart({ data, centerLabel, centerValue }: {
 // ── Hacimler Tab (Keywords + Websites side by side) ────────────────────────
 
 function HacimlerTab({ keywords, websites }: { keywords: KeywordVolume[]; websites: TopWebsite[] }) {
+  const { theme } = useTheme();
+  const NEON_COLORS = getChartColors(theme);
+  const GLOW_MAP = getGlowMap(theme);
+  const isDark = theme === "dark";
   const totalVolume = keywords.reduce((s, k) => s + k.monthlyVolume, 0);
   const totalTraffic = websites.reduce((s, w) => s + w.monthlyTraffic, 0);
 
@@ -326,11 +298,11 @@ function HacimlerTab({ keywords, websites }: { keywords: KeywordVolume[]; websit
       {/* ── Left: Keywords ──────────────────────────────── */}
       <div className="space-y-4">
         <div>
-          <h3 className="font-semibold text-gray-900 flex items-center gap-2">
-            <KeyRound size={18} className="text-[#667eea]" />
+          <h3 className="font-semibold text-text-primary flex items-center gap-2">
+            <KeyRound size={18} className="text-accent" />
             Anahtar Kelimeler
           </h3>
-          <p className="text-xs text-gray-400">Google aylik arama hacimleri</p>
+          <p className="text-xs text-text-muted">Google aylik arama hacimleri</p>
         </div>
 
         {keywords.length > 0 ? (
@@ -342,7 +314,7 @@ function HacimlerTab({ keywords, websites }: { keywords: KeywordVolume[]; websit
             />
 
             {/* Keyword list */}
-            <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm space-y-2">
+            <div className="bg-bg-card rounded-[14px] border border-border-default p-4 shadow-sm space-y-2">
               {keywords.map((kw, i) => {
                 const color = NEON_COLORS[i % NEON_COLORS.length];
                 return (
@@ -351,11 +323,11 @@ function HacimlerTab({ keywords, websites }: { keywords: KeywordVolume[]; websit
                       className="w-6 h-2 rounded-full flex-shrink-0"
                       style={{
                         backgroundColor: color,
-                        boxShadow: `0 0 6px ${GLOW_MAP[color] || color + "40"}`,
+                        boxShadow: isDark ? `0 0 6px ${GLOW_MAP[color] || color + "40"}` : undefined,
                       }}
                     />
-                    <span className="flex-1 text-gray-700 truncate">{kw.keyword}</span>
-                    <span className="font-bold text-gray-900">{formatCompact(kw.monthlyVolume)}</span>
+                    <span className="flex-1 text-text-primary truncate">{kw.keyword}</span>
+                    <span className="font-bold text-text-primary">{formatCompact(kw.monthlyVolume)}</span>
                     <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${
                       kw.difficulty >= 70 ? "bg-red-100 text-red-700" : kw.difficulty >= 40 ? "bg-amber-100 text-amber-700" : "bg-emerald-100 text-emerald-700"
                     }`}>
@@ -368,8 +340,8 @@ function HacimlerTab({ keywords, websites }: { keywords: KeywordVolume[]; websit
           </>
         ) : (
           <div className="text-center py-12 bg-[#0a0a14] rounded-2xl">
-            <KeyRound size={32} className="text-gray-600 mx-auto mb-2" />
-            <p className="text-sm text-gray-500">Veri bulunamadi</p>
+            <KeyRound size={32} className="text-text-secondary mx-auto mb-2" />
+            <p className="text-sm text-text-secondary">Veri bulunamadi</p>
           </div>
         )}
       </div>
@@ -377,11 +349,11 @@ function HacimlerTab({ keywords, websites }: { keywords: KeywordVolume[]; websit
       {/* ── Right: Brands ───────────────────────────────── */}
       <div className="space-y-4">
         <div>
-          <h3 className="font-semibold text-gray-900 flex items-center gap-2">
-            <Globe size={18} className="text-[#667eea]" />
+          <h3 className="font-semibold text-text-primary flex items-center gap-2">
+            <Globe size={18} className="text-accent" />
             Markalar
           </h3>
-          <p className="text-xs text-gray-400">Trafik bazli pazar paylari</p>
+          <p className="text-xs text-text-muted">Trafik bazli pazar paylari</p>
         </div>
 
         {websites.length > 0 ? (
@@ -393,7 +365,7 @@ function HacimlerTab({ keywords, websites }: { keywords: KeywordVolume[]; websit
             />
 
             {/* Website list */}
-            <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm space-y-2">
+            <div className="bg-bg-card rounded-[14px] border border-border-default p-4 shadow-sm space-y-2">
               {websites.map((ws, i) => {
                 const color = NEON_COLORS[i % NEON_COLORS.length];
                 return (
@@ -402,16 +374,16 @@ function HacimlerTab({ keywords, websites }: { keywords: KeywordVolume[]; websit
                       className="w-6 h-2 rounded-full flex-shrink-0"
                       style={{
                         backgroundColor: color,
-                        boxShadow: `0 0 6px ${GLOW_MAP[color] || color + "40"}`,
+                        boxShadow: isDark ? `0 0 6px ${GLOW_MAP[color] || color + "40"}` : undefined,
                       }}
                     />
                     <span className="flex-1 min-w-0">
-                      <span className="font-medium text-gray-900">{ws.brandName}</span>
+                      <span className="font-medium text-text-primary">{ws.brandName}</span>
                       <a href={`https://${ws.domain}`} target="_blank" rel="noopener noreferrer" className="text-[10px] text-blue-500 hover:underline ml-1">
                         {ws.domain} <ExternalLink size={8} className="inline" />
                       </a>
                     </span>
-                    <span className="font-bold text-gray-900 flex-shrink-0">{formatCompact(ws.monthlyTraffic)}</span>
+                    <span className="font-bold text-text-primary flex-shrink-0">{formatCompact(ws.monthlyTraffic)}</span>
                   </div>
                 );
               })}
@@ -419,8 +391,8 @@ function HacimlerTab({ keywords, websites }: { keywords: KeywordVolume[]; websit
           </>
         ) : (
           <div className="text-center py-12 bg-[#0a0a14] rounded-2xl">
-            <Globe size={32} className="text-gray-600 mx-auto mb-2" />
-            <p className="text-sm text-gray-500">Veri bulunamadi</p>
+            <Globe size={32} className="text-text-secondary mx-auto mb-2" />
+            <p className="text-sm text-text-secondary">Veri bulunamadi</p>
           </div>
         )}
       </div>
@@ -443,23 +415,23 @@ function BsrCalculator() {
 
   return (
     <div className="space-y-6">
-      <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-        <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-          <Calculator size={18} className="text-[#667eea]" />
+      <div className="bg-bg-card rounded-[14px] border border-border-default p-6 shadow-sm">
+        <h3 className="font-semibold text-text-primary mb-4 flex items-center gap-2">
+          <Calculator size={18} className="text-accent" />
           BSR Hesaplayici
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">BSR (Best Sellers Rank)</label>
-            <input type="number" value={bsr} onChange={(e) => setBsr(Math.max(1, parseInt(e.target.value) || 1))} className="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#667eea]/30 focus:border-[#667eea]" />
+            <label className="block text-xs font-medium text-text-secondary mb-1">BSR (Best Sellers Rank)</label>
+            <input type="number" value={bsr} onChange={(e) => setBsr(Math.max(1, parseInt(e.target.value) || 1))} className="w-full px-3 py-2 rounded-lg border border-border-default text-sm focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent" />
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Urun Fiyati ($)</label>
-            <input type="number" value={price} onChange={(e) => setPrice(Math.max(0.01, parseFloat(e.target.value) || 0.01))} step="0.5" className="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#667eea]/30 focus:border-[#667eea]" />
+            <label className="block text-xs font-medium text-text-secondary mb-1">Urun Fiyati ($)</label>
+            <input type="number" value={price} onChange={(e) => setPrice(Math.max(0.01, parseFloat(e.target.value) || 0.01))} step="0.5" className="w-full px-3 py-2 rounded-lg border border-border-default text-sm focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent" />
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Kategori</label>
-            <select value={category} onChange={(e) => setCategory(e.target.value)} className="w-full px-3 py-2 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#667eea]/30 focus:border-[#667eea]">
+            <label className="block text-xs font-medium text-text-secondary mb-1">Kategori</label>
+            <select value={category} onChange={(e) => setCategory(e.target.value)} className="w-full px-3 py-2 rounded-lg border border-border-default text-sm focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent">
               {categories.map((c) => <option key={c} value={c}>{c}</option>)}
             </select>
           </div>
@@ -468,23 +440,23 @@ function BsrCalculator() {
           <StatCard icon={ShoppingCart} label="Aylik Satis" value={formatCompact(sales)} />
           <StatCard icon={DollarSign} label="Aylik Gelir" value={formatMoney(revenue)} />
           <StatCard icon={TrendingUp} label="Yillik Gelir" value={formatMoney(revenue * 12)} />
-          <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
-            <div className="flex items-center gap-2 mb-1"><BarChart3 size={16} className="text-[#667eea]" /><span className="text-xs text-gray-500">Seviye</span></div>
+          <div className="bg-bg-card rounded-[14px] border border-border-default p-4 shadow-sm">
+            <div className="flex items-center gap-2 mb-1"><BarChart3 size={16} className="text-accent" /><span className="text-xs text-text-secondary">Seviye</span></div>
             <div className="mt-1"><span className={`text-sm font-bold px-3 py-1 rounded-full ${salesTierColor(tier)}`}>{tier}</span></div>
           </div>
         </div>
       </div>
-      <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-        <h3 className="font-semibold text-gray-900 mb-1">BSR Referans Tablosu</h3>
-        <p className="text-xs text-gray-500 mb-4">{category} - ${price.toFixed(0)} fiyat ile</p>
+      <div className="bg-bg-card rounded-[14px] border border-border-default p-6 shadow-sm">
+        <h3 className="font-semibold text-text-primary mb-1">BSR Referans Tablosu</h3>
+        <p className="text-xs text-text-secondary mb-4">{category} - ${price.toFixed(0)} fiyat ile</p>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead><tr className="border-b border-gray-200">
-              <th className="text-left py-2 px-3 text-xs font-medium text-gray-500">BSR</th>
-              <th className="text-right py-2 px-3 text-xs font-medium text-gray-500">Aylik Satis</th>
-              <th className="text-right py-2 px-3 text-xs font-medium text-gray-500">Aylik Gelir</th>
-              <th className="text-right py-2 px-3 text-xs font-medium text-gray-500">Yillik Gelir</th>
-              <th className="text-center py-2 px-3 text-xs font-medium text-gray-500">Seviye</th>
+            <thead><tr className="border-b border-border-default">
+              <th className="text-left py-2 px-3 text-xs font-medium text-text-secondary">BSR</th>
+              <th className="text-right py-2 px-3 text-xs font-medium text-text-secondary">Aylik Satis</th>
+              <th className="text-right py-2 px-3 text-xs font-medium text-text-secondary">Aylik Gelir</th>
+              <th className="text-right py-2 px-3 text-xs font-medium text-text-secondary">Yillik Gelir</th>
+              <th className="text-center py-2 px-3 text-xs font-medium text-text-secondary">Seviye</th>
             </tr></thead>
             <tbody>
               {refBsrs.map((b) => {
@@ -492,11 +464,11 @@ function BsrCalculator() {
                 const r = estimateRevenue(b, price, category);
                 const t = salesTier(s);
                 return (
-                  <tr key={b} className={`border-b border-gray-100 ${b === bsr ? "bg-[#667eea]/5" : ""}`}>
-                    <td className="py-2 px-3 font-mono text-gray-700">#{b.toLocaleString()}</td>
+                  <tr key={b} className={`border-b border-border-default ${b === bsr ? "bg-accent/5" : ""}`}>
+                    <td className="py-2 px-3 font-mono text-text-primary">#{b.toLocaleString()}</td>
                     <td className="py-2 px-3 text-right font-medium">{s.toLocaleString()}</td>
-                    <td className="py-2 px-3 text-right font-medium text-[#667eea]">{formatMoney(r)}</td>
-                    <td className="py-2 px-3 text-right text-gray-600">{formatMoney(r * 12)}</td>
+                    <td className="py-2 px-3 text-right font-medium text-accent">{formatMoney(r)}</td>
+                    <td className="py-2 px-3 text-right text-text-secondary">{formatMoney(r * 12)}</td>
                     <td className="py-2 px-3 text-center"><TierBadge tier={t} /></td>
                   </tr>
                 );
@@ -588,21 +560,21 @@ export default function HacimlerPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Hacimler</h1>
-        <p className="text-sm text-gray-500 mt-1">Bir anahtar kelime gir - arama hacimleri, top markalar ve Amazon verileri</p>
+        <h1 className="text-2xl font-bold text-text-primary">Hacimler</h1>
+        <p className="text-sm text-text-secondary mt-1">Bir anahtar kelime gir - arama hacimleri, top markalar ve Amazon verileri</p>
       </div>
 
       {/* Search bar */}
-      <div className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
+      <div className="bg-bg-card rounded-[14px] border border-border-default p-4 shadow-sm">
         <div className="flex gap-3">
           <div className="flex-1 relative">
-            <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" />
             <input type="text" value={localKeyword} onChange={(e) => setLocalKeyword(e.target.value)} onKeyDown={handleKeyDown}
               placeholder="Anahtar kelime girin... (orn: yoga mat, wireless earbuds, skincare)"
-              className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#667eea]/30 focus:border-[#667eea]" />
+              className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-border-default text-sm focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent" />
           </div>
           <button onClick={handleSearch} disabled={loading || !localKeyword.trim()}
-            className="px-6 py-2.5 bg-[#667eea] text-white rounded-lg text-sm font-medium hover:bg-[#5a6fd6] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2">
+            className="px-6 py-2.5 bg-accent text-white rounded-lg text-sm font-medium hover:bg-accent/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2">
             {loading ? <Loader2 size={16} className="animate-spin" /> : <Search size={16} />}
             Ara
           </button>
@@ -610,9 +582,9 @@ export default function HacimlerPage() {
       </div>
 
       {loading && (
-        <div className="bg-white rounded-xl border border-gray-200 p-12 shadow-sm text-center">
-          <Loader2 size={32} className="animate-spin text-[#667eea] mx-auto mb-3" />
-          <p className="text-sm text-gray-600">Veriler analiz ediliyor... (15-30 saniye)</p>
+        <div className="bg-bg-card rounded-[14px] border border-border-default p-12 shadow-sm text-center">
+          <Loader2 size={32} className="animate-spin text-accent mx-auto mb-3" />
+          <p className="text-sm text-text-secondary">Veriler analiz ediliyor... (15-30 saniye)</p>
         </div>
       )}
 
@@ -625,15 +597,15 @@ export default function HacimlerPage() {
       {!loading && hasResults && (
         <>
           {/* Tabs */}
-          <div className="flex gap-1 bg-gray-100 p-1 rounded-xl w-fit">
+          <div className="flex gap-1 bg-bg-hover p-1 rounded-[14px] w-fit">
             {[
               { key: "hacimler" as Tab, label: "Hacimler & Markalar", icon: BarChart3, count: keywordResults.length + websiteResults.length },
               { key: "amazon" as Tab, label: "Amazon", icon: ShoppingCart, count: amazonResults.length },
             ].map(({ key, label, icon: Icon, count }) => (
               <button key={key} onClick={() => setTab(key)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${tab === key ? "bg-white text-[#667eea] shadow-sm" : "text-gray-500 hover:text-gray-700"}`}>
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${tab === key ? "bg-bg-card text-accent shadow-sm" : "text-text-secondary hover:text-text-primary"}`}>
                 <Icon size={16} /> {label}
-                {count > 0 && <span className="text-[10px] bg-gray-200 text-gray-600 px-1.5 py-0.5 rounded-full">{count}</span>}
+                {count > 0 && <span className="text-[10px] bg-bg-hover text-text-secondary px-1.5 py-0.5 rounded-full">{count}</span>}
               </button>
             ))}
           </div>
@@ -654,19 +626,19 @@ export default function HacimlerPage() {
 
               <div className="flex items-center justify-between flex-wrap gap-2">
                 <div className="flex items-center gap-3">
-                  <button onClick={toggleAll} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-                    {selectedProducts.size === amazonResults.length ? <CheckSquare size={14} className="text-[#667eea]" /> : <Square size={14} />}
+                  <button onClick={toggleAll} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-text-secondary bg-bg-card border border-border-default rounded-lg hover:bg-bg-hover transition-colors">
+                    {selectedProducts.size === amazonResults.length ? <CheckSquare size={14} className="text-accent" /> : <Square size={14} />}
                     {selectedProducts.size > 0 ? `${selectedProducts.size} secili` : "Tumunu Sec"}
                   </button>
-                  <select value={sortKey} onChange={(e) => setSortKey(e.target.value as SortKey)} className="px-3 py-1.5 rounded-lg border border-gray-300 text-xs">
+                  <select value={sortKey} onChange={(e) => setSortKey(e.target.value as SortKey)} className="px-3 py-1.5 rounded-lg border border-border-default text-xs">
                     {SORT_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                   </select>
                 </div>
                 <div className="flex items-center gap-2">
-                  <button onClick={openSaveModal} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-[#667eea] rounded-lg hover:bg-[#5a6fd6] transition-colors">
+                  <button onClick={openSaveModal} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-accent rounded-lg hover:bg-accent/90 transition-colors">
                     <Bookmark size={14} /> {selectedProducts.size > 0 ? `${selectedProducts.size} Kaydet` : "Tumunu Kaydet"}
                   </button>
-                  <button onClick={() => downloadCSV(sortedAmazon, keyword)} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                  <button onClick={() => downloadCSV(sortedAmazon, keyword)} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-text-secondary bg-bg-card border border-border-default rounded-lg hover:bg-bg-hover transition-colors">
                     <Download size={14} /> CSV
                   </button>
                 </div>
@@ -678,8 +650,8 @@ export default function HacimlerPage() {
                 ))}
               </div>
 
-              <div className="border-t border-gray-200 pt-4">
-                <button onClick={() => setShowBsr(!showBsr)} className="flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-[#667eea] transition-colors">
+              <div className="border-t border-border-default pt-4">
+                <button onClick={() => setShowBsr(!showBsr)} className="flex items-center gap-2 text-sm font-medium text-text-secondary hover:text-accent transition-colors">
                   <Calculator size={16} /> BSR Hesaplayici {showBsr ? "▲" : "▼"}
                 </button>
                 {showBsr && <div className="mt-4"><BsrCalculator /></div>}
@@ -692,26 +664,26 @@ export default function HacimlerPage() {
       {/* Save Modal */}
       {showSaveModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl p-6 w-full max-w-md mx-4 shadow-2xl">
+          <div className="bg-bg-card rounded-[14px] p-6 w-full max-w-md mx-4 shadow-2xl">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold text-gray-900 flex items-center gap-2"><ShoppingCart size={18} className="text-[#FF9900]" /> Amazon Urunlerini Kaydet</h3>
-              <button onClick={() => setShowSaveModal(false)} className="text-gray-400 hover:text-gray-600"><X size={20} /></button>
+              <h3 className="font-semibold text-text-primary flex items-center gap-2"><ShoppingCart size={18} className="text-[#FF9900]" /> Amazon Urunlerini Kaydet</h3>
+              <button onClick={() => setShowSaveModal(false)} className="text-text-muted hover:text-text-secondary"><X size={20} /></button>
             </div>
-            <p className="text-sm text-gray-500 mb-4">{selectedProducts.size > 0 ? `${selectedProducts.size} urun secildi` : `${amazonResults.length} urun kaydedilecek`}</p>
+            <p className="text-sm text-text-secondary mb-4">{selectedProducts.size > 0 ? `${selectedProducts.size} urun secildi` : `${amazonResults.length} urun kaydedilecek`}</p>
             {folders.length > 0 && (
               <div className="mb-4">
-                <label className="block text-xs font-medium text-gray-500 mb-1">Mevcut Klasor</label>
-                <select value={selectedFolder} onChange={(e) => setSelectedFolder(e.target.value)} className="w-full py-2 px-3 border border-gray-200 rounded-lg text-sm">
+                <label className="block text-xs font-medium text-text-secondary mb-1">Mevcut Klasor</label>
+                <select value={selectedFolder} onChange={(e) => setSelectedFolder(e.target.value)} className="w-full py-2 px-3 border border-border-default rounded-lg text-sm">
                   {folders.map((f) => <option key={f} value={f}>{f}</option>)}
                 </select>
               </div>
             )}
             <div className="mb-4">
-              <label className="block text-xs font-medium text-gray-500 mb-1">veya Yeni Klasor</label>
-              <input value={newFolderName} onChange={(e) => setNewFolderName(e.target.value)} placeholder="Yeni klasor adi..." className="w-full py-2 px-3 border border-gray-200 rounded-lg text-sm" />
+              <label className="block text-xs font-medium text-text-secondary mb-1">veya Yeni Klasor</label>
+              <input value={newFolderName} onChange={(e) => setNewFolderName(e.target.value)} placeholder="Yeni klasor adi..." className="w-full py-2 px-3 border border-border-default rounded-lg text-sm" />
             </div>
             {saveMsg && <p className="text-sm text-green-600 mb-3">{saveMsg}</p>}
-            <button onClick={handleSave} className="w-full bg-[#667eea] text-white py-2.5 rounded-lg text-sm font-medium hover:bg-[#5a6fd6] transition-colors">Kaydet</button>
+            <button onClick={handleSave} className="w-full bg-accent text-white py-2.5 rounded-lg text-sm font-medium hover:bg-accent/90 transition-colors">Kaydet</button>
           </div>
         </div>
       )}

@@ -1,37 +1,99 @@
 @import "tailwindcss";
 
+/* ━━━ THEME VARIABLES ━━━ */
+
+.dark {
+  --bg-sidebar:      #111318;
+  --bg-main:         #13141a;
+  --bg-card:         #1a1b24;
+  --bg-hover:        #181924;
+  --bg-input:        #1a1b24;
+  --border-default:  #22242e;
+  --border-subtle:   #1a1c24;
+  --text-primary:    #f0f0f8;
+  --text-secondary:  #8888a0;
+  --text-muted:      #55566a;
+  --shadow-card:     none;
+  --scrollbar-thumb: #33354a;
+  --scrollbar-hover: #44466a;
+}
+
+.light {
+  --bg-sidebar:      #f7f5f2;
+  --bg-main:         #faf8f5;
+  --bg-card:         #ffffff;
+  --bg-hover:        #f2ede8;
+  --bg-input:        #ffffff;
+  --border-default:  #e8e4e0;
+  --border-subtle:   #eeebe6;
+  --text-primary:    #111318;
+  --text-secondary:  #6b6560;
+  --text-muted:      #a09890;
+  --shadow-card:     0 1px 4px rgba(0,0,0,0.06);
+  --scrollbar-thumb: #d0ccc8;
+  --scrollbar-hover: #b8b4b0;
+}
+
+/* Shared accent (default, can be overridden per-section) */
 :root {
-  --background: #f8f9fa;
-  --foreground: #1a1a2e;
-  --sidebar: #0D1B2A;
   --accent: #667eea;
   --green: #27AE60;
   --blue: #2980B9;
 }
 
+/* ━━━ TAILWIND THEME REGISTRATION ━━━ */
+
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-sidebar: var(--sidebar);
+  /* Backgrounds */
+  --color-bg-sidebar: var(--bg-sidebar);
+  --color-bg-main: var(--bg-main);
+  --color-bg-card: var(--bg-card);
+  --color-bg-hover: var(--bg-hover);
+  --color-bg-input: var(--bg-input);
+
+  /* Text */
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+
+  /* Borders */
+  --color-border-default: var(--border-default);
+  --color-border-subtle: var(--border-subtle);
+
+  /* Accent */
   --color-accent: var(--accent);
   --color-green: var(--green);
   --color-blue: var(--blue);
-  --font-sans: "Inter", sans-serif;
+
+  /* Fonts */
+  --font-sans: 'Plus Jakarta Sans', 'DM Sans', sans-serif;
   --font-display: var(--font-display), serif;
-  --font-body: var(--font-body), sans-serif;
+  --font-jakarta: var(--font-jakarta), 'DM Sans', sans-serif;
 }
+
+/* ━━━ BASE STYLES ━━━ */
 
 html {
   scroll-behavior: smooth;
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: "Inter", sans-serif;
+* {
+  transition: background-color 200ms ease, border-color 200ms ease, color 200ms ease;
 }
 
-/* Custom scrollbar */
+/* Opt out of transitions for elements that shouldn't animate */
+canvas, video, img, svg, input, textarea, select {
+  transition: none;
+}
+
+body {
+  background: var(--bg-main);
+  color: var(--text-primary);
+  font-family: 'Plus Jakarta Sans', 'DM Sans', sans-serif;
+}
+
+/* ━━━ SCROLLBAR ━━━ */
+
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -42,15 +104,16 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
+  background: var(--scrollbar-thumb);
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #a1a1a1;
+  background: var(--scrollbar-hover);
 }
 
-/* Card hover effect */
+/* ━━━ CARDS ━━━ */
+
 .card-hover {
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
@@ -60,17 +123,111 @@ body {
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
 }
 
-/* Gradient accent */
+/* ━━━ BUTTONS ━━━ */
+
+.btn-primary {
+  background: var(--accent);
+  color: #ffffff;
+  border: none;
+  border-radius: 100px;
+  height: 36px;
+  padding: 0 20px;
+  font-family: 'Plus Jakarta Sans', 'DM Sans', sans-serif;
+  font-weight: 500;
+  font-size: 13px;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: filter 150ms ease;
+}
+
+.btn-primary:hover {
+  filter: brightness(1.1);
+}
+
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  background: transparent;
+  color: var(--accent);
+  border: 1.5px solid var(--accent);
+  border-radius: 100px;
+  height: 36px;
+  padding: 0 20px;
+  font-family: 'Plus Jakarta Sans', 'DM Sans', sans-serif;
+  font-weight: 500;
+  font-size: 13px;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: background-color 150ms ease;
+}
+
+.btn-secondary:hover {
+  background: rgba(102, 126, 234, 0.08);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-default);
+  border-radius: 100px;
+  height: 36px;
+  padding: 0 20px;
+  font-family: 'Plus Jakarta Sans', 'DM Sans', sans-serif;
+  font-weight: 500;
+  font-size: 13px;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: background-color 150ms ease;
+}
+
+.btn-ghost:hover {
+  background: var(--bg-hover);
+}
+
+/* Keep gradient-accent as alias for backwards compat during migration */
 .gradient-accent {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--accent);
+  color: #ffffff;
+  border-radius: 100px;
 }
 
-/* Table striped rows */
+/* ━━━ DARK MODE GRID OVERLAY ━━━ */
+
+.bg-grid-dark {
+  background-image:
+    repeating-linear-gradient(0deg, transparent, transparent 31px, rgba(100,120,255,0.03) 32px),
+    repeating-linear-gradient(90deg, transparent, transparent 31px, rgba(100,120,255,0.03) 32px);
+}
+
+/* ━━━ TYPOGRAPHY ━━━ */
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ━━━ TABLE ━━━ */
+
 .table-striped tr:nth-child(even) {
-  background-color: rgba(0, 0, 0, 0.02);
+  background-color: var(--bg-hover);
 }
 
-/* Mobile responsive fixes */
+/* ━━━ MOBILE ━━━ */
+
 @media (max-width: 768px) {
   .overflow-x-auto {
     -webkit-overflow-scrolling: touch;
@@ -86,7 +243,8 @@ body {
   }
 }
 
-/* PWA standalone mode */
+/* ━━━ PWA ━━━ */
+
 @media (display-mode: standalone) {
   body {
     padding-top: env(safe-area-inset-top);
@@ -94,13 +252,15 @@ body {
   }
 }
 
-/* Prevent text overflow on mobile */
+/* ━━━ UTILITIES ━━━ */
+
 .break-words {
   word-break: break-word;
   overflow-wrap: break-word;
 }
 
-/* Landing page — ticker scroll */
+/* ━━━ LANDING PAGE ANIMATIONS ━━━ */
+
 @keyframes ticker-scroll {
   0% { transform: translateX(0); }
   100% { transform: translateX(-50%); }
@@ -110,7 +270,6 @@ body {
   animation: ticker-scroll 35s linear infinite;
 }
 
-/* Landing page — floating cards */
 @keyframes float-slow {
   0%, 100% { transform: translateY(0px); }
   50% { transform: translateY(-12px); }
@@ -132,7 +291,6 @@ body {
   animation: float-slow 6.5s ease-in-out 0.5s infinite;
 }
 
-/* Landing page — floating card hover */
 .landing-card {
   opacity: 0.82;
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
@@ -147,7 +305,6 @@ body {
     inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
-/* Respect reduced motion */
 @media (prefers-reduced-motion: reduce) {
   .animate-ticker,
   .animate-float,

@@ -153,7 +153,7 @@ export default function LoginPage() {
       <div className="relative z-10 w-full max-w-md px-4" style={{ animation: "cardAppear 0.6s ease-out" }}>
         {/* Logo */}
         <div className="text-center mb-8">
-          <p className="text-gray-400 tracking-[0.3em] text-xs uppercase mb-2">DTC Araştırma</p>
+          <p className="text-text-muted tracking-[0.3em] text-xs uppercase mb-2">DTC Araştırma</p>
           <h1 className="text-4xl font-black text-white tracking-tight">
             RESEARCH PORTAL
           </h1>
@@ -175,7 +175,7 @@ export default function LoginPage() {
               className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all duration-300 ${
                 mode === "login"
                   ? "bg-gradient-to-r from-[#667eea] to-[#764ba2] text-white shadow-lg"
-                  : "text-gray-400 hover:text-white"
+                  : "text-text-muted hover:text-white"
               }`}
               style={mode === "login" ? { boxShadow: "0 4px 20px rgba(102,126,234,0.4)" } : undefined}
             >
@@ -186,7 +186,7 @@ export default function LoginPage() {
               className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all duration-300 ${
                 mode === "signup"
                   ? "bg-gradient-to-r from-[#667eea] to-[#764ba2] text-white shadow-lg"
-                  : "text-gray-400 hover:text-white"
+                  : "text-text-muted hover:text-white"
               }`}
               style={mode === "signup" ? { boxShadow: "0 4px 20px rgba(102,126,234,0.4)" } : undefined}
             >
@@ -201,7 +201,7 @@ export default function LoginPage() {
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 placeholder="Kullanıcı Adı"
-                className="w-full bg-white/5 border border-white/10 rounded-full px-6 py-3.5 text-white placeholder:text-gray-400 focus:outline-none focus:border-[#667eea]/60 focus:ring-2 focus:ring-[#667eea]/20 transition-all text-sm"
+                className="w-full bg-white/5 border border-white/10 rounded-full px-6 py-3.5 text-white placeholder:text-text-muted focus:outline-none focus:border-accent/60 focus:ring-2 focus:ring-accent/20 transition-all text-sm"
                 autoComplete="username"
               />
             </div>
@@ -212,7 +212,7 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder={mode === "signup" ? "Şifre (en az 6 karakter)" : "Şifre"}
-                className="w-full bg-white/5 border border-white/10 rounded-full px-6 py-3.5 text-white placeholder:text-gray-400 focus:outline-none focus:border-[#667eea]/60 focus:ring-2 focus:ring-[#667eea]/20 transition-all text-sm"
+                className="w-full bg-white/5 border border-white/10 rounded-full px-6 py-3.5 text-white placeholder:text-text-muted focus:outline-none focus:border-accent/60 focus:ring-2 focus:ring-accent/20 transition-all text-sm"
                 autoComplete={mode === "login" ? "current-password" : "new-password"}
               />
             </div>

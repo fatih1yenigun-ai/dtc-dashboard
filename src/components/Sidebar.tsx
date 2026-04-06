@@ -11,26 +11,30 @@ import {
   ShoppingBag,
   Shield,
   LogOut,
+  Sun,
+  Moon,
 } from "lucide-react";
 import { loadFolders, getAllSavedCount } from "@/lib/supabase";
 import { useAuth } from "@/context/AuthContext";
+import { useTheme } from "@/context/ThemeContext";
 
 const navItems = [
-  { href: "/storeleads", label: "Marka Pusulası", iconKey: "marka-pusulasi" },
-  { href: "/reklam-tara", label: "Reklam Tara", iconKey: "reklam-tara" },
-  { href: "/kombine", label: "Çoklu Analiz (Beta)", iconKey: "coklu-analiz" },
-  { href: "/amazon", label: "Pazar Talebi", iconKey: "hacimler" },
-  { href: "/expert-browse", label: "Uzman Arşivi", iconKey: "uzman-arsivi" },
-  { href: "/saved", label: "Arşivim", iconKey: "arsivim" },
-  { href: "/research", label: "AI ile Araştır (Beta)", iconKey: "ai-ile-arastir" },
-  { href: "/brands", label: "Marka X-Ray (Beta)", iconKey: "marka-xray" },
-  { href: "/tools", label: "Araçlar", iconKey: "araclar" },
-  { href: "/pano", label: "Pano (Beta)", iconKey: "pano" },
+  { href: "/storeleads", label: "Marka Nabzı", iconKey: "marka-pusulasi", accentDark: "#3890f8", accentLight: "#185fa5" },
+  { href: "/reklam-tara", label: "Reklam Tara", iconKey: "reklam-tara", accentDark: "#c09af0", accentLight: "#534ab7" },
+  { href: "/kombine", label: "Bütünsel Analiz", iconKey: "coklu-analiz", accentDark: "#e0b020", accentLight: "#854f0b" },
+  { href: "/amazon", label: "Pazar Talebi", iconKey: "hacimler", accentDark: "#f0b040", accentLight: "#854f0b" },
+  { href: "/expert-browse", label: "Uzman Arşivi", iconKey: "uzman-arsivi", accentDark: "#e84040", accentLight: "#a32d2d" },
+  { href: "/saved", label: "Koleksiyonum", iconKey: "arsivim", accentDark: "#30c8a0", accentLight: "#0f6e56" },
+  { href: "/research", label: "Akıllı Tarama", iconKey: "ai-ile-arastir", accentDark: "#20d0f8", accentLight: "#185fa5" },
+  { href: "/brands", label: "Marka X-Ray (Beta)", iconKey: "marka-xray", accentDark: "#f07030", accentLight: "#993c1d" },
+  { href: "/tools", label: "Atölye", iconKey: "araclar", accentDark: "#40c860", accentLight: "#3b6d11" },
+  { href: "/pano", label: "Pano (Beta)", iconKey: "pano", accentDark: "#d060f0", accentLight: "#702090" },
 ];
 
 export default function Sidebar() {
   const pathname = usePathname();
   const { user, logout } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [folderCount, setFolderCount] = useState(0);
   const [brandCount, setBrandCount] = useState(0);
@@ -45,62 +49,106 @@ export default function Sidebar() {
       .catch(() => {});
   }, [pathname, user]);
 
+  const getAccent = (item: typeof navItems[0]) =>
+    theme === "dark" ? item.accentDark : item.accentLight;
+
   const sidebar = (
-    <div className="flex flex-col h-full bg-[#0D1B2A] text-white w-[260px] min-w-[260px]">
-      {/* Logo */}
-      <div className="px-6 py-6 border-b border-white/10">
+    <div className="flex flex-col h-full bg-bg-sidebar text-text-primary w-[280px] min-w-[280px]">
+      {/* Branding */}
+      <div className="px-5 pt-5 pb-4 border-b border-border-subtle">
         <h1 className="text-xl font-bold tracking-tight">
-          <span className="text-[#667eea]">DTC</span> Araştırma
+          <span className="text-accent">DTC</span>{" "}
+          <span className="text-text-primary">Araştırma</span>
         </h1>
-        <p className="text-xs text-gray-400 mt-1">Marka Araştırma Paneli</p>
+        <p className="text-[13px] text-text-muted mt-1">Marka Araştırma Paneli</p>
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 px-3 py-4 space-y-1">
+      <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
         {navItems.map((item) => {
-          const isActive = pathname === item.href;
+          const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href + "/"));
+          const accent = getAccent(item);
           const iconPath = isActive
             ? `/icons/active/${item.iconKey}.svg`
             : `/icons/default/${item.iconKey}.svg`;
+
           return (
             <Link
               key={item.href}
               href={item.href}
               onClick={() => setMobileOpen(false)}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
+              className="flex items-center gap-3 px-4 h-12 rounded-[10px] text-[15px] font-medium transition-all duration-[120ms]"
+              style={
                 isActive
-                  ? "bg-[#667eea]/20 text-[#667eea]"
-                  : "text-gray-300 hover:bg-white/5 hover:text-white"
-              }`}
+                  ? {
+                      background: `${accent}1a`,
+                      borderLeft: `3px solid ${accent}`,
+                      color: accent,
+                      paddingLeft: "13px",
+                    }
+                  : undefined
+              }
+              onMouseEnter={(e) => {
+                if (!isActive) {
+                  e.currentTarget.style.background = "var(--bg-hover)";
+                  e.currentTarget.style.color = "var(--text-primary)";
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!isActive) {
+                  e.currentTarget.style.background = "transparent";
+                  e.currentTarget.style.color = "var(--text-secondary)";
+                }
+              }}
             >
               <Image
                 src={iconPath}
                 alt={item.label}
-                width={22}
-                height={22}
+                width={28}
+                height={28}
                 className="flex-shrink-0"
               />
-              {item.label}
+              <span
+                className={isActive ? "" : "text-text-secondary"}
+                style={isActive ? { color: accent } : undefined}
+              >
+                {item.label}
+              </span>
             </Link>
           );
         })}
+
+        {/* Divider before conditional items */}
+        {(user?.role === "expert" || user?.role === "admin") && (
+          <div className="border-t border-border-subtle my-2.5" />
+        )}
 
         {/* Expert archive - expert/admin only */}
         {(user?.role === "expert" || user?.role === "admin") && (
           <Link
             href="/expert-archive"
             onClick={() => setMobileOpen(false)}
-            className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
+            className={`flex items-center gap-3 px-4 h-12 rounded-[10px] text-[15px] font-medium transition-all duration-[120ms] ${
               pathname === "/expert-archive"
-                ? "bg-[#667eea]/20 text-[#667eea]"
-                : "text-gray-300 hover:bg-white/5 hover:text-white"
+                ? ""
+                : "text-text-secondary hover:bg-bg-hover hover:text-text-primary"
             }`}
+            style={
+              pathname === "/expert-archive"
+                ? {
+                    background: "rgba(232, 64, 64, 0.1)",
+                    borderLeft: "3px solid #e84040",
+                    color: theme === "dark" ? "#e84040" : "#a32d2d",
+                    paddingLeft: "13px",
+                  }
+                : undefined
+            }
           >
             <Image
               src={pathname === "/expert-archive" ? "/icons/active/uzman-arsivi.svg" : "/icons/default/uzman-arsivi.svg"}
               alt="Uzman Arşivim"
-              width={22}
-              height={22}
+              width={28}
+              height={28}
               className="flex-shrink-0"
             />
             Uzman Arşivim
@@ -109,48 +157,62 @@ export default function Sidebar() {
 
         {/* Admin link */}
         {user?.role === "admin" && (
-          <Link
-            href="/admin"
-            onClick={() => setMobileOpen(false)}
-            className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
-              pathname === "/admin"
-                ? "bg-[#667eea]/20 text-[#667eea]"
-                : "text-gray-300 hover:bg-white/5 hover:text-white"
-            }`}
-          >
-            <Shield size={18} />
-            Admin Paneli
-          </Link>
+          <>
+            <div className="border-t border-border-subtle my-2.5" />
+            <Link
+              href="/admin"
+              onClick={() => setMobileOpen(false)}
+              className={`flex items-center gap-3 px-4 h-12 rounded-[10px] text-[15px] font-medium transition-all duration-[120ms] ${
+                pathname === "/admin"
+                  ? "bg-bg-hover text-text-primary"
+                  : "text-text-muted hover:bg-bg-hover hover:text-text-secondary"
+              }`}
+            >
+              <Shield size={20} />
+              Admin Paneli
+            </Link>
+          </>
         )}
       </nav>
 
       {/* Stats */}
-      <div className="px-6 py-4 border-t border-white/10 space-y-2">
-        <div className="flex items-center gap-2 text-xs text-gray-400">
+      <div className="px-5 py-3 border-t border-border-subtle space-y-1.5">
+        <div className="flex items-center gap-2 text-[11px] text-text-muted uppercase tracking-wider">
           <ShoppingBag size={14} />
           <span>{brandCount} kayıtlı marka</span>
         </div>
-        <div className="flex items-center gap-2 text-xs text-gray-400">
+        <div className="flex items-center gap-2 text-[11px] text-text-muted uppercase tracking-wider">
           <FolderOpen size={14} />
           <span>{folderCount} klasör</span>
         </div>
       </div>
 
+      {/* Theme toggle */}
+      <div className="px-5 py-2 border-t border-border-subtle">
+        <button
+          onClick={toggleTheme}
+          className="text-text-muted hover:text-text-secondary transition-colors"
+          title={theme === "dark" ? "Açık Tema" : "Koyu Tema"}
+        >
+          {theme === "dark" ? <Sun size={20} /> : <Moon size={20} />}
+        </button>
+      </div>
+
       {/* User info + logout */}
       {user && (
-        <div className="px-6 py-4 border-t border-white/10">
+        <div className="px-5 py-4 border-t border-border-subtle">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 min-w-0">
-              <div className="w-7 h-7 rounded-full bg-[#667eea]/20 flex items-center justify-center flex-shrink-0">
-                <span className="text-xs font-bold text-[#667eea]">
+              <div className="w-7 h-7 rounded-full bg-accent/20 flex items-center justify-center flex-shrink-0">
+                <span className="text-xs font-bold text-accent">
                   {user.username.charAt(0).toUpperCase()}
                 </span>
               </div>
-              <span className="text-sm text-gray-300 truncate">{user.username}</span>
+              <span className="text-sm text-text-secondary truncate">{user.username}</span>
             </div>
             <button
               onClick={logout}
-              className="text-gray-500 hover:text-red-400 transition-colors"
+              className="text-text-muted hover:text-red-400 transition-colors"
               title="Çıkış Yap"
             >
               <LogOut size={16} />
@@ -166,7 +228,7 @@ export default function Sidebar() {
       {/* Mobile toggle */}
       <button
         onClick={() => setMobileOpen(!mobileOpen)}
-        className="fixed top-4 left-4 z-50 md:hidden bg-[#0D1B2A] text-white p-2 rounded-lg"
+        className="fixed top-4 left-4 z-50 md:hidden bg-bg-sidebar text-text-primary p-2 rounded-lg"
       >
         {mobileOpen ? <X size={20} /> : <Menu size={20} />}
       </button>

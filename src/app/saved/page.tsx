@@ -288,14 +288,14 @@ export default function SavedPage() {
     <div>
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Kaydedilenler</h1>
-        <p className="text-gray-500 mt-1">
+        <h1 className="text-2xl font-bold text-text-primary">Kaydedilenler</h1>
+        <p className="text-text-secondary mt-1">
           Kayıtlı markalarınızı klasörler halinde yönetin
         </p>
       </div>
 
       {/* Folder tabs + create */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-6">
+      <div className="bg-bg-card rounded-[14px] shadow-sm border border-border-default p-4 mb-6">
         <div className="flex flex-wrap items-center gap-2 mb-3">
           {folders.map((name) => (
             <button
@@ -303,8 +303,8 @@ export default function SavedPage() {
               onClick={() => setActiveFolder(name)}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                 activeFolder === name
-                  ? "bg-[#667eea] text-white shadow-sm"
-                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  ? "bg-accent text-white shadow-sm"
+                  : "bg-bg-hover text-text-secondary hover:bg-bg-hover"
               }`}
             >
               <FolderOpen size={14} />
@@ -312,7 +312,7 @@ export default function SavedPage() {
             </button>
           ))}
           {folders.length === 0 && (
-            <span className="text-sm text-gray-400">
+            <span className="text-sm text-text-muted">
               Henüz klasör yok. Aşağıdan oluşturun.
             </span>
           )}
@@ -325,11 +325,11 @@ export default function SavedPage() {
             onChange={(e) => setNewFolderName(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleCreateFolder()}
             placeholder="Yeni klasör adı..."
-            className="flex-1 py-2 px-3 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#667eea]/30"
+            className="flex-1 py-2 px-3 border border-border-default rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/30"
           />
           <button
             onClick={handleCreateFolder}
-            className="flex items-center gap-1 px-4 py-2 bg-[#667eea] text-white rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
+            className="flex items-center gap-1 px-4 py-2 bg-accent text-white rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
           >
             <Plus size={14} />
             Oluştur
@@ -348,11 +348,11 @@ export default function SavedPage() {
 
       {/* Quick add by URL */}
       {activeFolder && (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-6">
+        <div className="bg-bg-card rounded-[14px] shadow-sm border border-border-default p-4 mb-6">
           <div className="flex items-center gap-2 mb-2">
-            <Link size={16} className="text-[#667eea]" />
-            <span className="text-sm font-semibold text-gray-700">Hızlı Ekle</span>
-            <span className="text-xs text-gray-400">— Link yapıştırarak marka ekle</span>
+            <Link size={16} className="text-accent" />
+            <span className="text-sm font-semibold text-text-primary">Hızlı Ekle</span>
+            <span className="text-xs text-text-muted">— Link yapıştırarak marka ekle</span>
           </div>
           <div className="flex gap-2">
             <input
@@ -361,12 +361,12 @@ export default function SavedPage() {
               onChange={(e) => setQuickAddUrl(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleQuickAdd()}
               placeholder="https://marka.com veya marka.com"
-              className="flex-1 py-2.5 px-4 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#667eea]/30"
+              className="flex-1 py-2.5 px-4 border border-border-default rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/30"
             />
             <button
               onClick={handleQuickAdd}
               disabled={quickAddLoading || !quickAddUrl.trim()}
-              className="flex items-center gap-2 px-5 py-2.5 bg-[#667eea] text-white rounded-lg text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-40"
+              className="flex items-center gap-2 px-5 py-2.5 bg-accent text-white rounded-lg text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-40"
             >
               {quickAddLoading ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />}
               Ekle
@@ -384,11 +384,11 @@ export default function SavedPage() {
       {brands.length > 0 && (
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
-            <span className="text-sm font-medium text-gray-700">
+            <span className="text-sm font-medium text-text-primary">
               {brands.length} marka
             </span>
             {selectedBrands.size > 0 && (
-              <span className="text-sm text-[#667eea] font-medium">
+              <span className="text-sm text-accent font-medium">
                 ({selectedBrands.size} seçili)
               </span>
             )}
@@ -402,7 +402,7 @@ export default function SavedPage() {
                 setSortKey(key as SortKey);
                 setSortAsc(dir === "asc");
               }}
-              className="py-1.5 px-3 border border-gray-200 rounded-lg text-xs text-gray-600 focus:outline-none focus:ring-2 focus:ring-[#667eea]/30"
+              className="py-1.5 px-3 border border-border-default rounded-lg text-xs text-text-secondary focus:outline-none focus:ring-2 focus:ring-accent/30"
             >
               <option value="revenue-desc">Ciro (Yüksek)</option>
               <option value="revenue-asc">Ciro (Düşük)</option>
@@ -418,10 +418,10 @@ export default function SavedPage() {
 
             <button
               onClick={toggleAll}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 text-gray-600 rounded-lg text-xs font-medium hover:bg-gray-200 transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-bg-hover text-text-secondary rounded-lg text-xs font-medium hover:bg-bg-hover transition-colors"
             >
               {selectedBrands.size === brands.length && brands.length > 0 ? (
-                <CheckSquare size={13} className="text-[#667eea]" />
+                <CheckSquare size={13} className="text-accent" />
               ) : (
                 <Square size={13} />
               )}
@@ -446,7 +446,7 @@ export default function SavedPage() {
             </button>
             <button
               onClick={exportCSV}
-              className="flex items-center gap-1 px-3 py-1.5 bg-gray-100 text-gray-600 rounded-lg text-xs font-medium hover:bg-gray-200 transition-colors"
+              className="flex items-center gap-1 px-3 py-1.5 bg-bg-hover text-text-secondary rounded-lg text-xs font-medium hover:bg-bg-hover transition-colors"
             >
               <Download size={12} />
               CSV İndir
@@ -457,9 +457,9 @@ export default function SavedPage() {
 
       {/* Content */}
       {loading ? (
-        <div className="text-center py-10 text-gray-400">Yükleniyor...</div>
+        <div className="text-center py-10 text-text-muted">Yükleniyor...</div>
       ) : brands.length === 0 ? (
-        <div className="text-center py-16 text-gray-400">
+        <div className="text-center py-16 text-text-muted">
           <FolderOpen size={48} className="mx-auto mb-3 opacity-50" />
           <p className="text-base">Bu klasörde henüz marka yok</p>
         </div>
@@ -488,10 +488,10 @@ export default function SavedPage() {
             return (
               <div
                 key={brand.id}
-                className={`bg-white rounded-xl shadow-sm border p-5 hover:shadow-md transition-shadow ${
+                className={`bg-bg-card rounded-[14px] shadow-sm border p-5 hover:shadow-md transition-shadow ${
                   isSelected
-                    ? "ring-2 ring-[#667eea] bg-[#667eea]/5 border-[#667eea]/30"
-                    : "border-gray-200"
+                    ? "ring-2 ring-accent bg-accent/5 border-accent/30"
+                    : "border-border-default"
                 }`}
               >
                 {/* Top: checkbox + name + source + flag */}
@@ -499,15 +499,15 @@ export default function SavedPage() {
                   <div className="flex items-center gap-2 min-w-0">
                     <button
                       onClick={() => toggleBrand(brand.id)}
-                      className="flex-shrink-0 text-gray-400 hover:text-gray-600"
+                      className="flex-shrink-0 text-text-muted hover:text-text-secondary"
                     >
                       {isSelected ? (
-                        <CheckSquare size={18} className="text-[#667eea]" />
+                        <CheckSquare size={18} className="text-accent" />
                       ) : (
                         <Square size={18} />
                       )}
                     </button>
-                    <span className="text-lg font-bold text-gray-900 truncate">
+                    <span className="text-lg font-bold text-text-primary truncate">
                       {name}
                     </span>
                     <SourceBadge source={source} />
@@ -534,42 +534,42 @@ export default function SavedPage() {
                 {/* Metrics grid */}
                 <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 mb-3">
                   <div>
-                    <span className="text-sm text-gray-500">Ciro: </span>
+                    <span className="text-sm text-text-secondary">Ciro: </span>
                     <span className="text-base font-semibold text-[#27AE60]">
                       {formatRevenue(revenue)}
                     </span>
                   </div>
                   <div>
-                    <span className="text-sm text-gray-500">AOV: </span>
+                    <span className="text-sm text-text-secondary">AOV: </span>
                     <span className="text-base font-semibold text-[#764ba2]">
                       {aov != null ? `$${aov}` : "-"}
                     </span>
                   </div>
                   <div>
-                    <span className="text-sm text-gray-500">Trafik: </span>
+                    <span className="text-sm text-text-secondary">Trafik: </span>
                     <span className="text-base font-semibold text-[#2980B9]">
                       {formatTraffic(traffic)}
                     </span>
                   </div>
                   <div>
-                    <span className="text-sm text-gray-500">TQS: </span>
+                    <span className="text-sm text-text-secondary">TQS: </span>
                     {tqs != null ? (
                       <span className="inline-block bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded text-xs font-semibold">
                         {tqs}
                       </span>
                     ) : (
-                      <span className="text-sm text-gray-300">-</span>
+                      <span className="text-sm text-text-muted">-</span>
                     )}
                   </div>
                   <div>
-                    <span className="text-sm text-gray-500">Dönüşüm:</span>
-                    <span className="text-base font-semibold text-gray-700">
+                    <span className="text-sm text-text-secondary">Dönüşüm:</span>
+                    <span className="text-base font-semibold text-text-primary">
                       {conversion != null ? `%${conversion}` : "-"}
                     </span>
                   </div>
                   <div>
-                    <span className="text-sm text-gray-500">Kuruluş:</span>
-                    <span className="text-base font-semibold text-gray-700">
+                    <span className="text-sm text-text-secondary">Kuruluş:</span>
+                    <span className="text-base font-semibold text-text-primary">
                       {founded || "-"}
                     </span>
                   </div>
@@ -578,8 +578,8 @@ export default function SavedPage() {
                 {/* Category tag */}
                 {category && (
                   <div className="mb-2">
-                    <span className="text-sm text-gray-500">Kategori: </span>
-                    <span className="inline-block bg-[#667eea]/10 text-[#667eea] px-2 py-0.5 rounded-full text-xs font-medium">
+                    <span className="text-sm text-text-secondary">Kategori: </span>
+                    <span className="inline-block bg-accent/10 text-accent px-2 py-0.5 rounded-full text-xs font-medium">
                       {category}
                     </span>
                   </div>
@@ -588,7 +588,7 @@ export default function SavedPage() {
                 {/* Growth tags */}
                 {growth && (
                   <div className="mb-2">
-                    <span className="text-sm text-gray-500">Büyüme:</span>
+                    <span className="text-sm text-text-secondary">Büyüme:</span>
                     <span className="inline">
                       {growth.split(",").filter(Boolean).slice(0, 3).map((g, gi) => (
                         <span
@@ -605,7 +605,7 @@ export default function SavedPage() {
                 {/* Marketing angle */}
                 {angles && (
                   <div className="mb-2">
-                    <span className="text-sm text-gray-500">Ana Açı:</span>
+                    <span className="text-sm text-text-secondary">Ana Açı:</span>
                     <span className="text-sm font-medium text-purple-700">
                       {angles.split(",")[0]?.trim() || "-"}
                     </span>
@@ -614,13 +614,13 @@ export default function SavedPage() {
 
                 {/* Insight */}
                 {insight && (
-                  <p className="text-sm text-gray-500 italic line-clamp-2 mb-3">
+                  <p className="text-sm text-text-secondary italic line-clamp-2 mb-3">
                     &ldquo;{insight}&rdquo;
                   </p>
                 )}
 
                 {/* Action buttons */}
-                <div className="flex items-center gap-2 pt-2 border-t border-gray-100">
+                <div className="flex items-center gap-2 pt-2 border-t border-border-default">
                   {metaAds && (
                     <a
                       href={metaAds.startsWith("http") ? metaAds : `https://${metaAds}`}
@@ -633,7 +633,7 @@ export default function SavedPage() {
                   )}
                   <button
                     onClick={() => setDetailBrand(brand)}
-                    className="inline-flex items-center gap-1 px-3 py-1.5 bg-[#667eea]/10 text-[#667eea] rounded-lg text-xs font-medium hover:bg-[#667eea]/20 transition-colors"
+                    className="inline-flex items-center gap-1 px-3 py-1.5 bg-accent/10 text-accent rounded-lg text-xs font-medium hover:bg-accent/20 transition-colors"
                   >
                     <Eye size={12} />
                     Detaylı Gör
@@ -648,9 +648,9 @@ export default function SavedPage() {
       {/* Detail Modal */}
       {detailBrand && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setDetailBrand(null)}>
-          <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[85vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-bg-card rounded-2xl w-full max-w-2xl max-h-[85vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
             {/* Header */}
-            <div className="sticky top-0 bg-[#0D1B2A] text-white px-6 py-4 rounded-t-2xl flex items-center justify-between">
+            <div className="sticky top-0 bg-bg-sidebar text-white px-6 py-4 rounded-t-2xl flex items-center justify-between">
               <div>
                 <h2 className="text-lg font-bold">{getBrandName(detailBrand)}</h2>
                 {getBrandWebsite(detailBrand) && (
@@ -664,7 +664,7 @@ export default function SavedPage() {
                   </a>
                 )}
               </div>
-              <button onClick={() => setDetailBrand(null)} className="text-gray-400 hover:text-white transition-colors">
+              <button onClick={() => setDetailBrand(null)} className="text-text-muted hover:text-white transition-colors">
                 <X size={22} />
               </button>
             </div>
@@ -687,34 +687,34 @@ export default function SavedPage() {
                 <p className="text-xs text-amber-600 font-medium mb-1">TQS / Dönüşüm</p>
                 <p className="text-2xl font-bold text-amber-700">
                   {getBrandTQS(detailBrand) ?? "-"}{" "}
-                  <span className="text-base font-medium text-gray-500">
+                  <span className="text-base font-medium text-text-secondary">
                     / {getBrandConversion(detailBrand) != null ? `%${getBrandConversion(detailBrand)}` : "-"}
                   </span>
                 </p>
               </div>
-              <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
-                <p className="text-xs text-gray-500 font-medium mb-1">Ülke & Kuruluş</p>
-                <p className="text-lg font-bold text-gray-800">
+              <div className="bg-bg-main border border-border-default rounded-xl p-4">
+                <p className="text-xs text-text-secondary font-medium mb-1">Ülke & Kuruluş</p>
+                <p className="text-lg font-bold text-text-primary">
                   {FLAG[getBrandCountry(detailBrand).toUpperCase()] || ""} {getBrandCountry(detailBrand).toUpperCase() || "-"}{" "}
-                  <span className="text-gray-400 font-normal">|</span> {getBrandFounded(detailBrand) || "-"}
+                  <span className="text-text-muted font-normal">|</span> {getBrandFounded(detailBrand) || "-"}
                 </p>
               </div>
-              <div className="bg-[#667eea]/5 border border-[#667eea]/20 rounded-xl p-4">
-                <p className="text-xs text-[#667eea] font-medium mb-1">Kategori</p>
-                <p className="text-lg font-bold text-gray-800">{getBrandCategory(detailBrand) || "-"}</p>
+              <div className="bg-accent/5 border border-accent/20 rounded-xl p-4">
+                <p className="text-xs text-accent font-medium mb-1">Kategori</p>
+                <p className="text-lg font-bold text-text-primary">{getBrandCategory(detailBrand) || "-"}</p>
               </div>
             </div>
 
             <div className="px-6 pb-6 space-y-4">
               {getBrandInsight(detailBrand) && (
-                <div className="bg-gray-50 rounded-xl p-4">
-                  <p className="text-xs text-gray-500 font-semibold mb-2 uppercase tracking-wide">Öne Çıkan Özellik</p>
-                  <p className="text-sm text-gray-700 leading-relaxed">{getBrandInsight(detailBrand)}</p>
+                <div className="bg-bg-main rounded-xl p-4">
+                  <p className="text-xs text-text-secondary font-semibold mb-2 uppercase tracking-wide">Öne Çıkan Özellik</p>
+                  <p className="text-sm text-text-primary leading-relaxed">{getBrandInsight(detailBrand)}</p>
                 </div>
               )}
               {getBrandGrowth(detailBrand) && (
-                <div className="bg-gray-50 rounded-xl p-4">
-                  <p className="text-xs text-gray-500 font-semibold mb-2 uppercase tracking-wide">Büyüme Yöntemi</p>
+                <div className="bg-bg-main rounded-xl p-4">
+                  <p className="text-xs text-text-secondary font-semibold mb-2 uppercase tracking-wide">Büyüme Yöntemi</p>
                   <div className="flex flex-wrap gap-2">
                     {getBrandGrowth(detailBrand).split(",").filter(Boolean).map((g, i) => (
                       <span key={i} className="inline-block bg-emerald-100 text-emerald-700 px-2.5 py-1 rounded-lg text-xs font-medium">{g.trim()}</span>
@@ -723,8 +723,8 @@ export default function SavedPage() {
                 </div>
               )}
               {getBrandMarketingAngles(detailBrand) && (
-                <div className="bg-gray-50 rounded-xl p-4">
-                  <p className="text-xs text-gray-500 font-semibold mb-2 uppercase tracking-wide">Pazarlama Açıları</p>
+                <div className="bg-bg-main rounded-xl p-4">
+                  <p className="text-xs text-text-secondary font-semibold mb-2 uppercase tracking-wide">Pazarlama Açıları</p>
                   <div className="flex flex-wrap gap-2">
                     {getBrandMarketingAngles(detailBrand).split(",").filter(Boolean).map((a, i) => (
                       <span key={i} className="inline-block bg-purple-100 text-purple-700 px-2.5 py-1 rounded-lg text-xs font-medium">{a.trim()}</span>
@@ -733,8 +733,8 @@ export default function SavedPage() {
                 </div>
               )}
               {getBrandMetaAds(detailBrand) && (
-                <div className="bg-gray-50 rounded-xl p-4">
-                  <p className="text-xs text-gray-500 font-semibold mb-2 uppercase tracking-wide">Meta Ads</p>
+                <div className="bg-bg-main rounded-xl p-4">
+                  <p className="text-xs text-text-secondary font-semibold mb-2 uppercase tracking-wide">Meta Ads</p>
                   <a
                     href={getBrandMetaAds(detailBrand).startsWith("http") ? getBrandMetaAds(detailBrand) : `https://${getBrandMetaAds(detailBrand)}`}
                     target="_blank"
@@ -753,19 +753,19 @@ export default function SavedPage() {
       {/* Move Modal */}
       {showMoveModal && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl p-6 w-full max-w-sm shadow-xl">
+          <div className="bg-bg-card rounded-[14px] p-6 w-full max-w-sm shadow-xl">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-gray-900">
+              <h2 className="text-lg font-semibold text-text-primary">
                 Klasöre Taşı
               </h2>
               <button
                 onClick={() => setShowMoveModal(false)}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
+                className="text-text-muted hover:text-text-secondary transition-colors"
               >
                 <X size={18} />
               </button>
             </div>
-            <p className="text-sm text-gray-500 mb-3">
+            <p className="text-sm text-text-secondary mb-3">
               {selectedBrands.size} marka taşınacak
             </p>
             <div className="space-y-2">
@@ -775,14 +775,14 @@ export default function SavedPage() {
                   <button
                     key={name}
                     onClick={() => handleMoveBrands(name)}
-                    className="w-full flex items-center gap-2 px-4 py-3 rounded-lg bg-gray-50 hover:bg-[#667eea]/10 text-sm text-left transition-colors"
+                    className="w-full flex items-center gap-2 px-4 py-3 rounded-lg bg-bg-main hover:bg-accent/10 text-sm text-left transition-colors"
                   >
-                    <FolderOpen size={16} className="text-[#667eea]" />
+                    <FolderOpen size={16} className="text-accent" />
                     {name}
                   </button>
                 ))}
               {folders.filter((f) => f !== activeFolder).length === 0 && (
-                <p className="text-sm text-gray-400 text-center py-4">
+                <p className="text-sm text-text-muted text-center py-4">
                   Taşınacak başka klasör yok
                 </p>
               )}

@@ -1,25 +1,26 @@
 import type { Metadata, Viewport } from "next";
-import { DM_Sans, Instrument_Serif, Instrument_Sans } from "next/font/google";
+import { Plus_Jakarta_Sans, DM_Sans, DM_Serif_Display } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
+import { ThemeProvider } from "@/context/ThemeContext";
 import AppShell from "@/components/AppShell";
+
+const plusJakarta = Plus_Jakarta_Sans({
+  subsets: ["latin", "latin-ext"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-jakarta",
+});
 
 const dmSans = DM_Sans({
   subsets: ["latin", "latin-ext"],
   variable: "--font-dm-sans",
 });
 
-const instrumentSerif = Instrument_Serif({
+const dmSerifDisplay = DM_Serif_Display({
   subsets: ["latin"],
   weight: ["400"],
   style: ["italic"],
   variable: "--font-display",
-});
-
-const instrumentSans = Instrument_Sans({
-  subsets: ["latin"],
-  weight: ["400", "500"],
-  variable: "--font-body",
 });
 
 export const metadata: Metadata = {
@@ -46,14 +47,22 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="tr" className={`${dmSans.variable} ${instrumentSerif.variable} ${instrumentSans.variable} h-full antialiased`}>
+    <html
+      lang="tr"
+      className={`${plusJakarta.variable} ${dmSans.variable} ${dmSerifDisplay.variable} dark h-full antialiased`}
+    >
       <head>
         <link rel="apple-touch-icon" href="/icon-192.png" />
       </head>
-      <body className="min-h-full font-sans" style={{ fontFamily: "var(--font-dm-sans), sans-serif" }}>
-        <AuthProvider>
-          <AppShell>{children}</AppShell>
-        </AuthProvider>
+      <body
+        className="min-h-full font-sans"
+        style={{ fontFamily: "var(--font-jakarta), var(--font-dm-sans), sans-serif" }}
+      >
+        <ThemeProvider>
+          <AuthProvider>
+            <AppShell>{children}</AppShell>
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
