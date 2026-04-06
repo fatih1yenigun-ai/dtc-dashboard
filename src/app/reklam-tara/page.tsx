@@ -439,18 +439,25 @@ export default function ReklamTaraPage() {
     setDetailVideo(v);
   }
 
-  function goToProductFromVideo(productId: string, shopName?: string, shopHandle?: string) {
+  function goToProductFromVideo(productId: string, shopName?: string) {
     if (!productId) return;
-    // Store video context so product detail page can use it
+    // Store the store ID so product detail page can search the store's products and match by ID
     try {
+      sessionStorage.setItem(`tts_store_id_${productId}`, productId);
       sessionStorage.setItem(`tts_video_context_${productId}`, JSON.stringify({
         shopName: shopName || "",
-        shopHandle: shopHandle || "",
+        shopHandle: "",
         shopId: productId,
         tiktokShopUrl: `https://shop.tiktok.com/view/product/${productId}`,
       }));
     } catch { /* ignore */ }
     window.open(`/tts/${productId}`, "_blank");
+  }
+
+  function goToStoreFromVideo(shopName: string) {
+    if (!shopName) return;
+    // Search for the store in Reklam Tara
+    window.open(`/reklam-tara?mode=tts_shops&q=${encodeURIComponent(shopName)}`, "_blank");
   }
 
   /* ── Derived sort direction for arrows ── */
@@ -1005,6 +1012,11 @@ export default function ReklamTaraPage() {
                     <a href={`https://www.tiktok.com/@${detailVideo.shop_handle}`} target="_blank" rel="noopener noreferrer" className="text-xs text-accent hover:underline">{detailVideo.shop_handle}</a>
                   )}
                 </div>
+                {detailVideo.shop_name && (
+                  <button onClick={() => goToStoreFromVideo(detailVideo.shop_name)} className="ml-2 text-xs bg-blue-50 text-blue-600 px-2.5 py-1 rounded-lg hover:bg-blue-100 cursor-pointer flex items-center gap-1">
+                    <ShoppingBag size={12} /> Magaza
+                  </button>
+                )}
               </div>
               <button onClick={() => setDetailVideo(null)} className="text-text-muted hover:text-text-secondary cursor-pointer"><X size={20} /></button>
             </div>
@@ -1110,7 +1122,7 @@ export default function ReklamTaraPage() {
                 {detailVideo.product_id && (
                   <div
                     className="border border-border-default rounded-lg p-3 flex items-center gap-3 cursor-pointer hover:bg-bg-hover transition-colors"
-                    onClick={() => goToProductFromVideo(detailVideo.product_id, detailVideo.shop_name, detailVideo.shop_handle)}
+                    onClick={() => goToProductFromVideo(detailVideo.product_id, detailVideo.shop_name)}
                   >
                     {detailVideo.product_image ? (
                       // eslint-disable-next-line @next/next/no-img-element
