@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useRef, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   Search,
   Loader2,
@@ -187,6 +187,7 @@ type Mode = "tts_products" | "tts_shops" | "tts_videos" | "meta_ads";
 
 export default function ReklamTaraPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user } = useAuth();
   const { setSelectedProduct } = useTikTokShop();
 
@@ -239,6 +240,32 @@ export default function ReklamTaraPage() {
   const [selectedFolder, setSelectedFolder] = useState("");
   const [newFolderName, setNewFolderName] = useState("");
   const [saveMsg, setSaveMsg] = useState("");
+
+  // Auto-search from URL params (e.g. /reklam-tara?mode=tts_products&q=shopName)
+  const urlParamHandled = useRef(false);
+  useEffect(() => {
+    if (urlParamHandled.current) return;
+    const qParam = searchParams.get("q");
+    const modeParam = searchParams.get("mode") as Mode | null;
+    if (qParam) {
+      urlParamHandled.current = true;
+      setKeyword(qParam);
+      if (modeParam && ["tts_products", "tts_videos", "meta_ads"].includes(modeParam)) {
+        setMode(modeParam);
+      }
+      // Trigger search after a tick so hooks are ready
+      setTimeout(() => {
+        if (modeParam === "tts_videos") {
+          videoSearch(qParam, videoSortBy, {});
+        } else if (modeParam === "meta_ads") {
+          metaSearch(qParam, metaSortKey, metaSortDir);
+        } else {
+          productSearch(qParam, productSort, productSortType);
+        }
+      }, 100);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   // Derived
   const loading = mode === "tts_products" ? productLoading : mode === "tts_videos" ? videoLoading : metaLoading;
@@ -373,11 +400,11 @@ export default function ReklamTaraPage() {
   }
 
   function goToProductFromVideo(productId: string, shopName?: string) {
-    if (!productId) return;
-    if (shopName) {
-      try { sessionStorage.setItem(`tts_shop_name_${productId}`, shopName); } catch { /* ignore */ }
-    }
-    window.open(`/tts/${productId}`, "_blank");
+    if (!shopName && !productId) return;
+    // Navigate to Reklam Tara in "Tiktok Urunler" mode with shop name as search query
+    // This searches PiPiAds for all products from this shop
+    const query = shopName || productId;
+    window.open(`/reklam-tara?mode=tts_products&q=${encodeURIComponent(query)}`, "_blank");
   }
 
   /* ── Derived sort direction for arrows ── */
