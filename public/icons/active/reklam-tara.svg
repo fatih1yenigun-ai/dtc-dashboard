@@ -1,0 +1,31 @@
+<svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" width="512" height="512">
+<defs>
+  <clipPath id="rnd"><rect width="512" height="512" rx="110"/></clipPath>
+  <filter id="glow" x="-80%" y="-80%" width="260%" height="260%">
+    <feGaussianBlur in="SourceGraphic" stdDeviation="16" result="b"/>
+    <feMerge><feMergeNode in="b"/><feMergeNode in="b"/><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter>
+  <filter id="sglow" x="-40%" y="-40%" width="180%" height="180%">
+    <feGaussianBlur in="SourceGraphic" stdDeviation="8" result="b"/>
+    <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter>
+  <filter id="pool" x="-100%" y="-100%" width="300%" height="300%">
+    <feGaussianBlur in="SourceGraphic" stdDeviation="28"/>
+  </filter>
+</defs>
+<g clip-path="url(#rnd)">
+  <rect width="512" height="512" fill="#0c0618"/>
+  <line x1="-100" y1="0" x2="612" y2="712" stroke="#3a1060" stroke-width="0.7" opacity="0.35"/><line x1="-62" y1="0" x2="650" y2="712" stroke="#3a1060" stroke-width="0.7" opacity="0.35"/><line x1="-24" y1="0" x2="688" y2="712" stroke="#3a1060" stroke-width="0.7" opacity="0.35"/><line x1="14" y1="0" x2="726" y2="712" stroke="#3a1060" stroke-width="0.7" opacity="0.35"/><line x1="52" y1="0" x2="764" y2="712" stroke="#3a1060" stroke-width="0.7" opacity="0.35"/><line x1="90" y1="0" x2="802" y2="712" stroke="#3a1060" stroke-width="0.7" opacity="0.35"/><line x1="128" y1="0" x2="840" y2="712" stroke="#3a1060" stroke-width="0.7" opacity="0.35"/><line x1="166" y1="0" x2="878" y2="712" stroke="#3a1060" stroke-width="0.7" opacity="0.35"/><line x1="204" y1="0" x2="916" y2="712" stroke="#3a1060" stroke-width="0.7" opacity="0.35"/><line x1="242" y1="0" x2="954" y2="712" stroke="#3a1060" stroke-width="0.7" opacity="0.35"/><line x1="280" y1="0" x2="992" y2="712" stroke="#3a1060" stroke-width="0.7" opacity="0.35"/><line x1="318" y1="0" x2="1030" y2="712" stroke="#3a1060" stroke-width="0.7" opacity="0.35"/><line x1="356" y1="0" x2="1068" y2="712" stroke="#3a1060" stroke-width="0.7" opacity="0.35"/><line x1="394" y1="0" x2="1106" y2="712" stroke="#3a1060" stroke-width="0.7" opacity="0.35"/><line x1="432" y1="0" x2="1144" y2="712" stroke="#3a1060" stroke-width="0.7" opacity="0.35"/><line x1="470" y1="0" x2="1182" y2="712" stroke="#3a1060" stroke-width="0.7" opacity="0.35"/><line x1="508" y1="0" x2="1220" y2="712" stroke="#3a1060" stroke-width="0.7" opacity="0.35"/><line x1="546" y1="0" x2="1258" y2="712" stroke="#3a1060" stroke-width="0.7" opacity="0.35"/><line x1="584" y1="0" x2="1296" y2="712" stroke="#3a1060" stroke-width="0.7" opacity="0.35"/><line x1="622" y1="0" x2="1334" y2="712" stroke="#3a1060" stroke-width="0.7" opacity="0.35"/><line x1="660" y1="0" x2="1372" y2="712" stroke="#3a1060" stroke-width="0.7" opacity="0.35"/><line x1="698" y1="0" x2="1410" y2="712" stroke="#3a1060" stroke-width="0.7" opacity="0.35"/>
+  <ellipse cx="256" cy="510" rx="220" ry="100" fill="#9030e0" filter="url(#pool)" opacity="0.38"/>
+  <g filter="url(#glow)"><g fill="none" stroke="#c060f8" stroke-width="4"><ellipse cx="256" cy="242" rx="172" ry="108"/>
+<circle cx="256" cy="242" r="90"/>
+<circle cx="256" cy="242" r="65"/>
+<circle cx="256" cy="242" r="43"/>
+<circle cx="256" cy="242" r="25"/></g><circle cx="256" cy="187" r="7" fill="#d0a8ff" opacity=".9"/><circle cx="304" cy="214" r="7" fill="#d0a8ff" opacity=".9"/><circle cx="304" cy="270" r="7" fill="#d0a8ff" opacity=".9"/><circle cx="256" cy="297" r="7" fill="#d0a8ff" opacity=".9"/><circle cx="208" cy="270" r="7" fill="#d0a8ff" opacity=".9"/><circle cx="208" cy="214" r="7" fill="#d0a8ff" opacity=".9"/><circle cx="256" cy="242" r="148" fill="none" stroke="#9060d0" stroke-width="2.5" opacity=".45" stroke-dasharray="14 10"/><circle cx="256" cy="242" r="14" fill="#f0d0ff"/></g>
+  <g filter="url(#sglow)"><g fill="none" stroke="#d090ff" stroke-width="2.5"><ellipse cx="256" cy="242" rx="172" ry="108"/>
+<circle cx="256" cy="242" r="90"/>
+<circle cx="256" cy="242" r="65"/>
+<circle cx="256" cy="242" r="43"/>
+<circle cx="256" cy="242" r="25"/></g><circle cx="256" cy="242" r="148" fill="none" stroke="#9060d0" stroke-width="2.5" opacity=".45" stroke-dasharray="14 10"/><circle cx="256" cy="242" r="14" fill="#f0d0ff"/></g>
+</g>
+</svg>

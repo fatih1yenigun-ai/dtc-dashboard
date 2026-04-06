@@ -1,0 +1,57 @@
+<svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" width="512" height="512">
+<defs>
+  <clipPath id="rnd"><rect width="512" height="512" rx="110"/></clipPath>
+  <filter id="glow" x="-80%" y="-80%" width="260%" height="260%">
+    <feGaussianBlur in="SourceGraphic" stdDeviation="14" result="b"/>
+    <feMerge><feMergeNode in="b"/><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter>
+  <filter id="sglow" x="-40%" y="-40%" width="180%" height="180%">
+    <feGaussianBlur in="SourceGraphic" stdDeviation="7" result="b"/>
+    <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter>
+  <filter id="pool" x="-100%" y="-100%" width="300%" height="300%">
+    <feGaussianBlur in="SourceGraphic" stdDeviation="28"/>
+  </filter>
+</defs>
+<g clip-path="url(#rnd)">
+  <rect width="512" height="512" fill="#180a02"/>
+  <line x1="-100" y1="0" x2="612" y2="712" stroke="#4a1808" stroke-width="0.7" opacity="0.35"/><line x1="-62" y1="0" x2="650" y2="712" stroke="#4a1808" stroke-width="0.7" opacity="0.35"/><line x1="-24" y1="0" x2="688" y2="712" stroke="#4a1808" stroke-width="0.7" opacity="0.35"/><line x1="14" y1="0" x2="726" y2="712" stroke="#4a1808" stroke-width="0.7" opacity="0.35"/><line x1="52" y1="0" x2="764" y2="712" stroke="#4a1808" stroke-width="0.7" opacity="0.35"/><line x1="90" y1="0" x2="802" y2="712" stroke="#4a1808" stroke-width="0.7" opacity="0.35"/><line x1="128" y1="0" x2="840" y2="712" stroke="#4a1808" stroke-width="0.7" opacity="0.35"/><line x1="166" y1="0" x2="878" y2="712" stroke="#4a1808" stroke-width="0.7" opacity="0.35"/><line x1="204" y1="0" x2="916" y2="712" stroke="#4a1808" stroke-width="0.7" opacity="0.35"/><line x1="242" y1="0" x2="954" y2="712" stroke="#4a1808" stroke-width="0.7" opacity="0.35"/><line x1="280" y1="0" x2="992" y2="712" stroke="#4a1808" stroke-width="0.7" opacity="0.35"/><line x1="318" y1="0" x2="1030" y2="712" stroke="#4a1808" stroke-width="0.7" opacity="0.35"/><line x1="356" y1="0" x2="1068" y2="712" stroke="#4a1808" stroke-width="0.7" opacity="0.35"/><line x1="394" y1="0" x2="1106" y2="712" stroke="#4a1808" stroke-width="0.7" opacity="0.35"/><line x1="432" y1="0" x2="1144" y2="712" stroke="#4a1808" stroke-width="0.7" opacity="0.35"/><line x1="470" y1="0" x2="1182" y2="712" stroke="#4a1808" stroke-width="0.7" opacity="0.35"/><line x1="508" y1="0" x2="1220" y2="712" stroke="#4a1808" stroke-width="0.7" opacity="0.35"/><line x1="546" y1="0" x2="1258" y2="712" stroke="#4a1808" stroke-width="0.7" opacity="0.35"/><line x1="584" y1="0" x2="1296" y2="712" stroke="#4a1808" stroke-width="0.7" opacity="0.35"/><line x1="622" y1="0" x2="1334" y2="712" stroke="#4a1808" stroke-width="0.7" opacity="0.35"/><line x1="660" y1="0" x2="1372" y2="712" stroke="#4a1808" stroke-width="0.7" opacity="0.35"/><line x1="698" y1="0" x2="1410" y2="712" stroke="#4a1808" stroke-width="0.7" opacity="0.35"/>
+  <ellipse cx="256" cy="510" rx="220" ry="100" fill="#c04010" filter="url(#pool)" opacity="0.38"/>
+  <g filter="url(#glow)">
+<circle cx="256" cy="228" r="130" fill="none" stroke="#f8a060" stroke-width="5"/>
+<circle cx="256" cy="228" r="148" fill="none" stroke="#f07030" stroke-width="1.5" opacity=".3"/>
+<circle cx="256" cy="228" r="164" fill="none" stroke="#f07030" stroke-width="1" opacity=".15"/>
+<path d="M 256,146 A 82,82 0 1,0 256,310 A 82,82 0 1,0 256,146" fill="none" stroke="#d05010" stroke-width="2.2" opacity=".5" stroke-dasharray="10 6"/>
+<text x="216" y="246" fill="#ffb878" font-size="72" font-weight="700" font-family="system-ui,sans-serif">TM</text>
+<line x1="60" y1="228" x2="440" y2="228" stroke="#f07030" stroke-width="3" opacity=".7"/>
+<line x1="60" y1="200" x2="440" y2="200" stroke="#d05010" stroke-width="1" opacity=".3" stroke-dasharray="12 8"/>
+<line x1="60" y1="256" x2="440" y2="256" stroke="#d05010" stroke-width="1" opacity=".3" stroke-dasharray="12 8"/>
+<rect x="40" y="196" width="20" height="64" rx="4" fill="#f07030" opacity=".3"/>
+<rect x="452" y="196" width="20" height="64" rx="4" fill="#f8a060" opacity=".95"/>
+<line x1="398" y1="180" x2="452" y2="180" stroke="#f07030" stroke-width="1.5" opacity=".5"/>
+<line x1="398" y1="228" x2="452" y2="228" stroke="#f07030" stroke-width="1.5" opacity=".5"/>
+<line x1="398" y1="276" x2="452" y2="276" stroke="#f07030" stroke-width="1.5" opacity=".5"/>
+<rect x="168" y="378" width="176" height="56" rx="8" fill="none" stroke="#f8a060" stroke-width="3.5"/>
+<line x1="192" y1="396" x2="320" y2="396" stroke="#f07030" stroke-width="2.5" opacity=".7"/>
+<line x1="192" y1="414" x2="300" y2="414" stroke="#f07030" stroke-width="2" opacity=".6"/>
+<rect x="298" y="382" width="38" height="24" rx="4" fill="#f07030" opacity=".25"/>
+<line x1="304" y1="396" x2="330" y2="396" stroke="#f8a060" stroke-width="1.5" opacity=".7"/>
+<polyline points="398,210 410,200 422,218 434,192 446,208" fill="none" stroke="#f8a060" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="446" cy="208" r="5" fill="#f8a060"/>
+</g>
+  <g filter="url(#sglow)">
+<circle cx="256" cy="228" r="130" fill="none" stroke="#ffb878" stroke-width="3"/>
+<circle cx="256" cy="228" r="148" fill="none" stroke="#f07030" stroke-width="1" opacity=".25"/>
+<path d="M 256,146 A 82,82 0 1,0 256,310 A 82,82 0 1,0 256,146" fill="none" stroke="#e07020" stroke-width="1.5" opacity=".4" stroke-dasharray="8 5"/>
+<text x="216" y="246" fill="#ffd090" font-size="72" font-weight="700" font-family="system-ui,sans-serif">TM</text>
+<line x1="60" y1="228" x2="440" y2="228" stroke="#f8a060" stroke-width="2" opacity=".65"/>
+<rect x="40" y="196" width="20" height="64" rx="4" fill="#f07030" opacity=".22"/>
+<rect x="452" y="196" width="20" height="64" rx="4" fill="#ffb878" opacity=".85"/>
+<polyline points="398,210 410,200 422,218 434,192 446,208" fill="none" stroke="#ffb878" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+<circle cx="446" cy="208" r="4" fill="#ffb878"/>
+<rect x="168" y="378" width="176" height="56" rx="8" fill="none" stroke="#f8a060" stroke-width="2.5"/>
+<line x1="192" y1="396" x2="320" y2="396" stroke="#f07030" stroke-width="2" opacity=".6"/>
+<line x1="192" y1="414" x2="300" y2="414" stroke="#f07030" stroke-width="1.5" opacity=".5"/>
+</g>
+</g>
+</svg>

@@ -1,0 +1,43 @@
+<svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" width="512" height="512">
+<defs>
+  <clipPath id="rnd"><rect width="512" height="512" rx="110"/></clipPath>
+  <filter id="glow" x="-80%" y="-80%" width="260%" height="260%">
+    <feGaussianBlur in="SourceGraphic" stdDeviation="16" result="b"/>
+    <feMerge><feMergeNode in="b"/><feMergeNode in="b"/><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter>
+  <filter id="sglow" x="-40%" y="-40%" width="180%" height="180%">
+    <feGaussianBlur in="SourceGraphic" stdDeviation="8" result="b"/>
+    <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter>
+  <filter id="pool" x="-100%" y="-100%" width="300%" height="300%">
+    <feGaussianBlur in="SourceGraphic" stdDeviation="28"/>
+  </filter>
+</defs>
+<g clip-path="url(#rnd)">
+  <rect width="512" height="512" fill="#100c00"/>
+  <circle cx="256" cy="256" r="40" fill="none" stroke="#3a2800" stroke-width="0.7" opacity="0.35"/><circle cx="256" cy="256" r="76" fill="none" stroke="#3a2800" stroke-width="0.7" opacity="0.35"/><circle cx="256" cy="256" r="112" fill="none" stroke="#3a2800" stroke-width="0.7" opacity="0.35"/><circle cx="256" cy="256" r="148" fill="none" stroke="#3a2800" stroke-width="0.7" opacity="0.35"/><circle cx="256" cy="256" r="184" fill="none" stroke="#3a2800" stroke-width="0.7" opacity="0.35"/><circle cx="256" cy="256" r="220" fill="none" stroke="#3a2800" stroke-width="0.7" opacity="0.35"/><circle cx="256" cy="256" r="256" fill="none" stroke="#3a2800" stroke-width="0.7" opacity="0.35"/>
+  <ellipse cx="256" cy="510" rx="210" ry="100" fill="#b08000" filter="url(#pool)" opacity="0.38"/>
+  <g filter="url(#glow)"><g fill="none" stroke="#f0c840" stroke-width="5">
+  <circle cx="196" cy="220" r="110"/>
+  <circle cx="316" cy="220" r="110"/>
+  <circle cx="256" cy="310" r="110"/>
+</g>
+<circle cx="256" cy="256" r="32" fill="#f8e040" opacity=".75"/>
+<circle cx="256" cy="256" r="48" fill="none" stroke="#f0c840" stroke-width="1.5" opacity=".4"/>
+<circle cx="86" cy="220" r="11" fill="#f0c840" opacity=".9"/>
+<circle cx="426" cy="220" r="11" fill="#f0c840" opacity=".9"/>
+<circle cx="256" cy="420" r="11" fill="#f8e060" opacity=".9"/>
+<line x1="97" y1="220" x2="228" y2="252" stroke="#c09000" stroke-width="1.5" opacity=".4"/>
+<line x1="415" y1="220" x2="284" y2="252" stroke="#c09000" stroke-width="1.5" opacity=".4"/>
+<line x1="256" y1="409" x2="256" y2="288" stroke="#c09000" stroke-width="1.5" opacity=".4"/></g>
+  <g filter="url(#sglow)"><g fill="none" stroke="#f8d840" stroke-width="3">
+  <circle cx="196" cy="220" r="110"/>
+  <circle cx="316" cy="220" r="110"/>
+  <circle cx="256" cy="310" r="110"/>
+</g>
+<circle cx="256" cy="256" r="24" fill="#fff090" opacity=".7"/>
+<circle cx="86" cy="220" r="8" fill="#f8e060"/>
+<circle cx="426" cy="220" r="8" fill="#f8e060"/>
+<circle cx="256" cy="420" r="8" fill="#fff090"/></g>
+</g>
+</svg>

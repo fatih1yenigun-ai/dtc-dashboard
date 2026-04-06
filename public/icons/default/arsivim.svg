@@ -1,0 +1,29 @@
+<svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" width="512" height="512">
+<defs>
+  <clipPath id="rnd"><rect width="512" height="512" rx="110"/></clipPath>
+  <filter id="glow" x="-80%" y="-80%" width="260%" height="260%">
+    <feGaussianBlur in="SourceGraphic" stdDeviation="14" result="b"/>
+    <feMerge><feMergeNode in="b"/><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter>
+  <filter id="sglow" x="-40%" y="-40%" width="180%" height="180%">
+    <feGaussianBlur in="SourceGraphic" stdDeviation="7" result="b"/>
+    <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter>
+  <filter id="pool" x="-100%" y="-100%" width="300%" height="300%">
+    <feGaussianBlur in="SourceGraphic" stdDeviation="28"/>
+  </filter>
+</defs>
+<g clip-path="url(#rnd)">
+  <rect width="512" height="512" fill="#041814"/>
+  <line x1="0" y1="0" x2="512" y2="0" stroke="#0d4030" stroke-width="0.7" opacity="0.4"/><line x1="0" y1="34" x2="512" y2="34" stroke="#0d4030" stroke-width="0.7" opacity="0.4"/><line x1="0" y1="68" x2="512" y2="68" stroke="#0d4030" stroke-width="0.7" opacity="0.4"/><line x1="0" y1="102" x2="512" y2="102" stroke="#0d4030" stroke-width="0.7" opacity="0.4"/><line x1="0" y1="136" x2="512" y2="136" stroke="#0d4030" stroke-width="0.7" opacity="0.4"/><line x1="0" y1="170" x2="512" y2="170" stroke="#0d4030" stroke-width="0.7" opacity="0.4"/><line x1="0" y1="204" x2="512" y2="204" stroke="#0d4030" stroke-width="0.7" opacity="0.4"/><line x1="0" y1="238" x2="512" y2="238" stroke="#0d4030" stroke-width="0.7" opacity="0.4"/><line x1="0" y1="272" x2="512" y2="272" stroke="#0d4030" stroke-width="0.7" opacity="0.4"/><line x1="0" y1="306" x2="512" y2="306" stroke="#0d4030" stroke-width="0.7" opacity="0.4"/><line x1="0" y1="340" x2="512" y2="340" stroke="#0d4030" stroke-width="0.7" opacity="0.4"/><line x1="0" y1="374" x2="512" y2="374" stroke="#0d4030" stroke-width="0.7" opacity="0.4"/><line x1="0" y1="408" x2="512" y2="408" stroke="#0d4030" stroke-width="0.7" opacity="0.4"/><line x1="0" y1="442" x2="512" y2="442" stroke="#0d4030" stroke-width="0.7" opacity="0.4"/><line x1="0" y1="476" x2="512" y2="476" stroke="#0d4030" stroke-width="0.7" opacity="0.4"/><line x1="0" y1="510" x2="512" y2="510" stroke="#0d4030" stroke-width="0.7" opacity="0.4"/>
+  <ellipse cx="256" cy="510" rx="220" ry="100" fill="#0a7060" filter="url(#pool)" opacity="0.38"/>
+  <g filter="url(#glow)"><path d="M 110,180 L 110,400 L 400,400 L 400,240 L 272,240 L 230,180 Z" fill="none" stroke="#30c8a0" stroke-width="4.5"/>
+<line x1="185" y1="390" x2="185" y2="272" stroke="#60e8c0" stroke-width="5" stroke-linecap="round"/>
+<path d="M 185,272 L 305,305 L 185,338 Z" fill="none" stroke="#60e8c0" stroke-width="4.5"/>
+<line x1="128" y1="305" x2="168" y2="305" stroke="#30c8a0" stroke-width="2" opacity=".4"/>
+<line x1="128" y1="335" x2="168" y2="335" stroke="#30c8a0" stroke-width="2" opacity=".3"/></g>
+  <g filter="url(#sglow)"><path d="M 110,180 L 110,400 L 400,400 L 400,240 L 272,240 L 230,180 Z" fill="none" stroke="#50d8b0" stroke-width="2.5"/>
+<line x1="185" y1="390" x2="185" y2="272" stroke="#90f0d8" stroke-width="3" stroke-linecap="round"/>
+<path d="M 185,272 L 305,305 L 185,338 Z" fill="none" stroke="#90f0d8" stroke-width="2.5"/></g>
+</g>
+</svg>

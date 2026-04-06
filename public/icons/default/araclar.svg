@@ -1,0 +1,35 @@
+<svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" width="512" height="512">
+<defs>
+  <clipPath id="rnd"><rect width="512" height="512" rx="110"/></clipPath>
+  <filter id="glow" x="-80%" y="-80%" width="260%" height="260%">
+    <feGaussianBlur in="SourceGraphic" stdDeviation="14" result="b"/>
+    <feMerge><feMergeNode in="b"/><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter>
+  <filter id="sglow" x="-40%" y="-40%" width="180%" height="180%">
+    <feGaussianBlur in="SourceGraphic" stdDeviation="7" result="b"/>
+    <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter>
+  <filter id="pool" x="-100%" y="-100%" width="300%" height="300%">
+    <feGaussianBlur in="SourceGraphic" stdDeviation="28"/>
+  </filter>
+</defs>
+<g clip-path="url(#rnd)">
+  <rect width="512" height="512" fill="#040e05"/>
+  <line x1="0" y1="0" x2="512" y2="0" stroke="#0a3010" stroke-width="0.7" opacity="0.4"/><line x1="0" y1="36" x2="512" y2="36" stroke="#0a3010" stroke-width="0.7" opacity="0.4"/><line x1="0" y1="72" x2="512" y2="72" stroke="#0a3010" stroke-width="0.7" opacity="0.4"/><line x1="0" y1="108" x2="512" y2="108" stroke="#0a3010" stroke-width="0.7" opacity="0.4"/><line x1="0" y1="144" x2="512" y2="144" stroke="#0a3010" stroke-width="0.7" opacity="0.4"/><line x1="0" y1="180" x2="512" y2="180" stroke="#0a3010" stroke-width="0.7" opacity="0.4"/><line x1="0" y1="216" x2="512" y2="216" stroke="#0a3010" stroke-width="0.7" opacity="0.4"/><line x1="0" y1="252" x2="512" y2="252" stroke="#0a3010" stroke-width="0.7" opacity="0.4"/><line x1="0" y1="288" x2="512" y2="288" stroke="#0a3010" stroke-width="0.7" opacity="0.4"/><line x1="0" y1="324" x2="512" y2="324" stroke="#0a3010" stroke-width="0.7" opacity="0.4"/><line x1="0" y1="360" x2="512" y2="360" stroke="#0a3010" stroke-width="0.7" opacity="0.4"/><line x1="0" y1="396" x2="512" y2="396" stroke="#0a3010" stroke-width="0.7" opacity="0.4"/><line x1="0" y1="432" x2="512" y2="432" stroke="#0a3010" stroke-width="0.7" opacity="0.4"/><line x1="0" y1="468" x2="512" y2="468" stroke="#0a3010" stroke-width="0.7" opacity="0.4"/><line x1="0" y1="504" x2="512" y2="504" stroke="#0a3010" stroke-width="0.7" opacity="0.4"/><line x1="0" y1="0" x2="0" y2="512" stroke="#0a3010" stroke-width="0.7" opacity="0.4"/><line x1="36" y1="0" x2="36" y2="512" stroke="#0a3010" stroke-width="0.7" opacity="0.4"/><line x1="72" y1="0" x2="72" y2="512" stroke="#0a3010" stroke-width="0.7" opacity="0.4"/><line x1="108" y1="0" x2="108" y2="512" stroke="#0a3010" stroke-width="0.7" opacity="0.4"/><line x1="144" y1="0" x2="144" y2="512" stroke="#0a3010" stroke-width="0.7" opacity="0.4"/><line x1="180" y1="0" x2="180" y2="512" stroke="#0a3010" stroke-width="0.7" opacity="0.4"/><line x1="216" y1="0" x2="216" y2="512" stroke="#0a3010" stroke-width="0.7" opacity="0.4"/><line x1="252" y1="0" x2="252" y2="512" stroke="#0a3010" stroke-width="0.7" opacity="0.4"/><line x1="288" y1="0" x2="288" y2="512" stroke="#0a3010" stroke-width="0.7" opacity="0.4"/><line x1="324" y1="0" x2="324" y2="512" stroke="#0a3010" stroke-width="0.7" opacity="0.4"/><line x1="360" y1="0" x2="360" y2="512" stroke="#0a3010" stroke-width="0.7" opacity="0.4"/><line x1="396" y1="0" x2="396" y2="512" stroke="#0a3010" stroke-width="0.7" opacity="0.4"/><line x1="432" y1="0" x2="432" y2="512" stroke="#0a3010" stroke-width="0.7" opacity="0.4"/><line x1="468" y1="0" x2="468" y2="512" stroke="#0a3010" stroke-width="0.7" opacity="0.4"/><line x1="504" y1="0" x2="504" y2="512" stroke="#0a3010" stroke-width="0.7" opacity="0.4"/>
+  <ellipse cx="256" cy="510" rx="220" ry="110" fill="#10a030" filter="url(#pool)" opacity="0.38"/>
+  <g filter="url(#glow)"><text x="80" y="370" fill="#30c050" font-size="270" font-family="Georgia,serif" opacity="0.9">&#x3A3;</text>
+<g fill="#30c050">
+  <rect x="334" y="310" width="38" height="100" rx="4"/>
+  <rect x="386" y="248" width="38" height="162" rx="4"/>
+  <rect x="438" y="176" width="38" height="234" rx="4"/>
+</g>
+<line x1="330" y1="412" x2="480" y2="412" stroke="#50e070" stroke-width="3.5" stroke-linecap="round"/></g>
+  <g filter="url(#sglow)"><text x="80" y="370" fill="#50d870" font-size="270" font-family="Georgia,serif" opacity="0.85">&#x3A3;</text>
+<g fill="#50d870" opacity="0.9">
+  <rect x="334" y="310" width="38" height="100" rx="4"/>
+  <rect x="386" y="248" width="38" height="162" rx="4"/>
+  <rect x="438" y="176" width="38" height="234" rx="4"/>
+</g>
+<line x1="330" y1="412" x2="480" y2="412" stroke="#80f090" stroke-width="2.5" stroke-linecap="round"/></g>
+</g>
+</svg>

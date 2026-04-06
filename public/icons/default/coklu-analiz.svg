@@ -1,0 +1,33 @@
+<svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" width="512" height="512">
+<defs>
+  <clipPath id="rnd"><rect width="512" height="512" rx="110"/></clipPath>
+  <filter id="glow" x="-80%" y="-80%" width="260%" height="260%">
+    <feGaussianBlur in="SourceGraphic" stdDeviation="14" result="b"/>
+    <feMerge><feMergeNode in="b"/><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter>
+  <filter id="sglow" x="-40%" y="-40%" width="180%" height="180%">
+    <feGaussianBlur in="SourceGraphic" stdDeviation="7" result="b"/>
+    <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter>
+  <filter id="pool" x="-100%" y="-100%" width="300%" height="300%">
+    <feGaussianBlur in="SourceGraphic" stdDeviation="28"/>
+  </filter>
+</defs>
+<g clip-path="url(#rnd)">
+  <rect width="512" height="512" fill="#100c00"/>
+  <circle cx="256" cy="256" r="40" fill="none" stroke="#3a2800" stroke-width="0.7" opacity="0.35"/><circle cx="256" cy="256" r="76" fill="none" stroke="#3a2800" stroke-width="0.7" opacity="0.35"/><circle cx="256" cy="256" r="112" fill="none" stroke="#3a2800" stroke-width="0.7" opacity="0.35"/><circle cx="256" cy="256" r="148" fill="none" stroke="#3a2800" stroke-width="0.7" opacity="0.35"/><circle cx="256" cy="256" r="184" fill="none" stroke="#3a2800" stroke-width="0.7" opacity="0.35"/><circle cx="256" cy="256" r="220" fill="none" stroke="#3a2800" stroke-width="0.7" opacity="0.35"/><circle cx="256" cy="256" r="256" fill="none" stroke="#3a2800" stroke-width="0.7" opacity="0.35"/>
+  <ellipse cx="256" cy="510" rx="210" ry="100" fill="#b08000" filter="url(#pool)" opacity="0.38"/>
+  <g filter="url(#glow)"><g fill="none" stroke="#e0b020" stroke-width="4.5">
+  <circle cx="196" cy="220" r="110"/>
+  <circle cx="316" cy="220" r="110"/>
+  <circle cx="256" cy="310" r="110"/>
+</g>
+<circle cx="256" cy="256" r="14" fill="#f8e040" opacity="0.85"/></g>
+  <g filter="url(#sglow)"><g fill="none" stroke="#f0c840" stroke-width="2.5">
+  <circle cx="196" cy="220" r="110"/>
+  <circle cx="316" cy="220" r="110"/>
+  <circle cx="256" cy="310" r="110"/>
+</g>
+<circle cx="256" cy="256" r="10" fill="#fff0a0"/></g>
+</g>
+</svg>

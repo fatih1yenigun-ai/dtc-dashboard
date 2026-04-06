@@ -1,41 +1,31 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  Search,
-  Bookmark,
-  Globe,
-  Wrench,
   Menu,
   X,
   FolderOpen,
   ShoppingBag,
-  ShoppingCart,
   Shield,
   LogOut,
-  Store,
-  Layers,
-  Megaphone,
-  BarChart3,
-  BookOpen,
-  Award,
-  Radar,
 } from "lucide-react";
 import { loadFolders, getAllSavedCount } from "@/lib/supabase";
 import { useAuth } from "@/context/AuthContext";
 
 const navItems = [
-  { href: "/storeleads", label: "Marka Pusulası", icon: Store },
-  { href: "/reklam-tara", label: "Reklam Tara", icon: Radar },
-  { href: "/kombine", label: "Çoklu Analiz (Beta)", icon: Layers },
-  { href: "/amazon", label: "Pazar Talebi", icon: BarChart3 },
-  { href: "/saved", label: "Arşivim", icon: Bookmark },
-  { href: "/research", label: "AI ile Araştır (Beta)", icon: Search },
-  { href: "/brands", label: "Marka X-Ray (Beta)", icon: Globe },
-  { href: "/tools", label: "Araçlar", icon: Wrench },
-  { href: "/pano", label: "Pano (Beta)", icon: Megaphone },
+  { href: "/storeleads", label: "Marka Pusulası", iconKey: "marka-pusulasi" },
+  { href: "/reklam-tara", label: "Reklam Tara", iconKey: "reklam-tara" },
+  { href: "/kombine", label: "Çoklu Analiz (Beta)", iconKey: "coklu-analiz" },
+  { href: "/amazon", label: "Pazar Talebi", iconKey: "hacimler" },
+  { href: "/expert-browse", label: "Uzman Arşivi", iconKey: "uzman-arsivi" },
+  { href: "/saved", label: "Arşivim", iconKey: "arsivim" },
+  { href: "/research", label: "AI ile Araştır (Beta)", iconKey: "ai-ile-arastir" },
+  { href: "/brands", label: "Marka X-Ray (Beta)", iconKey: "marka-xray" },
+  { href: "/tools", label: "Araçlar", iconKey: "araclar" },
+  { href: "/pano", label: "Pano (Beta)", iconKey: "pano" },
 ];
 
 export default function Sidebar() {
@@ -69,7 +59,9 @@ export default function Sidebar() {
       <nav className="flex-1 px-3 py-4 space-y-1">
         {navItems.map((item) => {
           const isActive = pathname === item.href;
-          const Icon = item.icon;
+          const iconPath = isActive
+            ? `/icons/active/${item.iconKey}.svg`
+            : `/icons/default/${item.iconKey}.svg`;
           return (
             <Link
               key={item.href}
@@ -81,25 +73,17 @@ export default function Sidebar() {
                   : "text-gray-300 hover:bg-white/5 hover:text-white"
               }`}
             >
-              <Icon size={18} />
+              <Image
+                src={iconPath}
+                alt={item.label}
+                width={22}
+                height={22}
+                className="flex-shrink-0"
+              />
               {item.label}
             </Link>
           );
         })}
-
-        {/* Expert browse - visible to all */}
-        <Link
-          href="/expert-browse"
-          onClick={() => setMobileOpen(false)}
-          className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
-            pathname === "/expert-browse"
-              ? "bg-[#667eea]/20 text-[#667eea]"
-              : "text-gray-300 hover:bg-white/5 hover:text-white"
-          }`}
-        >
-          <BookOpen size={18} />
-          Uzman Arşivi
-        </Link>
 
         {/* Expert archive - expert/admin only */}
         {(user?.role === "expert" || user?.role === "admin") && (
@@ -112,7 +96,13 @@ export default function Sidebar() {
                 : "text-gray-300 hover:bg-white/5 hover:text-white"
             }`}
           >
-            <Award size={18} />
+            <Image
+              src={pathname === "/expert-archive" ? "/icons/active/uzman-arsivi.svg" : "/icons/default/uzman-arsivi.svg"}
+              alt="Uzman Arşivim"
+              width={22}
+              height={22}
+              className="flex-shrink-0"
+            />
             Uzman Arşivim
           </Link>
         )}
