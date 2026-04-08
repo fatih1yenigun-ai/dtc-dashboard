@@ -23,13 +23,14 @@ import { useAuth } from "@/context/AuthContext";
 import { useTheme } from "@/context/ThemeContext";
 import NotificationBell from "@/components/NotificationBell";
 
-const topNavItems = [
+type NavItem = { href: string; label: string; iconKey: string; accentDark: string; accentLight: string };
+
+const topNavItems: NavItem[] = [];
+
+const workspaceItems: NavItem[] = [
   { href: "/storeleads", label: "Marka Nabzı", iconKey: "marka-pusulasi", accentDark: "#3890f8", accentLight: "#185fa5" },
   { href: "/reklam-tara", label: "Reklam Tara", iconKey: "reklam-tara", accentDark: "#c09af0", accentLight: "#534ab7" },
   { href: "/kombine", label: "Bütünsel Analiz", iconKey: "coklu-analiz", accentDark: "#e0b020", accentLight: "#854f0b" },
-];
-
-const workspaceItems = [
   { href: "/amazon", label: "Pazar Talebi", iconKey: "hacimler", accentDark: "#f0b040", accentLight: "#854f0b" },
   { href: "/expert-browse", label: "Uzman Arşivi", iconKey: "uzman-arsivi", accentDark: "#e84040", accentLight: "#a32d2d" },
   { href: "/saved", label: "Koleksiyonum", iconKey: "arsivim", accentDark: "#30c8a0", accentLight: "#0f6e56" },
@@ -42,8 +43,6 @@ const bottomNavItems = [
   { href: "/icerik-tedarik", label: "İçerik & Tedarik", iconKey: "icerik-tedarik", accentDark: "#f59e0b", accentLight: "#b45309" },
   { href: "/pano", label: "Pano (Beta)", iconKey: "pano", accentDark: "#d060f0", accentLight: "#702090" },
 ];
-
-type NavItem = typeof topNavItems[0];
 
 export default function Sidebar() {
   const pathname = usePathname();
