@@ -18,7 +18,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
   // Landing page: render without auth wrapper
-  if (pathname === "/") {
+  if (pathname === "/" || pathname.startsWith("/join")) {
     return <>{children}</>;
   }
 

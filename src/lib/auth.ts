@@ -36,6 +36,27 @@ export async function loginUser(username: string, password: string) {
   if (error || !data) throw new Error("Kullanıcı bulunamadı");
   const valid = await verifyPassword(password, data.password_hash);
   if (!valid) throw new Error("Yanlış şifre");
+
+  // Check approval status for creator/supplier roles
+  if (data.role === 'creator') {
+    const { data: profile } = await supabase.from("creator_profiles").select("status").eq("user_id", data.id).single();
+    if (profile && profile.status === 'PENDING_APPROVAL') {
+      throw new Error("Başvurunuz inceleniyor. Admin onayı bekleniyor.");
+    }
+    if (profile && profile.status === 'REJECTED') {
+      throw new Error("Başvurunuz reddedildi. Detay için destek ile iletişime geçin.");
+    }
+  }
+  if (data.role === 'supplier') {
+    const { data: profile } = await supabase.from("supplier_profiles").select("status").eq("user_id", data.id).single();
+    if (profile && profile.status === 'PENDING_APPROVAL') {
+      throw new Error("Başvurunuz inceleniyor. Admin onayı bekleniyor.");
+    }
+    if (profile && profile.status === 'REJECTED') {
+      throw new Error("Başvurunuz reddedildi. Detay için destek ile iletişime geçin.");
+    }
+  }
+
   return data;
 }
 

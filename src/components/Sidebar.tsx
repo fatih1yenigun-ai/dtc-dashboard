@@ -13,10 +13,12 @@ import {
   LogOut,
   Sun,
   Moon,
+  LayoutDashboard,
 } from "lucide-react";
 import { loadFolders, getAllSavedCount } from "@/lib/supabase";
 import { useAuth } from "@/context/AuthContext";
 import { useTheme } from "@/context/ThemeContext";
+import NotificationBell from "@/components/NotificationBell";
 
 const navItems = [
   { href: "/storeleads", label: "Marka Nabzı", iconKey: "marka-pusulasi", accentDark: "#3890f8", accentLight: "#185fa5" },
@@ -28,6 +30,7 @@ const navItems = [
   { href: "/research", label: "Akıllı Tarama", iconKey: "ai-ile-arastir", accentDark: "#20d0f8", accentLight: "#185fa5" },
   { href: "/brands", label: "Marka X-Ray (Beta)", iconKey: "marka-xray", accentDark: "#f07030", accentLight: "#993c1d" },
   { href: "/tools", label: "Atölye", iconKey: "araclar", accentDark: "#40c860", accentLight: "#3b6d11" },
+  { href: "/icerik-tedarik", label: "İçerik & Tedarik", iconKey: "icerik-tedarik", accentDark: "#f59e0b", accentLight: "#b45309" },
   { href: "/pano", label: "Pano (Beta)", iconKey: "pano", accentDark: "#d060f0", accentLight: "#702090" },
 ];
 
@@ -173,6 +176,25 @@ export default function Sidebar() {
             </Link>
           </>
         )}
+
+        {/* Creator/Supplier dashboard link */}
+        {(user?.role === "creator" || user?.role === "supplier") && (
+          <>
+            <div className="border-t border-border-subtle my-2.5" />
+            <Link
+              href="/dashboard"
+              onClick={() => setMobileOpen(false)}
+              className={`flex items-center gap-3 px-4 h-12 rounded-[10px] text-[15px] font-medium transition-all duration-[120ms] ${
+                pathname === "/dashboard" || pathname.startsWith("/dashboard/")
+                  ? "bg-bg-hover text-text-primary"
+                  : "text-text-muted hover:bg-bg-hover hover:text-text-secondary"
+              }`}
+            >
+              <LayoutDashboard size={20} />
+              Dashboard
+            </Link>
+          </>
+        )}
       </nav>
 
       {/* Stats */}
@@ -210,13 +232,16 @@ export default function Sidebar() {
               </div>
               <span className="text-sm text-text-secondary truncate">{user.username}</span>
             </div>
-            <button
-              onClick={logout}
-              className="text-text-muted hover:text-red-400 transition-colors"
-              title="Çıkış Yap"
-            >
-              <LogOut size={16} />
-            </button>
+            <div className="flex items-center gap-2">
+              <NotificationBell />
+              <button
+                onClick={logout}
+                className="text-text-muted hover:text-red-400 transition-colors"
+                title="Çıkış Yap"
+              >
+                <LogOut size={16} />
+              </button>
+            </div>
           </div>
         </div>
       )}

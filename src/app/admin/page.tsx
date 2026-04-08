@@ -13,9 +13,17 @@ import {
   Filter,
   DollarSign,
   X,
+  Send,
+  CheckCircle,
+  XCircle,
+  Trash2,
+  AlertTriangle,
+  Shield,
+  Star,
+  Mail,
 } from "lucide-react";
 import { supabase, uploadExpertAvatar, updateExpertProfile } from "@/lib/supabase";
-import { Upload, Camera } from "lucide-react";
+import { Upload } from "lucide-react";
 
 interface UserRow {
   id: number;
@@ -50,6 +58,37 @@ interface UserModalData {
   folders: { name: string; brandCount: number }[];
   recentKeywords: string[];
   dailyBreakdown: { date: string; searches: number; chats: number; tokens: number }[];
+}
+
+interface ApprovalRow {
+  id: number;
+  user_id: number;
+  name: string;
+  email: string;
+  type: string;
+  profile_type: "creator" | "supplier";
+  created_at: string;
+}
+
+interface ReviewRow {
+  id: number;
+  reviewer_user_id: number;
+  target_type: string;
+  target_id: number;
+  rating: number;
+  text: string | null;
+  is_expert: boolean;
+  created_at: string;
+  reviewer_username: string | null;
+}
+
+interface SuspiciousRow {
+  id: number;
+  user_id: number;
+  activity_type: string;
+  details: Record<string, unknown> | null;
+  created_at: string;
+  username: string | null;
 }
 
 // Sonnet pricing: $3/M input, $15/M output. Approximate as $8/M average
@@ -188,6 +227,18 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(true);
   const [userModal, setUserModal] = useState<UserModalData | null>(null);
   const [modalLoading, setModalLoading] = useState(false);
+  const [adminTab, setAdminTab] = useState<"users" | "approvals" | "reviews" | "suspicious">("users");
+  const [approvals, setApprovals] = useState<ApprovalRow[]>([]);
+  const [approvalsLoading, setApprovalsLoading] = useState(false);
+  const [reviews, setReviews] = useState<ReviewRow[]>([]);
+  const [reviewsLoading, setReviewsLoading] = useState(false);
+  const [suspicious, setSuspicious] = useState<SuspiciousRow[]>([]);
+  const [suspiciousLoading, setSuspiciousLoading] = useState(false);
+  const [messageModal, setMessageModal] = useState<{ userId: number; username: string } | null>(null);
+  const [messageTitle, setMessageTitle] = useState("");
+  const [messageBody, setMessageBody] = useState("");
+  const [messageSending, setMessageSending] = useState(false);
+  const [messageStatus, setMessageStatus] = useState("");
 
   // Redirect non-admin
   useEffect(() => {
@@ -256,6 +307,116 @@ export default function AdminPage() {
       fetchData();
     }
   }, [user, fetchData]);
+
+  const fetchApprovals = useCallback(async () => {
+    if (!token) return;
+    setApprovalsLoading(true);
+    try {
+      const res = await fetch("/api/admin/approvals", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      setApprovals(data.approvals || []);
+    } catch (err) {
+      console.error("Approvals fetch error:", err);
+    } finally {
+      setApprovalsLoading(false);
+    }
+  }, [token]);
+
+  const fetchReviews = useCallback(async () => {
+    if (!token) return;
+    setReviewsLoading(true);
+    try {
+      const res = await fetch("/api/admin/reviews", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      setReviews(data.reviews || []);
+    } catch (err) {
+      console.error("Reviews fetch error:", err);
+    } finally {
+      setReviewsLoading(false);
+    }
+  }, [token]);
+
+  const fetchSuspicious = useCallback(async () => {
+    if (!token) return;
+    setSuspiciousLoading(true);
+    try {
+      const res = await fetch("/api/admin/suspicious", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      setSuspicious(data.suspicious || []);
+    } catch (err) {
+      console.error("Suspicious fetch error:", err);
+    } finally {
+      setSuspiciousLoading(false);
+    }
+  }, [token]);
+
+  useEffect(() => {
+    if (adminTab === "approvals") fetchApprovals();
+    if (adminTab === "reviews") fetchReviews();
+    if (adminTab === "suspicious") fetchSuspicious();
+  }, [adminTab, fetchApprovals, fetchReviews, fetchSuspicious]);
+
+  async function handleApproval(id: number, profileType: "creator" | "supplier", action: "approve" | "reject") {
+    if (!token) return;
+    try {
+      await fetch("/api/admin/approvals", {
+        method: "PATCH",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ id, profile_type: profileType, action }),
+      });
+      fetchApprovals();
+    } catch (err) {
+      console.error("Approval action error:", err);
+    }
+  }
+
+  async function handleDeleteReview(id: number) {
+    if (!token) return;
+    try {
+      await fetch("/api/admin/reviews", {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
+      fetchReviews();
+    } catch (err) {
+      console.error("Delete review error:", err);
+    }
+  }
+
+  async function handleSendMessage() {
+    if (!token || !messageModal) return;
+    setMessageSending(true);
+    setMessageStatus("");
+    try {
+      const res = await fetch("/api/admin/message", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ user_id: messageModal.userId, title: messageTitle, body: messageBody }),
+      });
+      if (res.ok) {
+        setMessageStatus("Mesaj gönderildi!");
+        setTimeout(() => {
+          setMessageModal(null);
+          setMessageTitle("");
+          setMessageBody("");
+          setMessageStatus("");
+        }, 1500);
+      } else {
+        setMessageStatus("Gönderim hatası");
+      }
+    } catch {
+      setMessageStatus("Gönderim hatası");
+    } finally {
+      setMessageSending(false);
+    }
+  }
 
   async function loadUserDetail(userId: number) {
     if (userDetails[userId]) return;
@@ -417,6 +578,30 @@ export default function AdminPage() {
         <p className="text-text-secondary mt-1">Kullanıcı yönetimi ve aktivite izleme</p>
       </div>
 
+      {/* Tabs */}
+      <div className="flex gap-1 mb-6 bg-bg-main rounded-lg p-1">
+        {([
+          { key: "users" as const, label: "Kullanıcılar", icon: Users },
+          { key: "approvals" as const, label: "Onay Bekleyenler", icon: Shield },
+          { key: "reviews" as const, label: "Yorum Moderasyonu", icon: Star },
+          { key: "suspicious" as const, label: "Şüpheli Aktiviteler", icon: AlertTriangle },
+        ]).map((tab) => (
+          <button
+            key={tab.key}
+            onClick={() => setAdminTab(tab.key)}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              adminTab === tab.key
+                ? "bg-bg-card text-text-primary shadow-sm"
+                : "text-text-secondary hover:text-text-primary"
+            }`}
+          >
+            <tab.icon size={16} />
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {adminTab === "users" && (<>
       {/* Stats cards */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
         <div className="bg-bg-card rounded-xl shadow-sm border border-border-default p-5">
@@ -537,6 +722,13 @@ export default function AdminPage() {
                       className="px-2 py-0.5 rounded text-xs font-medium bg-accent/10 text-accent hover:bg-accent/20 transition-colors"
                     >
                       Detay
+                    </button>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setMessageModal({ userId: u.id, username: u.username }); }}
+                      className="px-2 py-0.5 rounded text-xs font-medium bg-purple-500/10 text-purple-400 hover:bg-purple-500/20 transition-colors"
+                    >
+                      <Mail size={12} className="inline mr-1" />
+                      Mesaj
                     </button>
                     {isExpanded ? <ChevronDown size={16} className="text-text-muted" /> : <ChevronRight size={16} className="text-text-muted" />}
                   </div>
@@ -762,6 +954,223 @@ export default function AdminPage() {
           </table>
         </div>
       </div>
+      </>)}
+
+      {/* Approvals Tab */}
+      {adminTab === "approvals" && (
+        <div className="bg-bg-card rounded-xl shadow-sm border border-border-default">
+          <div className="px-6 py-4 border-b border-border-default">
+            <h2 className="text-lg font-semibold text-text-primary">Onay Bekleyenler</h2>
+          </div>
+          {approvalsLoading ? (
+            <div className="px-6 py-8 text-center text-text-muted text-sm">Yükleniyor...</div>
+          ) : approvals.length === 0 ? (
+            <div className="px-6 py-8 text-center text-text-muted text-sm">Onay bekleyen başvuru yok</div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="bg-bg-main text-left">
+                    <th className="px-6 py-3 text-xs font-medium text-text-secondary uppercase tracking-wider">Ad/Firma</th>
+                    <th className="px-6 py-3 text-xs font-medium text-text-secondary uppercase tracking-wider">Tür</th>
+                    <th className="px-6 py-3 text-xs font-medium text-text-secondary uppercase tracking-wider">E-posta</th>
+                    <th className="px-6 py-3 text-xs font-medium text-text-secondary uppercase tracking-wider">Başvuru Tarihi</th>
+                    <th className="px-6 py-3 text-xs font-medium text-text-secondary uppercase tracking-wider">İşlem</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border-default">
+                  {approvals.map((a, i) => (
+                    <tr key={`${a.profile_type}-${a.id}`} className={i % 2 === 0 ? "bg-bg-card" : "bg-bg-main/50"}>
+                      <td className="px-6 py-3 text-text-primary">{a.name}</td>
+                      <td className="px-6 py-3">
+                        <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${
+                          a.profile_type === "creator" ? "bg-purple-100 text-purple-700" : "bg-amber-100 text-amber-700"
+                        }`}>
+                          {a.profile_type === "creator" ? "İçerik Üretici" : "Tedarikçi"} ({a.type})
+                        </span>
+                      </td>
+                      <td className="px-6 py-3 text-text-secondary">{a.email}</td>
+                      <td className="px-6 py-3 text-text-muted text-xs">{formatDate(a.created_at)}</td>
+                      <td className="px-6 py-3">
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => handleApproval(a.id, a.profile_type, "approve")}
+                            className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 transition-colors"
+                          >
+                            <CheckCircle size={14} />
+                            Onayla
+                          </button>
+                          <button
+                            onClick={() => handleApproval(a.id, a.profile_type, "reject")}
+                            className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors"
+                          >
+                            <XCircle size={14} />
+                            Reddet
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Reviews Tab */}
+      {adminTab === "reviews" && (
+        <div className="bg-bg-card rounded-xl shadow-sm border border-border-default">
+          <div className="px-6 py-4 border-b border-border-default">
+            <h2 className="text-lg font-semibold text-text-primary">Yorum Moderasyonu</h2>
+          </div>
+          {reviewsLoading ? (
+            <div className="px-6 py-8 text-center text-text-muted text-sm">Yükleniyor...</div>
+          ) : reviews.length === 0 ? (
+            <div className="px-6 py-8 text-center text-text-muted text-sm">Henüz yorum yok</div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="bg-bg-main text-left">
+                    <th className="px-6 py-3 text-xs font-medium text-text-secondary uppercase tracking-wider">Yorumcu</th>
+                    <th className="px-6 py-3 text-xs font-medium text-text-secondary uppercase tracking-wider">Profil</th>
+                    <th className="px-6 py-3 text-xs font-medium text-text-secondary uppercase tracking-wider">Puan</th>
+                    <th className="px-6 py-3 text-xs font-medium text-text-secondary uppercase tracking-wider">Yorum</th>
+                    <th className="px-6 py-3 text-xs font-medium text-text-secondary uppercase tracking-wider">Tarih</th>
+                    <th className="px-6 py-3 text-xs font-medium text-text-secondary uppercase tracking-wider">İşlem</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border-default">
+                  {reviews.map((r, i) => (
+                    <tr key={r.id} className={i % 2 === 0 ? "bg-bg-card" : "bg-bg-main/50"}>
+                      <td className="px-6 py-3 text-text-primary">
+                        {r.reviewer_username || `#${r.reviewer_user_id}`}
+                        {r.is_expert && (
+                          <span className="ml-1.5 px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-100 text-amber-700">Uzman</span>
+                        )}
+                      </td>
+                      <td className="px-6 py-3 text-text-secondary">{r.target_type} #{r.target_id}</td>
+                      <td className="px-6 py-3">
+                        <span className="text-amber-400">{"★".repeat(r.rating)}{"☆".repeat(5 - r.rating)}</span>
+                      </td>
+                      <td className="px-6 py-3 text-text-secondary max-w-xs truncate">{r.text || "-"}</td>
+                      <td className="px-6 py-3 text-text-muted text-xs">{formatDate(r.created_at)}</td>
+                      <td className="px-6 py-3">
+                        <button
+                          onClick={() => handleDeleteReview(r.id)}
+                          className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors"
+                        >
+                          <Trash2 size={14} />
+                          Sil
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Suspicious Tab */}
+      {adminTab === "suspicious" && (
+        <div className="bg-bg-card rounded-xl shadow-sm border border-border-default">
+          <div className="px-6 py-4 border-b border-border-default">
+            <h2 className="text-lg font-semibold text-text-primary">Şüpheli Aktiviteler</h2>
+          </div>
+          {suspiciousLoading ? (
+            <div className="px-6 py-8 text-center text-text-muted text-sm">Yükleniyor...</div>
+          ) : suspicious.length === 0 ? (
+            <div className="px-6 py-8 text-center text-text-muted text-sm">Şüpheli aktivite yok</div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="bg-bg-main text-left">
+                    <th className="px-6 py-3 text-xs font-medium text-text-secondary uppercase tracking-wider">Kullanıcı</th>
+                    <th className="px-6 py-3 text-xs font-medium text-text-secondary uppercase tracking-wider">İhlal Türü</th>
+                    <th className="px-6 py-3 text-xs font-medium text-text-secondary uppercase tracking-wider">Detay</th>
+                    <th className="px-6 py-3 text-xs font-medium text-text-secondary uppercase tracking-wider">Tarih</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border-default">
+                  {suspicious.map((s, i) => (
+                    <tr key={s.id} className={i % 2 === 0 ? "bg-bg-card" : "bg-bg-main/50"}>
+                      <td className="px-6 py-3 text-text-primary">{s.username || `#${s.user_id}`}</td>
+                      <td className="px-6 py-3">
+                        <span className="inline-block px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700">
+                          {s.activity_type}
+                        </span>
+                      </td>
+                      <td className="px-6 py-3 text-text-secondary text-xs max-w-md">
+                        {s.details ? (
+                          <pre className="whitespace-pre-wrap break-all bg-bg-main rounded p-2 text-[11px]">
+                            {JSON.stringify(s.details, null, 2)}
+                          </pre>
+                        ) : "-"}
+                      </td>
+                      <td className="px-6 py-3 text-text-muted text-xs">{formatDate(s.created_at)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Message Modal */}
+      {messageModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center" onClick={() => { setMessageModal(null); setMessageTitle(""); setMessageBody(""); setMessageStatus(""); }}>
+          <div className="bg-bg-card rounded-xl shadow-2xl border border-border-default w-full max-w-md mx-4" onClick={(e) => e.stopPropagation()}>
+            <div className="px-6 py-4 border-b border-border-default flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-text-primary">Mesaj Gönder — {messageModal.username}</h3>
+              <button onClick={() => { setMessageModal(null); setMessageTitle(""); setMessageBody(""); setMessageStatus(""); }} className="text-text-muted hover:text-text-primary transition-colors">
+                <X size={20} />
+              </button>
+            </div>
+            <div className="px-6 py-4 space-y-4">
+              <div>
+                <label className="text-xs text-text-secondary mb-1 block">Başlık</label>
+                <input
+                  type="text"
+                  value={messageTitle}
+                  onChange={(e) => setMessageTitle(e.target.value)}
+                  placeholder="Mesaj başlığı..."
+                  className="w-full bg-bg-main border border-border-default rounded-lg px-3 py-2 text-sm text-text-primary placeholder-text-secondary focus:outline-none focus:border-accent transition-colors"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-text-secondary mb-1 block">Mesaj</label>
+                <textarea
+                  value={messageBody}
+                  onChange={(e) => setMessageBody(e.target.value)}
+                  placeholder="Mesaj içeriği..."
+                  rows={4}
+                  className="w-full bg-bg-main border border-border-default rounded-lg px-3 py-2 text-sm text-text-primary placeholder-text-secondary focus:outline-none focus:border-accent transition-colors resize-none"
+                />
+              </div>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={handleSendMessage}
+                  disabled={messageSending || !messageTitle.trim() || !messageBody.trim()}
+                  className="flex items-center gap-2 px-4 py-2 bg-accent text-white rounded-lg text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-40"
+                >
+                  <Send size={14} />
+                  {messageSending ? "Gönderiliyor..." : "Gönder"}
+                </button>
+                {messageStatus && (
+                  <span className={`text-xs font-medium ${messageStatus.includes("hata") ? "text-red-400" : "text-green-400"}`}>
+                    {messageStatus}
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
