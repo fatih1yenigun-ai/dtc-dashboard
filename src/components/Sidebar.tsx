@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -14,31 +14,44 @@ import {
   Sun,
   Moon,
   LayoutDashboard,
+  ChevronDown,
+  GraduationCap,
+  Briefcase,
 } from "lucide-react";
 import { loadFolders, getAllSavedCount } from "@/lib/supabase";
 import { useAuth } from "@/context/AuthContext";
 import { useTheme } from "@/context/ThemeContext";
 import NotificationBell from "@/components/NotificationBell";
 
-const navItems = [
+const topNavItems = [
   { href: "/storeleads", label: "Marka Nabzı", iconKey: "marka-pusulasi", accentDark: "#3890f8", accentLight: "#185fa5" },
   { href: "/reklam-tara", label: "Reklam Tara", iconKey: "reklam-tara", accentDark: "#c09af0", accentLight: "#534ab7" },
   { href: "/kombine", label: "Bütünsel Analiz", iconKey: "coklu-analiz", accentDark: "#e0b020", accentLight: "#854f0b" },
+];
+
+const workspaceItems = [
   { href: "/amazon", label: "Pazar Talebi", iconKey: "hacimler", accentDark: "#f0b040", accentLight: "#854f0b" },
   { href: "/expert-browse", label: "Uzman Arşivi", iconKey: "uzman-arsivi", accentDark: "#e84040", accentLight: "#a32d2d" },
   { href: "/saved", label: "Koleksiyonum", iconKey: "arsivim", accentDark: "#30c8a0", accentLight: "#0f6e56" },
   { href: "/research", label: "Akıllı Tarama", iconKey: "ai-ile-arastir", accentDark: "#20d0f8", accentLight: "#185fa5" },
   { href: "/brands", label: "Marka X-Ray (Beta)", iconKey: "marka-xray", accentDark: "#f07030", accentLight: "#993c1d" },
   { href: "/tools", label: "Atölye", iconKey: "araclar", accentDark: "#40c860", accentLight: "#3b6d11" },
+];
+
+const bottomNavItems = [
   { href: "/icerik-tedarik", label: "İçerik & Tedarik", iconKey: "icerik-tedarik", accentDark: "#f59e0b", accentLight: "#b45309" },
   { href: "/pano", label: "Pano (Beta)", iconKey: "pano", accentDark: "#d060f0", accentLight: "#702090" },
 ];
+
+type NavItem = typeof topNavItems[0];
 
 export default function Sidebar() {
   const pathname = usePathname();
   const { user, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [workspaceOpen, setWorkspaceOpen] = useState(false);
+  const workspaceRef = useRef<HTMLDivElement>(null);
   const [folderCount, setFolderCount] = useState(0);
   const [brandCount, setBrandCount] = useState(0);
 
@@ -52,8 +65,70 @@ export default function Sidebar() {
       .catch(() => {});
   }, [pathname, user]);
 
-  const getAccent = (item: typeof navItems[0]) =>
+  // Auto-open workspace if a workspace item is active
+  const isWorkspaceItemActive = workspaceItems.some(
+    (item) => pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href + "/"))
+  );
+
+  useEffect(() => {
+    if (isWorkspaceItemActive) setWorkspaceOpen(true);
+  }, [isWorkspaceItemActive]);
+
+  const getAccent = (item: NavItem) =>
     theme === "dark" ? item.accentDark : item.accentLight;
+
+  const renderNavItem = (item: NavItem) => {
+    const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href + "/"));
+    const accent = getAccent(item);
+    const iconPath = isActive
+      ? `/icons/active/${item.iconKey}.svg`
+      : `/icons/default/${item.iconKey}.svg`;
+
+    return (
+      <Link
+        key={item.href}
+        href={item.href}
+        onClick={() => setMobileOpen(false)}
+        className="flex items-center gap-3 px-4 h-12 rounded-[10px] text-[15px] font-medium transition-all duration-[120ms]"
+        style={
+          isActive
+            ? {
+                background: `${accent}1a`,
+                borderLeft: `3px solid ${accent}`,
+                color: accent,
+                paddingLeft: "13px",
+              }
+            : undefined
+        }
+        onMouseEnter={(e) => {
+          if (!isActive) {
+            e.currentTarget.style.background = "var(--bg-hover)";
+            e.currentTarget.style.color = "var(--text-primary)";
+          }
+        }}
+        onMouseLeave={(e) => {
+          if (!isActive) {
+            e.currentTarget.style.background = "transparent";
+            e.currentTarget.style.color = "var(--text-secondary)";
+          }
+        }}
+      >
+        <Image
+          src={iconPath}
+          alt={item.label}
+          width={28}
+          height={28}
+          className="flex-shrink-0"
+        />
+        <span
+          className={isActive ? "" : "text-text-secondary"}
+          style={isActive ? { color: accent } : undefined}
+        >
+          {item.label}
+        </span>
+      </Link>
+    );
+  };
 
   const sidebar = (
     <div className="flex flex-col h-full bg-bg-sidebar text-text-primary w-[280px] min-w-[280px]">
@@ -68,58 +143,99 @@ export default function Sidebar() {
 
       {/* Nav */}
       <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
-        {navItems.map((item) => {
-          const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href + "/"));
-          const accent = getAccent(item);
-          const iconPath = isActive
-            ? `/icons/active/${item.iconKey}.svg`
-            : `/icons/default/${item.iconKey}.svg`;
+        {/* Top nav items */}
+        {topNavItems.map((item) => renderNavItem(item))}
 
+        {/* Çalışma Alanı collapsible section */}
+        <div className="pt-1">
+          <button
+            onClick={() => setWorkspaceOpen((prev) => !prev)}
+            className="flex items-center gap-3 px-4 h-12 rounded-[10px] text-[15px] font-medium transition-all duration-[120ms] w-full text-left hover:bg-bg-hover group"
+            style={isWorkspaceItemActive && !workspaceOpen ? { color: "var(--accent)" } : undefined}
+          >
+            <Briefcase
+              size={20}
+              className={`flex-shrink-0 transition-colors ${
+                isWorkspaceItemActive ? "text-accent" : "text-text-muted group-hover:text-text-primary"
+              }`}
+            />
+            <span
+              className={
+                isWorkspaceItemActive
+                  ? "text-accent"
+                  : "text-text-secondary group-hover:text-text-primary"
+              }
+            >
+              Çalışma Alanı
+            </span>
+            <ChevronDown
+              size={16}
+              className={`ml-auto text-text-muted transition-transform duration-300 ease-in-out ${
+                workspaceOpen ? "rotate-180" : ""
+              }`}
+            />
+          </button>
+          <div
+            ref={workspaceRef}
+            className="overflow-hidden transition-all duration-300 ease-in-out"
+            style={{
+              maxHeight: workspaceOpen
+                ? `${workspaceRef.current?.scrollHeight ?? 500}px`
+                : "0px",
+              opacity: workspaceOpen ? 1 : 0,
+            }}
+          >
+            <div className="pl-2 space-y-0.5 pt-0.5">
+              {workspaceItems.map((item) => renderNavItem(item))}
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom nav items */}
+        {bottomNavItems.map((item) => renderNavItem(item))}
+
+        {/* Mentör */}
+        {(() => {
+          const isMentorActive = pathname === "/mentor" || pathname.startsWith("/mentor/");
           return (
             <Link
-              key={item.href}
-              href={item.href}
+              href="/mentor"
               onClick={() => setMobileOpen(false)}
               className="flex items-center gap-3 px-4 h-12 rounded-[10px] text-[15px] font-medium transition-all duration-[120ms]"
               style={
-                isActive
+                isMentorActive
                   ? {
-                      background: `${accent}1a`,
-                      borderLeft: `3px solid ${accent}`,
-                      color: accent,
+                      background: "rgba(139, 92, 246, 0.1)",
+                      borderLeft: "3px solid #8b5cf6",
+                      color: theme === "dark" ? "#a78bfa" : "#6d28d9",
                       paddingLeft: "13px",
                     }
                   : undefined
               }
               onMouseEnter={(e) => {
-                if (!isActive) {
+                if (!isMentorActive) {
                   e.currentTarget.style.background = "var(--bg-hover)";
                   e.currentTarget.style.color = "var(--text-primary)";
                 }
               }}
               onMouseLeave={(e) => {
-                if (!isActive) {
+                if (!isMentorActive) {
                   e.currentTarget.style.background = "transparent";
                   e.currentTarget.style.color = "var(--text-secondary)";
                 }
               }}
             >
-              <Image
-                src={iconPath}
-                alt={item.label}
-                width={28}
-                height={28}
+              <GraduationCap
+                size={22}
                 className="flex-shrink-0"
+                style={isMentorActive ? { color: theme === "dark" ? "#a78bfa" : "#6d28d9" } : undefined}
               />
-              <span
-                className={isActive ? "" : "text-text-secondary"}
-                style={isActive ? { color: accent } : undefined}
-              >
-                {item.label}
+              <span className={isMentorActive ? "" : "text-text-secondary"}>
+                Mentör
               </span>
             </Link>
           );
-        })}
+        })()}
 
         {/* Divider before conditional items */}
         {(user?.role === "expert" || user?.role === "admin") && (
