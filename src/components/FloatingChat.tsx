@@ -3,7 +3,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { MessageCircle, X, Send, Loader2, GraduationCap, ArrowRight } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
-import { useRouter } from "next/navigation";
 
 interface Message {
   role: "user" | "assistant";
@@ -184,7 +183,6 @@ function parseToolCards(text: string): ContentPart[] {
 
 export default function FloatingChat() {
   const { token } = useAuth();
-  const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<ActiveTab>("mentor");
 
@@ -338,7 +336,7 @@ export default function FloatingChat() {
         style={{ background: "rgba(139,92,246,0.1)", border: "1px solid rgba(139,92,246,0.2)" }}
         onClick={() => {
           setIsOpen(false);
-          router.push(part.route);
+          window.location.href = part.route;
         }}
       >
         <div className="min-w-0 flex-1">
