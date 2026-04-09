@@ -143,12 +143,35 @@ export async function POST(request: NextRequest) {
     }
 
     // Stream response
-    const stream = await anthropic.messages.stream({
-      model: "claude-sonnet-4-20250514",
-      max_tokens: 4096,
-      system: systemPrompt,
-      messages: apiMessages,
-    });
+    let stream;
+    try {
+      stream = await anthropic.messages.stream({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 4096,
+        system: systemPrompt,
+        messages: apiMessages,
+      });
+    } catch (apiError) {
+      console.error("Mentor Anthropic API error:", apiError);
+      // Return error as readable text so the client displays it
+      const errorMsg = "Bir hata oluştu. Lütfen tekrar deneyin.";
+      // Still save the user message
+      const newUserMsg: StoredMessage = {
+        role: "user",
+        content: message,
+        timestamp: new Date().toISOString(),
+      };
+      await supabase
+        .from("mentor_sessions")
+        .update({
+          messages: [...storedMessages, newUserMsg],
+          updated_at: new Date().toISOString(),
+        })
+        .eq("user_id", userId);
+      return new Response(errorMsg, {
+        headers: { "Content-Type": "text/plain; charset=utf-8" },
+      });
+    }
 
     const encoder = new TextEncoder();
     let fullResponse = "";
@@ -171,12 +194,20 @@ export async function POST(request: NextRequest) {
               if (usage?.output_tokens) totalTokens = usage.output_tokens;
             }
           }
+        } catch (streamErr) {
+          console.error("Mentor stream iteration error:", streamErr);
+          // Send error text through the stream so user sees something
+          if (!fullResponse) {
+            controller.enqueue(encoder.encode("Bir hata oluştu. Lütfen tekrar deneyin."));
+            fullResponse = "Bir hata oluştu. Lütfen tekrar deneyin.";
+          }
+        }
 
-          // Post-stream: parse context update and stage advance
+        // Post-stream: save to DB
+        try {
           const { cleanText: afterContext, contextUpdate } = parseContextUpdate(fullResponse);
           const { cleanText: cleanResponse, nextStage } = parseStageAdvance(afterContext);
 
-          // Save messages to DB
           const newUserMsg: StoredMessage = {
             role: "user",
             content: message,
@@ -190,19 +221,16 @@ export async function POST(request: NextRequest) {
 
           let updatedMessages = [...storedMessages, newUserMsg, newAssistantMsg];
 
-          // Cap at MAX_STORED_MESSAGES — keep first 2 (greeting context) + most recent
           if (updatedMessages.length > MAX_STORED_MESSAGES) {
             const first2 = updatedMessages.slice(0, 2);
             const recent = updatedMessages.slice(-(MAX_STORED_MESSAGES - 2));
             updatedMessages = [...first2, ...recent];
           }
 
-          // Merge context update
           const updatedContext = contextUpdate
             ? { ...userContext, ...contextUpdate }
             : userContext;
 
-          // Update stage if advanced
           const updatedStage = nextStage || currentStage;
 
           await supabase
@@ -215,12 +243,11 @@ export async function POST(request: NextRequest) {
             })
             .eq("user_id", userId);
 
-          // Log activity
           if (userId) {
             await logActivity(userId, "mentor_chat", undefined, undefined, totalTokens).catch(() => {});
           }
-        } catch (err) {
-          console.error("Mentor stream error:", err);
+        } catch (saveErr) {
+          console.error("Mentor save error:", saveErr);
         }
 
         controller.close();

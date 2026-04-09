@@ -214,15 +214,20 @@ export default function MentorChat() {
       }
     } catch (err) {
       console.error("Mentor chat error:", err);
-      setMessages((prev) => [
-        ...prev.slice(0, -1).length > 0 && prev[prev.length - 1]?.content === ""
-          ? prev.slice(0, -1)
-          : prev,
-        {
-          role: "assistant",
-          content: "Bir hata oluştu. Lütfen tekrar deneyin.",
-        },
-      ]);
+      setMessages((prev) => {
+        // Remove the empty assistant message if it exists
+        const cleaned =
+          prev.length > 0 && prev[prev.length - 1]?.role === "assistant" && prev[prev.length - 1]?.content === ""
+            ? prev.slice(0, -1)
+            : prev;
+        return [
+          ...cleaned,
+          {
+            role: "assistant" as const,
+            content: "Bir hata oluştu. Lütfen tekrar deneyin.",
+          },
+        ];
+      });
     } finally {
       setLoading(false);
       inputRef.current?.focus();
