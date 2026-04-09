@@ -450,12 +450,11 @@ function loadMentorState(): MentorState {
   return { messages: [], stage: 1 };
 }
 
-function saveMentorState(state: MentorState) {
+function saveMentorState(state: MentorState, notify = false) {
   if (typeof window === "undefined") return;
   try {
     localStorage.setItem(MENTOR_STORAGE_KEY, JSON.stringify(state));
-    // Dispatch custom event so the floating chat picks it up (same tab)
-    window.dispatchEvent(new Event(MENTOR_SYNC_EVENT));
+    if (notify) window.dispatchEvent(new Event(MENTOR_SYNC_EVENT));
   } catch { /* ignore */ }
 }
 
@@ -528,10 +527,10 @@ export default function MentorMockChat() {
         clearInterval(interval);
         setIsTyping(false);
 
-        // Save final state after typing is done
+        // Save final state after typing is done and notify floating chat
         setMessages((prev) => {
           const final = [...prev];
-          saveMentorState({ messages: final, stage: response.nextStage || stage });
+          saveMentorState({ messages: final, stage: response.nextStage || stage }, true);
           return final;
         });
 
@@ -569,7 +568,7 @@ export default function MentorMockChat() {
   function handleStageAdvance(nextStage: number) {
     setStage(nextStage);
     setStageAdvancePrompt(null);
-    saveMentorState({ messages, stage: nextStage });
+    saveMentorState({ messages, stage: nextStage }, true);
   }
 
   function handleReset() {

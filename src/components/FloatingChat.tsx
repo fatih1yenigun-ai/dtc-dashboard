@@ -46,11 +46,11 @@ function loadMentorState(): MentorState {
   return { messages: [], stage: 1 };
 }
 
-function saveMentorState(state: MentorState) {
+function saveMentorState(state: MentorState, notify = false) {
   if (typeof window === "undefined") return;
   try {
     localStorage.setItem(MENTOR_STORAGE_KEY, JSON.stringify(state));
-    window.dispatchEvent(new Event(MENTOR_SYNC_EVENT));
+    if (notify) window.dispatchEvent(new Event(MENTOR_SYNC_EVENT));
   } catch { /* ignore */ }
 }
 
@@ -284,9 +284,9 @@ export default function FloatingChat() {
         if (wordIndex >= words.length) {
           clearInterval(interval);
           setMentorTyping(false);
-          // Save final state after typing completes
+          // Save final state after typing completes and notify other components
           setMentorMessages((prev) => {
-            saveMentorState({ messages: prev, stage: response.nextStage || mentorStage });
+            saveMentorState({ messages: prev, stage: response.nextStage || mentorStage }, true);
             return prev;
           });
           if (response.nextStage) setStageAdvance(response.nextStage);
@@ -308,7 +308,7 @@ export default function FloatingChat() {
     setMentorStage(1);
     setStageAdvance(null);
     localStorage.removeItem(MENTOR_STORAGE_KEY);
-    window.dispatchEvent(new Event(MENTOR_SYNC_EVENT));
+    window.dispatchEvent(new Event(MENTOR_SYNC_EVENT)); // notify Mentör2 page
   }
 
   // Format text with bold + numbers
