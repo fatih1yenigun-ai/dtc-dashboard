@@ -437,7 +437,7 @@ export default function FloatingChat() {
           )}
 
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-3 scrollbar-thin">
+          <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-3 scrollbar-thin">
             {messages.length === 0 && (
               <div className="text-center pt-12">
                 <div
@@ -472,7 +472,22 @@ export default function FloatingChat() {
                     : ["Hangi niş daha karlı?", "Türkiye'de ne satmalıyım?", "AOV nasıl artırılır?"].map((q) => (
                         <button
                           key={q}
-                          onClick={() => { setDanismaInput(q); setTimeout(() => handleDanismaSend(), 100); }}
+                          onClick={() => {
+                            // Send directly instead of setting input + delayed send
+                            setDanismaMessages((prev) => [...prev, { role: "user", content: q }]);
+                            setDanismaLoading(true);
+                            const headers: Record<string, string> = { "Content-Type": "application/json" };
+                            if (token) headers["Authorization"] = `Bearer ${token}`;
+                            fetch("/api/chat", {
+                              method: "POST",
+                              headers,
+                              body: JSON.stringify({ messages: [...danismaMessages, { role: "user", content: q }], model: "sonnet" }),
+                            })
+                              .then((r) => r.json())
+                              .then((data) => setDanismaMessages((prev) => [...prev, { role: "assistant", content: data.reply || "Bir hata oluştu." }]))
+                              .catch(() => setDanismaMessages((prev) => [...prev, { role: "assistant", content: "Bağlantı hatası." }]))
+                              .finally(() => setDanismaLoading(false));
+                          }}
                           className="block w-full text-left px-3 py-2 rounded-lg bg-white/5 text-text-muted text-xs hover:bg-white/10 transition-colors border border-white/5"
                         >
                           {q}
