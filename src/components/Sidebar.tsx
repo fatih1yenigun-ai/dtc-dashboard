@@ -15,8 +15,6 @@ import {
   Moon,
   LayoutDashboard,
   ChevronDown,
-  GraduationCap,
-  Briefcase,
 } from "lucide-react";
 import { loadFolders, getAllSavedCount } from "@/lib/supabase";
 import { useAuth } from "@/context/AuthContext";
@@ -40,7 +38,7 @@ const workspaceItems: NavItem[] = [
 ];
 
 const bottomNavItems = [
-  { href: "/icerik-tedarik", label: "İçerik & Tedarik", iconKey: "icerik-tedarik", accentDark: "#f59e0b", accentLight: "#b45309" },
+  { href: "/icerik-tedarik", label: "İçerik & Tedarik", iconKey: "icerik-uretici", accentDark: "#f59e0b", accentLight: "#b45309" },
   { href: "/pano", label: "Pano (Beta)", iconKey: "pano", accentDark: "#d060f0", accentLight: "#702090" },
 ];
 
@@ -152,11 +150,12 @@ export default function Sidebar() {
             className="flex items-center gap-3 px-4 h-12 rounded-[10px] text-[15px] font-medium transition-all duration-[120ms] w-full text-left hover:bg-bg-hover group"
             style={isWorkspaceItemActive && !workspaceOpen ? { color: "var(--accent)" } : undefined}
           >
-            <Briefcase
-              size={20}
-              className={`flex-shrink-0 transition-colors ${
-                isWorkspaceItemActive ? "text-accent" : "text-text-muted group-hover:text-text-primary"
-              }`}
+            <Image
+              src={isWorkspaceItemActive ? "/icons/active/calisma-alani.svg" : "/icons/default/calisma-alani.svg"}
+              alt="Çalışma Alanı"
+              width={28}
+              height={28}
+              className="flex-shrink-0"
             />
             <span
               className={
@@ -224,10 +223,12 @@ export default function Sidebar() {
                 }
               }}
             >
-              <GraduationCap
-                size={22}
+              <Image
+                src={isMentorActive ? "/icons/active/ai-mentor.svg" : "/icons/default/ai-mentor.svg"}
+                alt="Mentör"
+                width={28}
+                height={28}
                 className="flex-shrink-0"
-                style={isMentorActive ? { color: theme === "dark" ? "#a78bfa" : "#6d28d9" } : undefined}
               />
               <span className={isMentorActive ? "" : "text-text-secondary"}>
                 Mentör
@@ -267,10 +268,12 @@ export default function Sidebar() {
                 }
               }}
             >
-              <GraduationCap
-                size={22}
+              <Image
+                src={isMentor2Active ? "/icons/active/ai-mentor.svg" : "/icons/default/ai-mentor.svg"}
+                alt="Mentör2"
+                width={28}
+                height={28}
                 className="flex-shrink-0"
-                style={isMentor2Active ? { color: theme === "dark" ? "#a78bfa" : "#6d28d9" } : undefined}
               />
               <span className={isMentor2Active ? "" : "text-text-secondary"}>
                 Mentör2
