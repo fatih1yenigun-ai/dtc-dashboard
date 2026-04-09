@@ -236,6 +236,49 @@ export default function Sidebar() {
           );
         })()}
 
+        {/* Mentör2 (Mock) */}
+        {(() => {
+          const isMentor2Active = pathname === "/mentor2" || pathname.startsWith("/mentor2/");
+          return (
+            <Link
+              href="/mentor2"
+              onClick={() => setMobileOpen(false)}
+              className="flex items-center gap-3 px-4 h-12 rounded-[10px] text-[15px] font-medium transition-all duration-[120ms]"
+              style={
+                isMentor2Active
+                  ? {
+                      background: "rgba(139, 92, 246, 0.1)",
+                      borderLeft: "3px solid #8b5cf6",
+                      color: theme === "dark" ? "#a78bfa" : "#6d28d9",
+                      paddingLeft: "13px",
+                    }
+                  : undefined
+              }
+              onMouseEnter={(e) => {
+                if (!isMentor2Active) {
+                  e.currentTarget.style.background = "var(--bg-hover)";
+                  e.currentTarget.style.color = "var(--text-primary)";
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!isMentor2Active) {
+                  e.currentTarget.style.background = "transparent";
+                  e.currentTarget.style.color = "var(--text-secondary)";
+                }
+              }}
+            >
+              <GraduationCap
+                size={22}
+                className="flex-shrink-0"
+                style={isMentor2Active ? { color: theme === "dark" ? "#a78bfa" : "#6d28d9" } : undefined}
+              />
+              <span className={isMentor2Active ? "" : "text-text-secondary"}>
+                Mentör2
+              </span>
+            </Link>
+          );
+        })()}
+
         {/* Divider before conditional items */}
         {(user?.role === "expert" || user?.role === "admin") && (
           <div className="border-t border-border-subtle my-2.5" />
