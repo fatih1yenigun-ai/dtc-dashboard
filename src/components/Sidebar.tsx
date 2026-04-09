@@ -151,7 +151,7 @@ export default function Sidebar() {
             style={isWorkspaceItemActive && !workspaceOpen ? { color: "var(--accent)" } : undefined}
           >
             <Image
-              src={isWorkspaceItemActive ? "/icons/active/calisma-alani.svg" : "/icons/default/calisma-alani.svg"}
+              src={isWorkspaceItemActive || workspaceOpen ? "/icons/active/calisma-alani.svg" : "/icons/default/calisma-alani.svg"}
               alt="Çalışma Alanı"
               width={28}
               height={28}
