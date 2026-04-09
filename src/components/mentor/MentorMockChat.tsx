@@ -425,6 +425,40 @@ function formatText(text: string) {
   });
 }
 
+// ---------- Shared localStorage persistence ----------
+
+const MENTOR_STORAGE_KEY = "mentor2_state";
+const MENTOR_SYNC_EVENT = "mentor-state-change";
+
+interface MentorState {
+  messages: Message[];
+  stage: number;
+}
+
+function loadMentorState(): MentorState {
+  if (typeof window === "undefined") return { messages: [], stage: 1 };
+  try {
+    const raw = localStorage.getItem(MENTOR_STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      return {
+        messages: Array.isArray(parsed.messages) ? parsed.messages : [],
+        stage: typeof parsed.stage === "number" ? parsed.stage : 1,
+      };
+    }
+  } catch { /* ignore */ }
+  return { messages: [], stage: 1 };
+}
+
+function saveMentorState(state: MentorState) {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(MENTOR_STORAGE_KEY, JSON.stringify(state));
+    // Dispatch custom event so the floating chat picks it up (same tab)
+    window.dispatchEvent(new Event(MENTOR_SYNC_EVENT));
+  } catch { /* ignore */ }
+}
+
 // ---------- Main Component ----------
 
 export default function MentorMockChat() {
@@ -447,13 +481,42 @@ export default function MentorMockChat() {
     scrollToBottom();
   }, [messages, scrollToBottom]);
 
+  // Load from localStorage on mount
+  useEffect(() => {
+    const saved = loadMentorState();
+    setMessages(saved.messages);
+    setStage(saved.stage);
+    setHasStarted(saved.messages.length > 0);
+  }, []);
+
+  // Listen for sync events from floating chat
+  useEffect(() => {
+    function handleSync() {
+      const saved = loadMentorState();
+      setMessages(saved.messages);
+      setStage(saved.stage);
+      setHasStarted(saved.messages.length > 0);
+    }
+    window.addEventListener(MENTOR_SYNC_EVENT, handleSync);
+    return () => window.removeEventListener(MENTOR_SYNC_EVENT, handleSync);
+  }, []);
+
+  // Save to localStorage whenever messages or stage change (skip during typing animation)
+  const isTypingRef = useRef(false);
+  useEffect(() => { isTypingRef.current = isTyping; }, [isTyping]);
+
+  useEffect(() => {
+    if (messages.length > 0 && !isTypingRef.current) {
+      saveMentorState({ messages, stage });
+    }
+  }, [messages, stage]);
+
   // Simulate typing delay then add response
   function simulateResponse(text: string, userMsg: string) {
     setIsTyping(true);
 
     const response = getScriptedResponse(userMsg, stage);
 
-    // Simulate streaming — reveal text word by word
     const words = response.text.split(" ");
     let accumulated = "";
     let wordIndex = 0;
@@ -464,6 +527,14 @@ export default function MentorMockChat() {
       if (wordIndex >= words.length) {
         clearInterval(interval);
         setIsTyping(false);
+
+        // Save final state after typing is done
+        setMessages((prev) => {
+          const final = [...prev];
+          saveMentorState({ messages: final, stage: response.nextStage || stage });
+          return final;
+        });
+
         if (response.nextStage) {
           setStageAdvancePrompt(response.nextStage);
         }
@@ -478,7 +549,7 @@ export default function MentorMockChat() {
         updated[updated.length - 1] = { role: "assistant", content: accumulated };
         return updated;
       });
-    }, 30); // 30ms per word = fast but visible streaming
+    }, 30);
   }
 
   function sendMessage(text: string) {
@@ -490,7 +561,6 @@ export default function MentorMockChat() {
     setHasStarted(true);
     setImageBase64(null);
 
-    // Small delay before "assistant starts typing"
     setTimeout(() => {
       simulateResponse(text, text.trim());
     }, 300);
@@ -499,6 +569,7 @@ export default function MentorMockChat() {
   function handleStageAdvance(nextStage: number) {
     setStage(nextStage);
     setStageAdvancePrompt(null);
+    saveMentorState({ messages, stage: nextStage });
   }
 
   function handleReset() {
@@ -508,6 +579,8 @@ export default function MentorMockChat() {
     setHasStarted(false);
     setImageBase64(null);
     setStageAdvancePrompt(null);
+    localStorage.removeItem(MENTOR_STORAGE_KEY);
+    window.dispatchEvent(new Event(MENTOR_SYNC_EVENT));
   }
 
   function handleKeyDown(e: React.KeyboardEvent) {

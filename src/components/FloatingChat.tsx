@@ -13,6 +13,7 @@ interface Message {
 type ActiveTab = "danisma" | "mentor";
 
 const MENTOR_STORAGE_KEY = "mentor2_state";
+const MENTOR_SYNC_EVENT = "mentor-state-change";
 
 // ============================================================
 // Mentor Scripted Responses (no API)
@@ -50,6 +51,7 @@ function saveMentorState(state: MentorState) {
   if (typeof window === "undefined") return;
   try {
     localStorage.setItem(MENTOR_STORAGE_KEY, JSON.stringify(state));
+    window.dispatchEvent(new Event(MENTOR_SYNC_EVENT));
   } catch { /* ignore */ }
 }
 
@@ -207,9 +209,24 @@ export default function FloatingChat() {
     setMentorStage(saved.stage);
   }, []);
 
-  // Save mentor state whenever it changes
+  // Listen for sync events from Mentör2 page
   useEffect(() => {
-    if (mentorMessages.length > 0 || mentorStage > 1) {
+    function handleSync() {
+      if (mentorTypingRef.current) return; // Don't reload during own typing
+      const saved = loadMentorState();
+      setMentorMessages(saved.messages);
+      setMentorStage(saved.stage);
+    }
+    window.addEventListener(MENTOR_SYNC_EVENT, handleSync);
+    return () => window.removeEventListener(MENTOR_SYNC_EVENT, handleSync);
+  }, []);
+
+  const mentorTypingRef = useRef(false);
+  useEffect(() => { mentorTypingRef.current = mentorTyping; }, [mentorTyping]);
+
+  // Save mentor state whenever it changes (skip during typing)
+  useEffect(() => {
+    if ((mentorMessages.length > 0 || mentorStage > 1) && !mentorTypingRef.current) {
       saveMentorState({ messages: mentorMessages, stage: mentorStage });
     }
   }, [mentorMessages, mentorStage]);
@@ -268,6 +285,11 @@ export default function FloatingChat() {
         if (wordIndex >= words.length) {
           clearInterval(interval);
           setMentorTyping(false);
+          // Save final state after typing completes
+          setMentorMessages((prev) => {
+            saveMentorState({ messages: prev, stage: response.nextStage || mentorStage });
+            return prev;
+          });
           if (response.nextStage) setStageAdvance(response.nextStage);
           return;
         }
@@ -287,6 +309,7 @@ export default function FloatingChat() {
     setMentorStage(1);
     setStageAdvance(null);
     localStorage.removeItem(MENTOR_STORAGE_KEY);
+    window.dispatchEvent(new Event(MENTOR_SYNC_EVENT));
   }
 
   // Format text with bold + numbers
