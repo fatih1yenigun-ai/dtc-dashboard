@@ -86,7 +86,7 @@ export default function Sidebar() {
         key={item.href}
         href={item.href}
         onClick={() => setMobileOpen(false)}
-        className="flex items-center gap-3 px-4 h-12 rounded-[10px] text-[15px] font-medium transition-all duration-[120ms]"
+        className="flex items-center gap-3.5 px-4 h-14 rounded-[10px] text-[15.5px] font-medium transition-all duration-[120ms]"
         style={
           isActive
             ? {
@@ -113,9 +113,9 @@ export default function Sidebar() {
         <Image
           src={iconPath}
           alt={item.label}
-          width={28}
-          height={28}
-          className="flex-shrink-0"
+          width={36}
+          height={36}
+          className="flex-shrink-0 rounded-lg"
         />
         <span
           className={isActive ? "" : "text-text-secondary"}
@@ -128,7 +128,7 @@ export default function Sidebar() {
   };
 
   const sidebar = (
-    <div className="flex flex-col h-full bg-bg-sidebar text-text-primary w-[280px] min-w-[280px]">
+    <div className="flex flex-col h-full bg-bg-sidebar text-text-primary w-[320px] min-w-[320px]">
       {/* Branding */}
       <div className="px-5 pt-5 pb-4 border-b border-border-subtle">
         <h1 className="text-xl font-bold tracking-tight">
@@ -147,15 +147,15 @@ export default function Sidebar() {
         <div className="pt-1">
           <button
             onClick={() => setWorkspaceOpen((prev) => !prev)}
-            className="flex items-center gap-3 px-4 h-12 rounded-[10px] text-[15px] font-medium transition-all duration-[120ms] w-full text-left hover:bg-bg-hover group"
+            className="flex items-center gap-3.5 px-4 h-14 rounded-[10px] text-[15.5px] font-medium transition-all duration-[120ms] w-full text-left hover:bg-bg-hover group"
             style={isWorkspaceItemActive && !workspaceOpen ? { color: "var(--accent)" } : undefined}
           >
             <Image
               src={isWorkspaceItemActive || workspaceOpen ? "/icons/active/calisma-alani.svg" : "/icons/default/calisma-alani.svg"}
               alt="Çalışma Alanı"
-              width={28}
-              height={28}
-              className="flex-shrink-0"
+              width={36}
+              height={36}
+              className="flex-shrink-0 rounded-lg"
             />
             <span
               className={
@@ -199,7 +199,7 @@ export default function Sidebar() {
             <Link
               href="/mentor"
               onClick={() => setMobileOpen(false)}
-              className="flex items-center gap-3 px-4 h-12 rounded-[10px] text-[15px] font-medium transition-all duration-[120ms]"
+              className="flex items-center gap-3.5 px-4 h-14 rounded-[10px] text-[15.5px] font-medium transition-all duration-[120ms]"
               style={
                 isMentorActive
                   ? {
@@ -226,9 +226,9 @@ export default function Sidebar() {
               <Image
                 src={isMentorActive ? "/icons/active/ai-mentor.svg" : "/icons/default/ai-mentor.svg"}
                 alt="Mentör"
-                width={28}
-                height={28}
-                className="flex-shrink-0"
+                width={36}
+                height={36}
+                className="flex-shrink-0 rounded-lg"
               />
               <span className={isMentorActive ? "" : "text-text-secondary"}>
                 Mentör
@@ -244,7 +244,7 @@ export default function Sidebar() {
             <Link
               href="/mentor2"
               onClick={() => setMobileOpen(false)}
-              className="flex items-center gap-3 px-4 h-12 rounded-[10px] text-[15px] font-medium transition-all duration-[120ms]"
+              className="flex items-center gap-3.5 px-4 h-14 rounded-[10px] text-[15.5px] font-medium transition-all duration-[120ms]"
               style={
                 isMentor2Active
                   ? {
@@ -271,9 +271,9 @@ export default function Sidebar() {
               <Image
                 src={isMentor2Active ? "/icons/active/ai-mentor.svg" : "/icons/default/ai-mentor.svg"}
                 alt="Mentör2"
-                width={28}
-                height={28}
-                className="flex-shrink-0"
+                width={36}
+                height={36}
+                className="flex-shrink-0 rounded-lg"
               />
               <span className={isMentor2Active ? "" : "text-text-secondary"}>
                 Mentör2
@@ -292,7 +292,7 @@ export default function Sidebar() {
           <Link
             href="/expert-archive"
             onClick={() => setMobileOpen(false)}
-            className={`flex items-center gap-3 px-4 h-12 rounded-[10px] text-[15px] font-medium transition-all duration-[120ms] ${
+            className={`flex items-center gap-3.5 px-4 h-14 rounded-[10px] text-[15.5px] font-medium transition-all duration-[120ms] ${
               pathname === "/expert-archive"
                 ? ""
                 : "text-text-secondary hover:bg-bg-hover hover:text-text-primary"
@@ -311,9 +311,9 @@ export default function Sidebar() {
             <Image
               src={pathname === "/expert-archive" ? "/icons/active/uzman-arsivi.svg" : "/icons/default/uzman-arsivi.svg"}
               alt="Uzman Arşivim"
-              width={28}
-              height={28}
-              className="flex-shrink-0"
+              width={36}
+              height={36}
+              className="flex-shrink-0 rounded-lg"
             />
             Uzman Arşivim
           </Link>
