@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { MessageCircle, X, Send, Loader2, GraduationCap, ArrowRight } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 interface Message {
   role: "user" | "assistant";
@@ -184,6 +184,7 @@ function parseToolCards(text: string): ContentPart[] {
 
 export default function FloatingChat() {
   const { token } = useAuth();
+  const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<ActiveTab>("mentor");
 
@@ -331,19 +332,21 @@ export default function FloatingChat() {
   // Render inline tool card (compact for floating chat)
   function renderMiniToolCard(part: ToolPart, key: number) {
     return (
-      <Link
+      <div
         key={key}
-        href={part.route}
-        className="flex items-center gap-2 my-1.5 px-3 py-2 rounded-lg transition-all duration-150 group"
+        className="flex items-center gap-2 my-1.5 px-3 py-2 rounded-lg transition-all duration-150 group cursor-pointer"
         style={{ background: "rgba(139,92,246,0.1)", border: "1px solid rgba(139,92,246,0.2)" }}
-        onClick={() => setIsOpen(false)}
+        onClick={() => {
+          setIsOpen(false);
+          router.push(part.route);
+        }}
       >
         <div className="min-w-0 flex-1">
           <div className="text-xs font-semibold" style={{ color: "#a78bfa" }}>{part.name}</div>
           <div className="text-[10px]" style={{ color: "var(--text-muted)" }}>{part.description}</div>
         </div>
         <ArrowRight size={12} style={{ color: "#a78bfa" }} className="flex-shrink-0 group-hover:translate-x-0.5 transition-transform" />
-      </Link>
+      </div>
     );
   }
 
