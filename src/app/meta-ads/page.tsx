@@ -11,6 +11,7 @@ import { useMetaAdSearch, type MetaAd, type SortKey } from "@/hooks/useMetaAdSea
 import { useAuth } from "@/context/AuthContext";
 import { AdCard } from "@/components/meta-ads/AdCard";
 import { AdDetailPopup } from "@/components/meta-ads/AdDetailPopup";
+import { MetaAdsTabs } from "@/components/meta-ads/MetaAdsTabs";
 import { toBrandData } from "@/components/meta-ads/utils";
 
 const META_AD_SORT_OPTIONS: { key: SortKey; label: string }[] = [
@@ -107,6 +108,8 @@ export default function MetaAdsPage() {
         <h1 className="text-2xl font-bold text-text-primary">Meta Ad Library</h1>
         <p className="text-text-secondary mt-1">PiPiAds ile Facebook/Instagram reklamlarini kesfet</p>
       </div>
+
+      <MetaAdsTabs active="reklamlar" />
 
       {/* Search Bar */}
       <div className="bg-bg-card rounded-xl shadow-sm border border-border-default p-6 mb-6">

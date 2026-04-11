@@ -23,6 +23,7 @@ export interface MetaAd {
   firstDiscoveredAt: number;
   lastDiscoveredAt: number;
   latestActivedAt: number;
+  advertiserId: string;
   advertiserName: string;
   advertiserProfilePic: string;
   advertiserAdCount: number;
@@ -110,6 +111,7 @@ function mapAd(item: any): MetaAd {
     firstDiscoveredAt: item.first_discovered_at || 0,
     lastDiscoveredAt: item.last_discovered_at || 0,
     latestActivedAt: item.latest_actived_at || 0,
+    advertiserId: adv.id || "",
     advertiserName: adv.name || "",
     advertiserProfilePic: adv.profile_picture_url || "",
     advertiserAdCount: adv.ad_count || 0,
@@ -234,15 +236,12 @@ export function useMetaAdSearch() {
         if (data.error) throw new Error(data.error);
 
         const list = data.data?.data || [];
-        let mapped: MetaAd[] = list.map(mapAd);
+        const mapped: MetaAd[] = list.map(mapAd);
 
-        // When scoping to an advertiser, defensively filter on the client too — the
-        // server may have transparently fallen back to a loose keyword match if
-        // PiPiAds' advertiser_name field filter returned nothing.
-        if (params.advertiserName) {
-          const target = params.advertiserName.trim().toLowerCase();
-          mapped = mapped.filter((a) => a.advertiserName.trim().toLowerCase() === target);
-        }
+        // NOTE: no client-side advertiser filter — the server already narrows via
+        // PiPiAds' `advertiser_name` field filter (with a loose fallback). Adding
+        // a strict client filter on top of that caused legitimate saved-brand
+        // profile pages to appear empty when name casing/whitespace drifted.
 
         if (append) {
           setAllAds((prev) => {
