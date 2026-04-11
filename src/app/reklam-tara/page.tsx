@@ -175,6 +175,8 @@ function toBrandDataVideo(v: VideoResult): BrandData {
     Kategori: v.tags?.[0] || "", "One Cikan Ozellik": v.hook || "",
     "Buyume Yontemi": "TikTok Shop", "Pazarlama Acilari": v.tags?.join(", ") || "",
     Kaynak: "PiPiAds", Goruntulenme: v.play_count, Cover: v.cover_image || v.image,
+    // Capture playable creative so the saved page can render it.
+    VideoUrl: v.video_url || "",
   } as BrandData;
 }
 
@@ -189,6 +191,9 @@ function toBrandDataAd(ad: MetaAd): BrandData {
     "Buyume Yontemi": "Meta Ads",
     Kaynak: "PiPiAds Meta",
     Cover: ad.thumbnail,
+    // Capture playable creative so the saved page can render it.
+    VideoUrl: ad.videos?.[0]?.url || "",
+    AdvertiserName: ad.advertiserName,
     Ulke: ad.country?.join(", "),
   } as BrandData;
 }

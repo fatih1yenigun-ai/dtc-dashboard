@@ -101,8 +101,24 @@ export function getBrandSource(brand: BrandLike): string {
   const d = brand.brand_data;
   const kaynak = (d?.Kaynak as string) || "";
   if (kaynak === "Amazon") return "Amazon";
+  if (kaynak === "PiPiAds Meta") return "Meta";
   if (kaynak === "PiPiAds" || (d?.["Büyüme Yöntemi"] as string)?.includes("TikTok")) return "TikTok";
   return "Research";
+}
+
+export function getBrandCover(brand: BrandLike): string {
+  const d = brand.brand_data;
+  return (d?.Cover as string) || "";
+}
+
+export function getBrandVideoUrl(brand: BrandLike): string {
+  const d = brand.brand_data;
+  return (d?.VideoUrl as string) || "";
+}
+
+export function getBrandAdvertiserName(brand: BrandLike): string {
+  const d = brand.brand_data;
+  return (d?.AdvertiserName as string) || "";
 }
 
 export function SourceBadge({ source }: { source: string }) {
@@ -115,6 +131,11 @@ export function SourceBadge({ source }: { source: string }) {
     return React.createElement("span", {
       className: "inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-black/5 text-gray-800 text-[10px] font-bold",
     }, React.createElement(ShoppingBag, { size: 10 }), "TikTok");
+  }
+  if (source === "Meta") {
+    return React.createElement("span", {
+      className: "inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-[#1877F2]/10 text-[#1877F2] text-[10px] font-bold",
+    }, React.createElement(ShoppingBag, { size: 10 }), "Meta");
   }
   return React.createElement("span", {
     className: "inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-[#667eea]/10 text-[#667eea] text-[10px] font-bold",

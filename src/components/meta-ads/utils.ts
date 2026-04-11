@@ -73,6 +73,9 @@ export function toBrandData(ad: MetaAd): BrandData {
     "Buyume Yontemi": "Meta Ads",
     Kaynak: "PiPiAds Meta",
     Cover: ad.thumbnail,
+    // Capture playable creative so the saved page can render it like the search page does.
+    VideoUrl: ad.videos?.[0]?.url || "",
+    AdvertiserName: ad.advertiserName,
     Ulke: ad.country?.join(", "),
   } as BrandData;
 }

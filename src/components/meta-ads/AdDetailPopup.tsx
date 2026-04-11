@@ -5,7 +5,7 @@ import Link from "next/link";
 import {
   X,
   Save,
-  Globe,
+  User,
   ExternalLink,
   ShoppingBag,
   Megaphone,
@@ -244,15 +244,14 @@ export function AdDetailPopup({ ad, onClose, onSave, onOwnProfile = false }: AdD
               >
                 <Save size={14} /> Kaydet
               </button>
-              {ad.advertiserAdsLibraryLink && (
-                <a
-                  href={ad.advertiserAdsLibraryLink}
-                  target="_blank"
-                  rel="noopener noreferrer"
+              {showAdvertiserLink && (
+                <Link
+                  href={profileHref}
+                  onClick={onClose}
                   className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-blue-50 text-blue-700 text-sm font-medium hover:bg-blue-100"
                 >
-                  <Globe size={14} /> Meta Ad Library
-                </a>
+                  <User size={14} /> Meta Hesap
+                </Link>
               )}
               {ad.advertiserLink && (
                 <a

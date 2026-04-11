@@ -45,8 +45,13 @@ import {
   getBrandConversion,
   getBrandMarketingAngles,
   getBrandSource,
+  getBrandCover,
+  getBrandVideoUrl,
+  getBrandAdvertiserName,
   SourceBadge,
 } from "@/lib/brand-utils";
+import { SavedAdCreative } from "@/components/saved/SavedAdCreative";
+import NextLink from "next/link";
 
 type SortKey = "revenue" | "traffic" | "tqs" | "aov" | "founded";
 
@@ -484,6 +489,12 @@ export default function SavedPage() {
             const isSelected = selectedBrands.has(brand.id);
             const websiteClean = website.replace(/^https?:\/\//, "");
             const source = getBrandSource(brand);
+            const cover = getBrandCover(brand);
+            const videoUrl = getBrandVideoUrl(brand);
+            const advertiserName = getBrandAdvertiserName(brand) || (source === "Meta" ? name : "");
+            const metaProfileHref = source === "Meta" && advertiserName
+              ? `/meta-ads/advertiser/${encodeURIComponent(advertiserName)}`
+              : "";
 
             return (
               <div
@@ -529,6 +540,13 @@ export default function SavedPage() {
                   >
                     {websiteClean} <ExternalLink size={11} />
                   </a>
+                )}
+
+                {/* Saved ad creative — thumbnail with click-to-play video */}
+                {(cover || videoUrl) && (
+                  <div className="mb-3">
+                    <SavedAdCreative cover={cover} videoUrl={videoUrl} alt={name} size="card" />
+                  </div>
                 )}
 
                 {/* Metrics grid */}
@@ -620,8 +638,16 @@ export default function SavedPage() {
                 )}
 
                 {/* Action buttons */}
-                <div className="flex items-center gap-2 pt-2 border-t border-border-default">
-                  {metaAds && (
+                <div className="flex items-center gap-2 pt-2 border-t border-border-default flex-wrap">
+                  {metaProfileHref && (
+                    <NextLink
+                      href={metaProfileHref}
+                      className="inline-flex items-center gap-1 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-xs font-medium hover:bg-blue-100 transition-colors"
+                    >
+                      Meta Hesap
+                    </NextLink>
+                  )}
+                  {metaAds && !metaProfileHref && (
                     <a
                       href={metaAds.startsWith("http") ? metaAds : `https://${metaAds}`}
                       target="_blank"
@@ -668,6 +694,18 @@ export default function SavedPage() {
                 <X size={22} />
               </button>
             </div>
+
+            {/* Saved ad creative — playable video / thumbnail */}
+            {(getBrandCover(detailBrand) || getBrandVideoUrl(detailBrand)) && (
+              <div className="p-6 pb-0">
+                <SavedAdCreative
+                  cover={getBrandCover(detailBrand)}
+                  videoUrl={getBrandVideoUrl(detailBrand)}
+                  alt={getBrandName(detailBrand)}
+                  size="modal"
+                />
+              </div>
+            )}
 
             {/* Content grid */}
             <div className="p-6 grid grid-cols-2 gap-4">
@@ -745,6 +783,19 @@ export default function SavedPage() {
                   </a>
                 </div>
               )}
+              {getBrandSource(detailBrand) === "Meta" &&
+                (getBrandAdvertiserName(detailBrand) || getBrandName(detailBrand)) && (
+                  <div className="bg-bg-main rounded-xl p-4">
+                    <p className="text-xs text-text-secondary font-semibold mb-2 uppercase tracking-wide">Meta Hesap</p>
+                    <NextLink
+                      href={`/meta-ads/advertiser/${encodeURIComponent(getBrandAdvertiserName(detailBrand) || getBrandName(detailBrand))}`}
+                      onClick={() => setDetailBrand(null)}
+                      className="inline-flex items-center gap-1 text-sm text-blue-600 hover:underline"
+                    >
+                      Reklamveren profilini gör
+                    </NextLink>
+                  </div>
+                )}
             </div>
           </div>
         </div>
