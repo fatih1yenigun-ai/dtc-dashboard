@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -8,8 +8,6 @@ import {
   Star,
   MapPin,
   Users,
-  ChevronLeft,
-  ChevronRight,
   Loader2,
   SearchX,
 } from "lucide-react";
@@ -68,6 +66,16 @@ function formatFollowers(count: number): string {
   return count.toString();
 }
 
+function getInstagramUsername(url: string): string {
+  try {
+    const path = new URL(url).pathname.replace(/\/$/, "");
+    const username = path.split("/").pop();
+    return username ? "@" + username : url;
+  } catch {
+    return url;
+  }
+}
+
 // --------------- component ---------------
 
 export default function CreatorsPage() {
@@ -77,41 +85,88 @@ export default function CreatorsPage() {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [tier, setTier] = useState<string | null>(null);
   const [sort, setSort] = useState<CreatorFilters["sort"]>("followers_desc");
-  const [page, setPage] = useState(1);
 
-  // data
+  // data + infinite scroll
   const [creators, setCreators] = useState<CreatorProfile[]>([]);
   const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const observerRef = useRef<HTMLDivElement>(null);
+  const isLoadingRef = useRef(false);
 
-  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const fetchData = useCallback(
+    async (p: number, append = false) => {
+      if (isLoadingRef.current && append) return;
+      isLoadingRef.current = true;
 
-  const fetchData = useCallback(async () => {
-    setLoading(true);
-    const filters: CreatorFilters = {
-      page,
-      pageSize: PAGE_SIZE,
-      sort: sort ?? "followers_desc",
-    };
-    if (type) filters.type = type;
-    if (source) filters.source = source;
-    if (tier) filters.tier = tier;
-    if (selectedCategories.length > 0) filters.categories = selectedCategories;
+      if (append) {
+        setLoadingMore(true);
+      } else {
+        setLoading(true);
+      }
 
-    const res = await loadCreatorProfiles(filters);
-    setCreators(res.data);
-    setTotal(res.total);
-    setLoading(false);
-  }, [type, source, tier, selectedCategories, sort, page]);
+      try {
+        const filters: CreatorFilters = {
+          page: p,
+          pageSize: PAGE_SIZE,
+          sort: sort ?? "followers_desc",
+        };
+        if (type) filters.type = type;
+        if (source) filters.source = source;
+        if (tier) filters.tier = tier;
+        if (selectedCategories.length > 0) filters.categories = selectedCategories;
 
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+        const res = await loadCreatorProfiles(filters);
 
-  // reset page when filters change
+        if (append) {
+          setCreators((prev) => {
+            const existingIds = new Set(prev.map((c) => c.id));
+            return [...prev, ...res.data.filter((c) => !existingIds.has(c.id))];
+          });
+        } else {
+          setCreators(res.data);
+        }
+        setTotal(res.total);
+        setHasMore(p * PAGE_SIZE < res.total);
+      } catch (err) {
+        console.error("fetchData error:", err);
+      } finally {
+        setLoading(false);
+        setLoadingMore(false);
+        isLoadingRef.current = false;
+      }
+    },
+    [type, source, tier, selectedCategories, sort]
+  );
+
+  // Reset on filter change
   useEffect(() => {
     setPage(1);
-  }, [type, source, tier, selectedCategories, sort]);
+    setCreators([]);
+    setHasMore(true);
+    fetchData(1);
+  }, [fetchData]);
+
+  // Infinite scroll observer
+  useEffect(() => {
+    if (!observerRef.current || !hasMore || loading || loadingMore) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !isLoadingRef.current) {
+          const nextPage = page + 1;
+          setPage(nextPage);
+          fetchData(nextPage, true);
+        }
+      },
+      { rootMargin: "0px 0px 200px 0px" }
+    );
+
+    observer.observe(observerRef.current);
+    return () => observer.disconnect();
+  }, [hasMore, loading, loadingMore, page, fetchData]);
 
   // category toggle
   const toggleCategory = (cat: string) => {
@@ -250,7 +305,7 @@ export default function CreatorsPage() {
                 key={c.id}
                 className="bg-bg-card rounded-[14px] border border-border-default p-5 hover:-translate-y-0.5 transition-transform"
               >
-                {/* Top row: avatar + name */}
+                {/* Top row: avatar + name + instagram */}
                 <div className="flex items-center gap-3 mb-3">
                   {c.avatar_url ? (
                     <Image
@@ -269,12 +324,22 @@ export default function CreatorsPage() {
                     <p className="text-sm font-semibold text-text-primary truncate">
                       {c.name}
                     </p>
-                    {c.city && (
+                    {/* Clickable Instagram username */}
+                    {c.instagram_url ? (
+                      <a
+                        href={c.instagram_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-accent hover:text-accent/80 transition-colors truncate block"
+                      >
+                        {getInstagramUsername(c.instagram_url)}
+                      </a>
+                    ) : c.city ? (
                       <span className="flex items-center gap-1 text-xs text-text-muted">
                         <MapPin size={12} />
                         {c.city}
                       </span>
-                    )}
+                    ) : null}
                   </div>
                 </div>
 
@@ -308,11 +373,49 @@ export default function CreatorsPage() {
                   </span>
                 </div>
 
-                {/* Category */}
-                {c.categories?.[0] && (
+                {/* Category — only show if non-empty */}
+                {c.categories && c.categories.length > 0 && c.categories[0] && (
                   <p className="text-xs text-text-secondary mb-2">
-                    {c.categories[0]}
+                    {(c.categories as string[]).filter(Boolean).join(", ")}
                   </p>
+                )}
+
+                {/* City (if instagram shown above, show city here) */}
+                {c.instagram_url && c.city && (
+                  <div className="flex items-center gap-1 text-xs text-text-muted mb-2">
+                    <MapPin size={12} />
+                    {c.city}
+                  </div>
+                )}
+
+                {/* Social links (TikTok, YouTube only — Instagram is already above) */}
+                {(c.tiktok_url || c.youtube_url) && (
+                  <div className="flex items-center gap-2 mb-2">
+                    {c.tiktok_url && (
+                      <a
+                        href={c.tiktok_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                        className="text-text-muted hover:text-text-primary transition-colors"
+                        title="TikTok"
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1v-3.5a6.37 6.37 0 00-.79-.05A6.34 6.34 0 003.15 15.2a6.34 6.34 0 0010.86 4.48V13a8.28 8.28 0 005.58 2.15V11.7a4.81 4.81 0 01-3.77-1.24V6.69h3.77z"/></svg>
+                      </a>
+                    )}
+                    {c.youtube_url && (
+                      <a
+                        href={c.youtube_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                        className="text-text-muted hover:text-red-500 transition-colors"
+                        title="YouTube"
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+                      </a>
+                    )}
+                  </div>
                 )}
 
                 {/* Stats row */}
@@ -339,27 +442,13 @@ export default function CreatorsPage() {
             ))}
           </div>
 
-          {/* Pagination */}
-          <div className="flex items-center justify-center gap-4 mt-8">
-            <button
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-              disabled={page <= 1}
-              className="flex items-center gap-1 text-sm text-text-secondary hover:text-text-primary disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-            >
-              <ChevronLeft size={16} />
-              Önceki
-            </button>
-            <span className="text-sm text-text-muted">
-              Sayfa {page} / {totalPages}
-            </span>
-            <button
-              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-              disabled={page >= totalPages}
-              className="flex items-center gap-1 text-sm text-text-secondary hover:text-text-primary disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-            >
-              Sonraki
-              <ChevronRight size={16} />
-            </button>
+          {/* Infinite scroll trigger */}
+          <div ref={observerRef} className="h-10 mt-4">
+            {loadingMore && (
+              <div className="flex items-center justify-center py-4">
+                <Loader2 size={20} className="animate-spin text-text-muted" />
+              </div>
+            )}
           </div>
         </>
       )}

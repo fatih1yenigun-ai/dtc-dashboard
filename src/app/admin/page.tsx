@@ -85,7 +85,7 @@ interface ReviewRow {
 interface SuspiciousRow {
   id: number;
   user_id: number;
-  activity_type: string;
+  violation_type: string;
   details: Record<string, unknown> | null;
   created_at: string;
   username: string | null;
@@ -1101,7 +1101,7 @@ export default function AdminPage() {
                       <td className="px-6 py-3 text-text-primary">{s.username || `#${s.user_id}`}</td>
                       <td className="px-6 py-3">
                         <span className="inline-block px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700">
-                          {s.activity_type}
+                          {s.violation_type}
                         </span>
                       </td>
                       <td className="px-6 py-3 text-text-secondary text-xs max-w-md">

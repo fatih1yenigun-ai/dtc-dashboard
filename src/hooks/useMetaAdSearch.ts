@@ -185,6 +185,7 @@ export function useMetaAdSearch() {
     keyword: string;
     orderBy: string | undefined;
     direction: "asc" | "desc";
+    advertiserName?: string;
   } | null>(null);
 
   const fetchPage = useCallback(
@@ -219,6 +220,7 @@ export function useMetaAdSearch() {
             perPage: PAGE_SIZE,
             orderBy: params.orderBy,
             direction: params.direction,
+            advertiserName: params.advertiserName,
           }),
           signal: controller.signal,
         });
@@ -232,7 +234,15 @@ export function useMetaAdSearch() {
         if (data.error) throw new Error(data.error);
 
         const list = data.data?.data || [];
-        const mapped: MetaAd[] = list.map(mapAd);
+        let mapped: MetaAd[] = list.map(mapAd);
+
+        // When scoping to an advertiser, defensively filter on the client too — the
+        // server may have transparently fallen back to a loose keyword match if
+        // PiPiAds' advertiser_name field filter returned nothing.
+        if (params.advertiserName) {
+          const target = params.advertiserName.trim().toLowerCase();
+          mapped = mapped.filter((a) => a.advertiserName.trim().toLowerCase() === target);
+        }
 
         if (append) {
           setAllAds((prev) => {
@@ -262,12 +272,19 @@ export function useMetaAdSearch() {
   );
 
   const search = useCallback(
-    (keyword: string, sortKey: SortKey = "default", direction: "asc" | "desc" = "desc") => {
-      if (!keyword.trim()) return;
+    (
+      keyword: string,
+      sortKey: SortKey = "default",
+      direction: "asc" | "desc" = "desc",
+      options?: { advertiserName?: string }
+    ) => {
+      const advertiserName = options?.advertiserName?.trim();
+      if (!keyword.trim() && !advertiserName) return;
       searchParamsRef.current = {
-        keyword,
+        keyword: advertiserName ? "" : keyword,
         orderBy: ORDER_BY_MAP[sortKey],
         direction,
+        advertiserName,
       };
       setAllAds([]);
       setHasMore(true);

@@ -12,7 +12,7 @@ export interface CreatorProfile {
   city: string | null;
   country: string | null;
   phone: string | null;
-  email: string;
+  email: string | null;
   instagram_url: string | null;
   youtube_url: string | null;
   linkedin_url: string | null;

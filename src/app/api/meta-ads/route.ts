@@ -93,17 +93,21 @@ async function searchAds(
   page: number,
   perPage: number,
   orderBy?: string,
-  direction: string = "desc"
+  direction: string = "desc",
+  advertiserName?: string
 ) {
   const url = "https://www.pipiads.com/v1/api/ppspy/advertisements";
+  // When advertiserName is provided, scope the query to that advertiser
+  // using PiPiAds' `advertiser_name` field filter instead of the loose "all" match.
+  const extendKeywords = advertiserName
+    ? [{ field: "advertiser_name", value: advertiserName, logic_operator: "or" }]
+    : [{ field: "all", value: keyword, logic_operator: "or" }];
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const body: Record<string, any> = {
     is_real: false,
     is_and: false,
     enable_token_search: 2,
-    extend_keywords: JSON.stringify([
-      { field: "all", value: keyword, logic_operator: "or" },
-    ]),
+    extend_keywords: JSON.stringify(extendKeywords),
     direction,
     page,
     per_page: perPage,
@@ -113,7 +117,7 @@ async function searchAds(
     body.order_by = orderBy;
   }
 
-  console.log("[Meta Ads Search] Request:", { keyword, page, perPage, orderBy, direction });
+  console.log("[Meta Ads Search] Request:", { keyword, advertiserName, page, perPage, orderBy, direction });
 
   const res = await fetch(url, {
     method: "POST",
@@ -152,20 +156,34 @@ export async function POST(request: NextRequest) {
       if (payload) userId = payload.userId;
     }
 
-    const { keyword, page = 1, perPage = 20, orderBy, direction = "desc" } = await request.json();
+    const { keyword, page = 1, perPage = 20, orderBy, direction = "desc", advertiserName } = await request.json();
 
-    if (!keyword) {
+    if (!keyword && !advertiserName) {
       return new Response(
-        JSON.stringify({ error: "Keyword is required" }),
+        JSON.stringify({ error: "Keyword or advertiserName is required" }),
         { status: 400, headers: { "Content-Type": "application/json" } }
       );
     }
 
     const token = await pipiadsLogin();
 
-    const data = await enqueue(() =>
-      searchAds(token, keyword, page, perPage, orderBy, direction)
+    let data = await enqueue(() =>
+      searchAds(token, keyword || "", page, perPage, orderBy, direction, advertiserName)
     );
+
+    // Fallback: if PiPiAds doesn't accept the `advertiser_name` field filter (or the
+    // advertiser is keyed differently in their index), an advertiser-scoped page-1 call
+    // can come back empty. Re-query with the loose `all` field using the advertiser
+    // name as the keyword, then client-side filtering on the page narrows the result.
+    if (advertiserName && page === 1) {
+      const firstList = data?.data?.data || [];
+      if (firstList.length === 0) {
+        console.log("[Meta Ads Search] advertiser_name field returned empty, falling back to all-field keyword");
+        data = await enqueue(() =>
+          searchAds(token, advertiserName, page, perPage, orderBy, direction)
+        );
+      }
+    }
 
     if (!data?.data?.data) {
       console.error(
@@ -175,7 +193,8 @@ export async function POST(request: NextRequest) {
     }
 
     if (userId) {
-      await logActivity(userId, "meta_ads_search", keyword, {
+      const action = advertiserName ? "meta_ads_advertiser_view" : "meta_ads_search";
+      await logActivity(userId, action, advertiserName || keyword, {
         page,
         perPage,
       }).catch(() => {});

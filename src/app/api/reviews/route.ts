@@ -116,7 +116,7 @@ export async function POST(request: NextRequest) {
     // Log suspicious activity
     await supabase.from("suspicious_activity").insert({
       user_id: userId,
-      activity_type: "review_rate_limit",
+      violation_type: "review_rate_limit",
       details: { target_type, target_id, recent_count: recentReviews.length },
     });
     return NextResponse.json(
@@ -140,7 +140,7 @@ export async function POST(request: NextRequest) {
     if (dupeReviews && dupeReviews.length > 0) {
       await supabase.from("suspicious_activity").insert({
         user_id: userId,
-        activity_type: "review_duplicate_text",
+        violation_type: "review_duplicate_text",
         details: { target_type, target_id, text: text.trim() },
       });
       return NextResponse.json(

@@ -1,16 +1,16 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
   Star,
   MapPin,
   Factory,
-  ChevronLeft,
-  ChevronRight,
   Loader2,
   Package,
+  Globe,
+  ExternalLink,
 } from "lucide-react";
 import {
   loadSupplierProfiles,
@@ -54,11 +54,12 @@ export default function SuppliersPage() {
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const observerRef = useRef<HTMLDivElement>(null);
+  const isLoadingRef = useRef(false);
 
   // Filters
-  const [typeFilter, setTypeFilter] = useState<
-    "all" | "uretici" | "toptanci"
-  >("all");
   const [sourceFilter, setSourceFilter] = useState<
     "all" | "faycom" | "veritabani"
   >("all");
@@ -66,38 +67,84 @@ export default function SuppliersPage() {
   const [cityFilter, setCityFilter] = useState("");
   const [sortFilter, setSortFilter] = useState<"reviews" | "newest">("newest");
 
-  const totalPages = Math.ceil(total / PAGE_SIZE);
-
   const fetchData = useCallback(
-    async (p: number) => {
-      setLoading(true);
-      const filters: SupplierFilters = {
-        page: p,
-        pageSize: PAGE_SIZE,
-        sort: sortFilter,
-      };
-      if (typeFilter !== "all") filters.type = typeFilter;
-      if (sourceFilter !== "all") filters.source = sourceFilter;
-      if (categoryFilter) filters.category = categoryFilter;
-      if (cityFilter) filters.city = cityFilter;
+    async (p: number, append = false) => {
+      if (isLoadingRef.current && append) return;
+      isLoadingRef.current = true;
 
-      const result = await loadSupplierProfiles(filters);
-      setSuppliers(result.data);
-      setTotal(result.total);
-      setLoading(false);
+      if (append) {
+        setLoadingMore(true);
+      } else {
+        setLoading(true);
+      }
+
+      try {
+        const filters: SupplierFilters = {
+          page: p,
+          pageSize: PAGE_SIZE,
+          sort: sortFilter,
+        };
+        if (sourceFilter !== "all") filters.source = sourceFilter;
+        if (categoryFilter) filters.category = categoryFilter;
+        if (cityFilter) filters.city = cityFilter;
+
+        const result = await loadSupplierProfiles(filters);
+
+        if (append) {
+          setSuppliers((prev) => {
+            const existingIds = new Set(prev.map((s) => s.id));
+            return [...prev, ...result.data.filter((s) => !existingIds.has(s.id))];
+          });
+        } else {
+          setSuppliers(result.data);
+        }
+        setTotal(result.total);
+        setHasMore(p * PAGE_SIZE < result.total);
+      } catch (err) {
+        console.error("fetchData error:", err);
+      } finally {
+        setLoading(false);
+        setLoadingMore(false);
+        isLoadingRef.current = false;
+      }
     },
-    [typeFilter, sourceFilter, categoryFilter, cityFilter, sortFilter]
+    [sourceFilter, categoryFilter, cityFilter, sortFilter]
   );
 
+  // Reset on filter change
   useEffect(() => {
     setPage(1);
+    setSuppliers([]);
+    setHasMore(true);
     fetchData(1);
   }, [fetchData]);
 
-  function goToPage(p: number) {
-    setPage(p);
-    fetchData(p);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+  // Infinite scroll observer
+  useEffect(() => {
+    if (!observerRef.current || !hasMore || loading || loadingMore) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !isLoadingRef.current) {
+          const nextPage = page + 1;
+          setPage(nextPage);
+          fetchData(nextPage, true);
+        }
+      },
+      { rootMargin: "0px 0px 200px 0px" }
+    );
+
+    observer.observe(observerRef.current);
+    return () => observer.disconnect();
+  }, [hasMore, loading, loadingMore, page, fetchData]);
+
+  function getWebsiteDomain(url: string): string {
+    try {
+      const hostname = new URL(url.startsWith("http") ? url : `https://${url}`).hostname;
+      return hostname.replace("www.", "");
+    } catch {
+      return url;
+    }
   }
 
   return (
@@ -113,31 +160,8 @@ export default function SuppliersPage() {
         </Link>
         <h1 className="text-2xl font-bold text-text-primary">Tedarik</h1>
         <p className="text-text-secondary mt-1">
-          Üretici ve toptancıları keşfet
+          Fason üreticileri keşfet
         </p>
-      </div>
-
-      {/* Type Toggle */}
-      <div className="flex items-center gap-2 mb-4">
-        {(
-          [
-            { value: "all", label: "Tümü" },
-            { value: "uretici", label: "Üretici" },
-            { value: "toptanci", label: "Toptancı" },
-          ] as const
-        ).map((opt) => (
-          <button
-            key={opt.value}
-            onClick={() => setTypeFilter(opt.value)}
-            className={`px-4 py-1.5 text-sm rounded-full border transition-colors ${
-              typeFilter === opt.value
-                ? "bg-text-primary text-bg-main border-text-primary"
-                : "bg-bg-card text-text-secondary border-border-default hover:border-text-muted"
-            }`}
-          >
-            {opt.label}
-          </button>
-        ))}
       </div>
 
       {/* Source Toggle */}
@@ -165,7 +189,6 @@ export default function SuppliersPage() {
 
       {/* Filters Row */}
       <div className="flex flex-wrap items-center gap-3 mb-6">
-        {/* Category */}
         <select
           value={categoryFilter}
           onChange={(e) => setCategoryFilter(e.target.value)}
@@ -179,7 +202,6 @@ export default function SuppliersPage() {
           ))}
         </select>
 
-        {/* City */}
         <select
           value={cityFilter}
           onChange={(e) => setCityFilter(e.target.value)}
@@ -193,7 +215,6 @@ export default function SuppliersPage() {
           ))}
         </select>
 
-        {/* Sort */}
         <select
           value={sortFilter}
           onChange={(e) =>
@@ -219,7 +240,7 @@ export default function SuppliersPage() {
       ) : (
         <>
           <p className="text-xs text-text-muted mb-3">
-            {total} sonuç{totalPages > 1 && ` — Sayfa ${page}/${totalPages}`}
+            {total} sonuç
           </p>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -229,28 +250,23 @@ export default function SuppliersPage() {
                 className="bg-bg-card rounded-[14px] border border-border-default p-5 flex flex-col gap-3"
               >
                 {/* Company name */}
-                <div className="flex items-start justify-between gap-2">
-                  <h3 className="text-sm font-bold text-text-primary leading-snug">
-                    {s.company_name}
-                  </h3>
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    {/* Type badge */}
-                    <span
-                      className={`text-[11px] font-medium px-2 py-0.5 rounded-full ${
-                        s.type === "uretici"
-                          ? "bg-emerald-500/15 text-emerald-500"
-                          : "bg-orange-500/15 text-orange-500"
-                      }`}
-                    >
-                      {s.type === "uretici" ? "Üretici" : "Toptancı"}
-                    </span>
-                  </div>
-                </div>
+                <h3 className="text-sm font-bold text-text-primary leading-snug">
+                  {s.company_name}
+                </h3>
 
-                {/* Source badge */}
-                <span className="text-[11px] text-text-muted bg-bg-main px-2 py-0.5 rounded-full w-fit">
-                  {s.source === "faycom" ? "Faycom'a Özel" : "Veritabanı"}
-                </span>
+                {/* Website - prominent clickable link */}
+                {s.website && (
+                  <a
+                    href={s.website.startsWith("http") ? s.website : `https://${s.website}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 text-xs text-accent hover:text-accent/80 transition-colors truncate"
+                  >
+                    <Globe size={13} className="shrink-0" />
+                    {getWebsiteDomain(s.website)}
+                    <ExternalLink size={11} className="shrink-0 opacity-60" />
+                  </a>
+                )}
 
                 {/* City */}
                 {s.city && (
@@ -273,7 +289,38 @@ export default function SuppliersPage() {
                   </div>
                 )}
 
-                {/* Rating placeholder */}
+                {/* Marketplace links */}
+                {(s.marketplace_shopier || s.marketplace_trendyol || s.marketplace_hepsiburada || s.marketplace_n11 || s.marketplace_amazon_tr) && (
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {s.marketplace_shopier && (
+                      <a href={s.marketplace_shopier} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[11px] text-text-muted hover:text-accent transition-colors">
+                        <ExternalLink size={11} />Shopier
+                      </a>
+                    )}
+                    {s.marketplace_trendyol && (
+                      <a href={s.marketplace_trendyol} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[11px] text-text-muted hover:text-accent transition-colors">
+                        <ExternalLink size={11} />Trendyol
+                      </a>
+                    )}
+                    {s.marketplace_hepsiburada && (
+                      <a href={s.marketplace_hepsiburada} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[11px] text-text-muted hover:text-accent transition-colors">
+                        <ExternalLink size={11} />Hepsiburada
+                      </a>
+                    )}
+                    {s.marketplace_n11 && (
+                      <a href={s.marketplace_n11} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[11px] text-text-muted hover:text-accent transition-colors">
+                        <ExternalLink size={11} />N11
+                      </a>
+                    )}
+                    {s.marketplace_amazon_tr && (
+                      <a href={s.marketplace_amazon_tr} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-[11px] text-text-muted hover:text-accent transition-colors">
+                        <ExternalLink size={11} />Amazon
+                      </a>
+                    )}
+                  </div>
+                )}
+
+                {/* Rating */}
                 <div className="flex items-center gap-1 text-xs text-text-muted">
                   <Star size={13} className="text-yellow-500" />
                   <span>
@@ -294,28 +341,14 @@ export default function SuppliersPage() {
             ))}
           </div>
 
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="flex items-center justify-between px-4 py-3 mt-6 border-t border-border-default">
-              <button
-                disabled={page <= 1}
-                onClick={() => goToPage(page - 1)}
-                className="flex items-center gap-1 px-3 py-1.5 text-sm rounded-lg border border-border-default hover:bg-bg-card disabled:opacity-30 disabled:cursor-not-allowed"
-              >
-                <ChevronLeft size={14} /> Önceki
-              </button>
-              <span className="text-sm text-text-secondary">
-                {page} / {totalPages}
-              </span>
-              <button
-                disabled={page >= totalPages}
-                onClick={() => goToPage(page + 1)}
-                className="flex items-center gap-1 px-3 py-1.5 text-sm rounded-lg border border-border-default hover:bg-bg-card disabled:opacity-30 disabled:cursor-not-allowed"
-              >
-                Sonraki <ChevronRight size={14} />
-              </button>
-            </div>
-          )}
+          {/* Infinite scroll trigger */}
+          <div ref={observerRef} className="h-10 mt-4">
+            {loadingMore && (
+              <div className="flex items-center justify-center py-4">
+                <Loader2 size={20} className="animate-spin text-text-muted" />
+              </div>
+            )}
+          </div>
         </>
       )}
     </div>

@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
   const mapped = (data ?? []).map((s) => ({
     id: s.id,
     user_id: s.user_id,
-    activity_type: s.activity_type,
+    violation_type: s.violation_type,
     details: s.details,
     created_at: s.created_at,
     username: (s.users as { username: string } | null)?.username ?? null,
