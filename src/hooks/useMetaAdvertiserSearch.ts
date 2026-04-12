@@ -34,7 +34,8 @@ export function useMetaAdvertiserSearch() {
   const [hasMore, setHasMore] = useState(false);
   const pageRef = useRef(1);
   const keywordRef = useRef<string>("");
-  const orderByRef = useRef<string | undefined>(undefined);
+  const orderByRef = useRef<string>("advertiser_ad_count");
+  const directionRef = useRef<"asc" | "desc">("desc");
   const abortRef = useRef<AbortController | null>(null);
   const seenKeysRef = useRef<Set<string>>(new Set());
 
@@ -61,7 +62,7 @@ export function useMetaAdvertiserSearch() {
         const res = await fetch("/api/meta-ads/advertisers", {
           method: "POST",
           headers,
-          body: JSON.stringify({ keyword, page: pageNum, perPage: 60, orderBy: orderByRef.current }),
+          body: JSON.stringify({ keyword, page: pageNum, perPage: 60, orderBy: orderByRef.current, direction: directionRef.current }),
           signal: controller.signal,
         });
         if (!res.ok) {
@@ -99,10 +100,26 @@ export function useMetaAdvertiserSearch() {
   );
 
   const search = useCallback(
-    (keyword: string, orderBy?: string) => {
+    (keyword: string, orderBy: string = "advertiser_ad_count", direction: "asc" | "desc" = "desc") => {
       if (!keyword.trim()) return;
       keywordRef.current = keyword.trim();
       orderByRef.current = orderBy;
+      directionRef.current = direction;
+      setAdvertisers([]);
+      setHasMore(false);
+      pageRef.current = 1;
+      fetchPage(1, false);
+    },
+    [fetchPage]
+  );
+
+  const resort = useCallback(
+    (orderBy: string, direction: "asc" | "desc") => {
+      const kw = keywordRef.current;
+      if (!kw) return;
+      orderByRef.current = orderBy;
+      directionRef.current = direction;
+      seenKeysRef.current = new Set();
       setAdvertisers([]);
       setHasMore(false);
       pageRef.current = 1;
@@ -142,6 +159,7 @@ export function useMetaAdvertiserSearch() {
     error,
     hasMore,
     search,
+    resort,
     sentinelRef,
   };
 }

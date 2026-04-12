@@ -244,8 +244,12 @@ export default function ReklamTaraPage() {
 
   const {
     advertisers: metaAdvertisers, loading: advLoading, loadingMore: advLoadingMore,
-    error: advError, hasMore: advHasMore, search: advSearch, sentinelRef: advSentinelRef,
+    error: advError, hasMore: advHasMore, search: advSearch, resort: advResort, sentinelRef: advSentinelRef,
   } = useMetaAdvertiserSearch();
+
+  // Meta advertiser sort state
+  const [advSortKey, setAdvSortKey] = useState("advertiser_ad_count");
+  const [advSortDir, setAdvSortDir] = useState<"asc" | "desc">("desc");
 
   // UI state
   const [mode, setMode] = useState<Mode>("tts_products");
@@ -339,7 +343,9 @@ export default function ReklamTaraPage() {
     } else if (mode === "meta_ads") {
       metaSearch(q, metaSortKey, metaSortDir);
     } else if (mode === "meta_advertisers") {
-      advSearch(q);
+      setAdvSortKey("advertiser_ad_count");
+      setAdvSortDir("desc");
+      advSearch(q, "advertiser_ad_count", "desc");
     }
   }
 
@@ -385,6 +391,9 @@ export default function ReklamTaraPage() {
     } else if (mode === "meta_ads") {
       setMetaSortDir(dir);
       metaResort(metaSortKey, dir);
+    } else if (mode === "meta_advertisers") {
+      setAdvSortDir(dir);
+      advResort(advSortKey, dir);
     }
   }
 
@@ -491,11 +500,21 @@ export default function ReklamTaraPage() {
   }
 
   /* ── Derived sort direction for arrows ── */
-  const currentDir = mode === "tts_products" ? productSortType : mode === "tts_shops" ? storeSortType : metaSortDir;
-  const showAscDesc = mode !== "tts_videos" && mode !== "meta_advertisers";
-  const showSortDropdown = mode !== "meta_advertisers";
+  const currentDir = mode === "tts_products" ? productSortType : mode === "tts_shops" ? storeSortType : mode === "meta_advertisers" ? advSortDir : metaSortDir;
+  const showAscDesc = mode !== "tts_videos";
+  const showSortDropdown = true;
 
   /* ── Current sort dropdown value ── */
+  const ADV_SORT_OPTIONS = [
+    { key: "advertiser_ad_count", label: "Reklam Sayisi" },
+    { key: "ad_audience_reach", label: "Erisim / Gosterim" },
+    { key: "ad_cost", label: "Reklam Harcamasi" },
+    { key: "ad_started_at", label: "Baslangic Tarihi" },
+    { key: "latest_actived_at", label: "Bitis Tarihi" },
+    { key: "active_days", label: "Reklam Sureleri" },
+    { key: "adset_count", label: "Adset" },
+  ];
+
   const sortDropdownValue =
     mode === "tts_products"
       ? (productSort === 2 && productSortType === "asc" ? "found_time_asc" : String(productSort))
@@ -503,6 +522,8 @@ export default function ReklamTaraPage() {
       ? (storeSort === 2 && storeSortType === "asc" ? "store_first" : String(storeSort))
       : mode === "tts_videos"
       ? String(videoSortBy)
+      : mode === "meta_advertisers"
+      ? advSortKey
       : metaSortKey;
 
   return (
@@ -598,6 +619,7 @@ export default function ReklamTaraPage() {
             else if (mode === "tts_shops") handleStoreSortChange(e.target.value);
             else if (mode === "tts_videos") handleVideoSortChange(Number(e.target.value));
             else if (mode === "meta_ads") handleMetaSortChange(e.target.value as SortKey);
+            else if (mode === "meta_advertisers") { setAdvSortKey(e.target.value); advResort(e.target.value, advSortDir); }
           }}
           className="py-2 px-3 border border-border-default rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/30"
         >
@@ -618,6 +640,11 @@ export default function ReklamTaraPage() {
           }
           {mode === "meta_ads" &&
             META_AD_SORT_OPTIONS.map((opt) => (
+              <option key={opt.key} value={opt.key}>{opt.label}</option>
+            ))
+          }
+          {mode === "meta_advertisers" &&
+            ADV_SORT_OPTIONS.map((opt) => (
               <option key={opt.key} value={opt.key}>{opt.label}</option>
             ))
           }

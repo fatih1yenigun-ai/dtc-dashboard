@@ -47,7 +47,11 @@ function buildHeaders(token: string): Record<string, string> {
  * we don't depend on a separate (and possibly non-existent) advertiser API.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function fetchAdsPage(token: string, keyword: string, page: number, perPage: number, orderBy?: string): Promise<any> {
+async function fetchAdsPage(token: string, keyword: string, page: number, perPage: number, orderBy?: string, direction: string = "desc"): Promise<any> {
+  // PiPiAds' advertisements endpoint doesn't support partial-match on the
+  // "advertiser_name" field — it only works for exact names. Using "all" with
+  // order_by="advertiser_ad_count" ensures the biggest brands (most relevant to
+  // the keyword) surface first. Grouping then dedupes by advertiser.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const body: Record<string, any> = {
     is_real: false,
@@ -56,7 +60,7 @@ async function fetchAdsPage(token: string, keyword: string, page: number, perPag
     extend_keywords: JSON.stringify([
       { field: "all", value: keyword, logic_operator: "or" },
     ]),
-    direction: "desc",
+    direction,
     page,
     per_page: perPage,
   };
@@ -111,12 +115,15 @@ function extractThumb(item: any): string {
 }
 
 /**
- * Group ads into a map of unique advertisers. Preserves insertion order from
- * PiPiAds (which is usually the sort the caller requested — recency/reach/etc.)
- * so the client renders the first page in a sensible order.
+ * Group ads into a map of unique advertisers, then rank them using a composite
+ * score that heavily rewards advertisers whose NAME contains the keyword.
+ * This surfaces "rhode" above "TYMO Beauty" for a "rhode" search, even
+ * though TYMO has 200K+ total ads. Without this, the "all" field search
+ * returns ads from mega-advertisers that happen to mention the keyword
+ * in their ad copy, drowning out the actual brand.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function groupByAdvertiser(items: any[]): AdvertiserSummary[] {
+function groupByAdvertiser(items: any[], keyword?: string): AdvertiserSummary[] {
   const byKey = new Map<string, AdvertiserSummary>();
   for (const item of items) {
     const adv = item.advertiser || {};
@@ -152,7 +159,20 @@ function groupByAdvertiser(items: any[]): AdvertiserSummary[] {
       if (t && !summary.sampleThumbs.includes(t)) summary.sampleThumbs.push(t);
     }
   }
-  return Array.from(byKey.values());
+
+  // Rank: advertisers whose name contains the keyword get a massive boost so they
+  // appear at the top regardless of total ad count.
+  const results = Array.from(byKey.values());
+  if (keyword) {
+    const kw = keyword.trim().toLowerCase();
+    results.sort((a, b) => {
+      const aMatch = a.name.toLowerCase().includes(kw) ? 1 : 0;
+      const bMatch = b.name.toLowerCase().includes(kw) ? 1 : 0;
+      if (aMatch !== bMatch) return bMatch - aMatch; // name-matches first
+      return b.adCount - a.adCount; // then by ad count
+    });
+  }
+  return results;
 }
 
 export async function POST(request: NextRequest) {
@@ -164,7 +184,17 @@ export async function POST(request: NextRequest) {
       if (payload) userId = payload.userId;
     }
 
-    const { keyword, page = 1, perPage = 60, orderBy } = await request.json();
+    const {
+      keyword,
+      page = 1,
+      perPage = 60,
+      // Default to ad_started_at for the PiPiAds query — this ensures diverse
+      // results across many advertisers. Sorting by advertiser_ad_count causes
+      // mega-advertisers to monopolize all ad slots for common keywords.
+      // The response is then re-ranked by name-match + adCount client-side.
+      orderBy = "ad_started_at",
+      direction = "desc",
+    } = await request.json();
 
     if (!keyword) {
       return new Response(
@@ -175,13 +205,23 @@ export async function POST(request: NextRequest) {
 
     const token = await pipiadsLogin();
 
-    // Pull a big page from PiPiAds so we have enough ad variety to reveal multiple
-    // advertisers. 60 is a good balance — bigger = more advertisers but slower.
-    const data = await fetchAdsPage(token, keyword, page, perPage, orderBy);
-    const items: unknown[] = data?.data?.data || [];
-    const advertisers = groupByAdvertiser(items);
-    // Sort by highest advertiser.ad_count first (biggest brands surface first)
-    advertisers.sort((a, b) => b.adCount - a.adCount);
+    // Pull 3 pages worth of ads to get past mega-advertisers that dominate
+    // the first page (e.g. TYMO Beauty fills 60 slots for "rhode" because
+    // its ad copy mentions the word). Fetching 3 pages × 60 ads gives us
+    // ~180 ads → typically 15-30 unique advertisers.
+    const pagesToFetch = page === 1 ? [1, 2, 3] : [page];
+    const results = await Promise.all(
+      pagesToFetch.map((p) => fetchAdsPage(token, keyword, p, perPage, orderBy, direction))
+    );
+    // Merge all ad items across pages
+    const allItems: unknown[] = [];
+    let lastPageFull = false;
+    for (const data of results) {
+      const items = data?.data?.data || [];
+      allItems.push(...items);
+      lastPageFull = items.length >= perPage;
+    }
+    const advertisers = groupByAdvertiser(allItems, keyword);
 
     if (userId) {
       await logActivity(userId, "meta_advertisers_search", keyword, { page, perPage, count: advertisers.length }).catch(() => {});
@@ -190,8 +230,8 @@ export async function POST(request: NextRequest) {
     return new Response(
       JSON.stringify({
         advertisers,
-        rawAdCount: items.length,
-        hasMore: items.length >= perPage,
+        rawAdCount: allItems.length,
+        hasMore: lastPageFull,
       }),
       { status: 200, headers: { "Content-Type": "application/json" } }
     );

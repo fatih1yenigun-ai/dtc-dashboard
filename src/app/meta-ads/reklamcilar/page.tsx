@@ -1,18 +1,42 @@
 "use client";
 
 import { useState } from "react";
-import { Search, Loader2, Users } from "lucide-react";
+import { Search, Loader2, Users, ArrowUp, ArrowDown } from "lucide-react";
 import { useMetaAdvertiserSearch } from "@/hooks/useMetaAdvertiserSearch";
 import { MetaAdsTabs } from "@/components/meta-ads/MetaAdsTabs";
 import { AdvertiserCard } from "@/components/meta-ads/AdvertiserCard";
 
+const ADV_SORT_OPTIONS = [
+  { key: "advertiser_ad_count", label: "Reklam Sayisi" },
+  { key: "ad_audience_reach", label: "Erisim / Gosterim" },
+  { key: "ad_cost", label: "Reklam Harcamasi" },
+  { key: "ad_started_at", label: "Baslangic Tarihi" },
+  { key: "latest_actived_at", label: "Bitis Tarihi" },
+  { key: "active_days", label: "Reklam Sureleri" },
+  { key: "adset_count", label: "Adset" },
+];
+
 export default function MetaAdvertisersPage() {
-  const { advertisers, loading, loadingMore, error, hasMore, search, sentinelRef } = useMetaAdvertiserSearch();
+  const { advertisers, loading, loadingMore, error, hasMore, search, resort, sentinelRef } = useMetaAdvertiserSearch();
   const [keyword, setKeyword] = useState("");
+  const [sortKey, setSortKey] = useState("advertiser_ad_count");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
 
   function handleSearch() {
     if (!keyword.trim()) return;
-    search(keyword.trim());
+    setSortKey("advertiser_ad_count");
+    setSortDir("desc");
+    search(keyword.trim(), "advertiser_ad_count", "desc");
+  }
+
+  function handleSortChange(key: string) {
+    setSortKey(key);
+    resort(key, sortDir);
+  }
+
+  function handleDirChange(dir: "asc" | "desc") {
+    setSortDir(dir);
+    resort(sortKey, dir);
   }
 
   return (
@@ -20,17 +44,17 @@ export default function MetaAdvertisersPage() {
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-text-primary">Meta Reklamcilar</h1>
         <p className="text-text-secondary mt-1">
-          Bir anahtar kelime ile PiPiAds&apos;ten reklamverenleri kesfet, tiklayinca o reklamverenin tum reklamlarini gor.
+          Reklamveren adi ile PiPiAds&apos;ten reklamverenleri kesfet, tiklayinca tum reklamlarini gor.
         </p>
       </div>
 
       <MetaAdsTabs active="reklamcilar" />
 
-      {/* Search bar */}
+      {/* Search bar + Sort */}
       <div className="bg-bg-card rounded-xl shadow-sm border border-border-default p-6 mb-6">
         <div className="flex flex-col md:flex-row gap-4">
           <div className="flex-1">
-            <label className="block text-sm font-medium text-text-primary mb-1">Anahtar Kelime</label>
+            <label className="block text-sm font-medium text-text-primary mb-1">Reklamveren Adi</label>
             <div className="relative">
               <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted" />
               <input
@@ -38,11 +62,45 @@ export default function MetaAdvertisersPage() {
                 value={keyword}
                 onChange={(e) => setKeyword(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                placeholder="ornegin: skincare, fitness, rhode, primally pure..."
+                placeholder="ornegin: rhode, primally pure, glossier..."
                 className="w-full pl-10 pr-4 py-2.5 border border-border-default rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent"
               />
             </div>
           </div>
+
+          {/* Sort */}
+          <div className="w-56">
+            <label className="block text-sm font-medium text-text-primary mb-1">Siralama</label>
+            <select
+              value={sortKey}
+              onChange={(e) => handleSortChange(e.target.value)}
+              className="w-full py-2.5 px-3 border border-border-default rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent/30"
+            >
+              {ADV_SORT_OPTIONS.map((opt) => (
+                <option key={opt.key} value={opt.key}>{opt.label}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Asc/Desc */}
+          <div className="w-24">
+            <label className="block text-sm font-medium text-text-primary mb-1">Sira</label>
+            <div className="flex rounded-lg border border-border-default overflow-hidden">
+              <button
+                onClick={() => handleDirChange("desc")}
+                className={`flex-1 py-2.5 flex items-center justify-center transition-colors ${sortDir === "desc" ? "bg-accent text-white" : "bg-bg-card text-text-secondary hover:bg-bg-main"}`}
+              >
+                <ArrowDown size={16} />
+              </button>
+              <button
+                onClick={() => handleDirChange("asc")}
+                className={`flex-1 py-2.5 flex items-center justify-center transition-colors ${sortDir === "asc" ? "bg-accent text-white" : "bg-bg-card text-text-secondary hover:bg-bg-main"}`}
+              >
+                <ArrowUp size={16} />
+              </button>
+            </div>
+          </div>
+
           <div className="flex items-end">
             <button
               onClick={handleSearch}
@@ -69,18 +127,15 @@ export default function MetaAdvertisersPage() {
         </div>
       )}
 
-      {/* Empty initial state (no search yet) */}
+      {/* Empty initial state */}
       {!loading && advertisers.length === 0 && !error && !keyword && (
         <div className="text-center py-16 text-text-muted">
           <Users size={48} className="mx-auto mb-3 opacity-40" />
-          <p className="text-base">Aramak icin bir anahtar kelime girin.</p>
-          <p className="text-sm mt-1">
-            Bulunan reklamverenlere tiklayarak <span className="text-accent font-medium">tum reklamlarini</span> goruntuleyebilirsin.
-          </p>
+          <p className="text-base">Aramak icin bir reklamveren adi girin.</p>
         </div>
       )}
 
-      {/* No matches for a search */}
+      {/* No matches */}
       {!loading && advertisers.length === 0 && !error && keyword && (
         <div className="text-center py-16 text-text-muted">
           <p className="text-base">Bu anahtar kelime icin reklamveren bulunamadi.</p>
