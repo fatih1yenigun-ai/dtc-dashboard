@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import NextLink from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   Search,
@@ -15,7 +16,13 @@ import {
   Eye,
   ShoppingBag,
   Globe,
+  User,
+  Users,
   Megaphone,
+  Sparkles,
+  Layers,
+  Heart,
+  ArrowRight,
   Image as ImageIcon,
   ChevronLeft,
   ChevronRight,
@@ -29,6 +36,7 @@ import { useProductSearch, type ProductResult } from "@/hooks/useProductSearch";
 import { useVideoSearch, type VideoResult } from "@/hooks/useVideoSearch";
 import { useMetaAdSearch, type MetaAd, type SortKey } from "@/hooks/useMetaAdSearch";
 import { useStoreSearch, type StoreResult } from "@/hooks/useStoreSearch";
+import { useMetaAdvertiserSearch, type AdvertiserSummary } from "@/hooks/useMetaAdvertiserSearch";
 
 /* ═══ Constants ═══ */
 
@@ -200,7 +208,7 @@ function toBrandDataAd(ad: MetaAd): BrandData {
 
 /* ═══ Types ═══ */
 
-type Mode = "tts_products" | "tts_shops" | "tts_videos" | "meta_ads";
+type Mode = "tts_products" | "tts_shops" | "tts_videos" | "meta_ads" | "meta_advertisers";
 
 /* ═══ Main Page ═══ */
 
@@ -233,6 +241,11 @@ export default function ReklamTaraPage() {
     error: storeError, hasMore: storeHasMore, search: storeSearch, resort: storeResort,
     sentinelRef: storeSentinelRef,
   } = useStoreSearch();
+
+  const {
+    advertisers: metaAdvertisers, loading: advLoading, loadingMore: advLoadingMore,
+    error: advError, hasMore: advHasMore, search: advSearch, sentinelRef: advSentinelRef,
+  } = useMetaAdvertiserSearch();
 
   // UI state
   const [mode, setMode] = useState<Mode>("tts_products");
@@ -299,8 +312,18 @@ export default function ReklamTaraPage() {
   }, [searchParams]);
 
   // Derived
-  const loading = mode === "tts_products" ? productLoading : mode === "tts_videos" ? videoLoading : mode === "tts_shops" ? storeLoading : metaLoading;
-  const error = mode === "tts_products" ? productError : mode === "tts_videos" ? videoError : mode === "tts_shops" ? storeError : metaError;
+  const loading =
+    mode === "tts_products" ? productLoading
+    : mode === "tts_videos" ? videoLoading
+    : mode === "tts_shops" ? storeLoading
+    : mode === "meta_advertisers" ? advLoading
+    : metaLoading;
+  const error =
+    mode === "tts_products" ? productError
+    : mode === "tts_videos" ? videoError
+    : mode === "tts_shops" ? storeError
+    : mode === "meta_advertisers" ? advError
+    : metaError;
 
   /* ── Search ── */
 
@@ -315,6 +338,8 @@ export default function ReklamTaraPage() {
       videoSearch(q, videoSortBy, {});
     } else if (mode === "meta_ads") {
       metaSearch(q, metaSortKey, metaSortDir);
+    } else if (mode === "meta_advertisers") {
+      advSearch(q);
     }
   }
 
@@ -467,7 +492,8 @@ export default function ReklamTaraPage() {
 
   /* ── Derived sort direction for arrows ── */
   const currentDir = mode === "tts_products" ? productSortType : mode === "tts_shops" ? storeSortType : metaSortDir;
-  const showAscDesc = mode !== "tts_videos";
+  const showAscDesc = mode !== "tts_videos" && mode !== "meta_advertisers";
+  const showSortDropdown = mode !== "meta_advertisers";
 
   /* ── Current sort dropdown value ── */
   const sortDropdownValue =
@@ -549,11 +575,22 @@ export default function ReklamTaraPage() {
         >
           Meta Reklamlar
         </button>
+        <button
+          onClick={() => setMode("meta_advertisers")}
+          className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+            mode === "meta_advertisers"
+              ? "bg-accent text-white"
+              : "bg-bg-card text-text-secondary border border-border-default hover:bg-bg-hover"
+          }`}
+        >
+          Meta Reklamveren
+        </button>
 
         {/* Spacer */}
         <div className="flex-1" />
 
         {/* Sort dropdown */}
+        {showSortDropdown && (
         <select
           value={sortDropdownValue}
           onChange={(e) => {
@@ -585,6 +622,7 @@ export default function ReklamTaraPage() {
             ))
           }
         </select>
+        )}
 
         {/* Asc/Desc arrows */}
         {showAscDesc && (
@@ -731,6 +769,32 @@ export default function ReklamTaraPage() {
         </div>
       )}
 
+      {/* ═══ META ADVERTISER RESULTS ═══ */}
+      {mode === "meta_advertisers" && !advLoading && metaAdvertisers.length > 0 && (
+        <div>
+          <p className="text-sm text-text-secondary mb-4">
+            {metaAdvertisers.length} reklamveren bulundu{advHasMore ? " (devam ediyor...)" : ""}
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {metaAdvertisers.map((adv) => (
+              <MetaAdvertiserRow key={adv.id || adv.name} advertiser={adv} />
+            ))}
+          </div>
+          {advHasMore && !advLoadingMore && <div key={metaAdvertisers.length} ref={advSentinelRef} className="py-8" />}
+          {advLoadingMore && (
+            <div className="py-8 flex justify-center">
+              <div className="flex items-center gap-2 text-text-muted">
+                <Loader2 size={20} className="animate-spin" />
+                <span className="text-sm">Daha fazla reklamveren yukleniyor...</span>
+              </div>
+            </div>
+          )}
+          {!advHasMore && metaAdvertisers.length > 0 && (
+            <p className="text-center text-sm text-text-muted py-8">Tum reklamverenler yuklendi.</p>
+          )}
+        </div>
+      )}
+
       {/* ═══ META AD RESULTS ═══ */}
       {mode === "meta_ads" && !metaLoading && ads.length > 0 && (
         <div>
@@ -766,7 +830,8 @@ export default function ReklamTaraPage() {
         (mode === "tts_products" && products.length === 0 && !productError && productAllCount === 0 && !productLoading) ||
         (mode === "tts_shops" && stores.length === 0 && !storeError && storeAllCount === 0 && !storeLoading) ||
         (mode === "tts_videos" && videoResults.length === 0 && !videoError && videoAllCount === 0 && !videoLoading) ||
-        (mode === "meta_ads" && ads.length === 0 && !metaError && metaAllCount === 0 && !metaLoading)
+        (mode === "meta_ads" && ads.length === 0 && !metaError && metaAllCount === 0 && !metaLoading) ||
+        (mode === "meta_advertisers" && metaAdvertisers.length === 0 && !advError && !advLoading)
       ) && (
         <div className="text-center py-16 text-text-muted">
           <p className="text-lg">Sonuc bulunamadi</p>
@@ -964,15 +1029,14 @@ export default function ReklamTaraPage() {
                   >
                     <Save size={14} /> Kaydet
                   </button>
-                  {detailAd.advertiserAdsLibraryLink && (
-                    <a
-                      href={detailAd.advertiserAdsLibraryLink}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                  {detailAd.advertiserName && (
+                    <NextLink
+                      href={`/meta-ads/advertiser/${encodeURIComponent(detailAd.advertiserName)}`}
+                      onClick={() => setDetailAd(null)}
                       className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-blue-50 text-blue-700 text-sm font-medium hover:bg-blue-100"
                     >
-                      <Globe size={14} /> Meta Ad Library
-                    </a>
+                      <User size={14} /> Reklamveren
+                    </NextLink>
                   )}
                   {detailAd.advertiserLink && (
                     <a
@@ -981,17 +1045,17 @@ export default function ReklamTaraPage() {
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-bg-hover text-text-primary text-sm font-medium hover:bg-bg-main"
                     >
-                      <ExternalLink size={14} /> Facebook
+                      <ExternalLink size={14} /> Instagram
                     </a>
                   )}
-                  {detailAd.storeLink && (
+                  {(detailAd.landingPages?.[0] || detailAd.storeLink) && (
                     <a
-                      href={detailAd.storeLink}
+                      href={detailAd.landingPages?.[0] || detailAd.storeLink}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-bg-hover text-text-primary text-sm font-medium hover:bg-bg-main"
                     >
-                      <ShoppingBag size={14} /> Magaza
+                      <Globe size={14} /> Website
                     </a>
                   )}
                 </div>
@@ -1646,6 +1710,85 @@ function StoreTable({ results }: { results: StoreResult[] }) {
           </tbody>
         </table>
       </div>
+    </div>
+  );
+}
+
+/* ═══ Meta Advertiser Card (Reklam Tara inline) ═══ */
+
+function MetaAdvertiserRow({ advertiser }: { advertiser: AdvertiserSummary }) {
+  const href = `/meta-ads/advertiser/${encodeURIComponent(advertiser.name)}`;
+  return (
+    <div className="bg-bg-card rounded-[14px] shadow-sm border border-border-default p-5 hover:shadow-md transition-shadow flex flex-col">
+      <div className="flex items-start gap-3 mb-3">
+        {advertiser.profilePic ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={advertiser.profilePic} alt={advertiser.name} className="w-12 h-12 rounded-full object-cover flex-shrink-0 border border-border-default" />
+        ) : (
+          <div className="w-12 h-12 rounded-full bg-bg-hover flex items-center justify-center flex-shrink-0">
+            <Megaphone size={20} className="text-text-muted" />
+          </div>
+        )}
+        <div className="min-w-0 flex-1">
+          <p className="text-base font-bold text-text-primary truncate">{advertiser.name || "Bilinmeyen"}</p>
+          <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+            {advertiser.ecommercePlatform && (
+              <span className="bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded text-[10px] font-medium">{advertiser.ecommercePlatform}</span>
+            )}
+            {advertiser.platforms.slice(0, 5).map((p) => (
+              <span key={p} className="text-[10px] bg-bg-hover text-text-secondary px-1 py-0.5 rounded">{PLATFORM_LABELS[p] || p}</span>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {advertiser.sampleThumbs.length > 0 && (
+        <div className="grid grid-cols-3 gap-1.5 mb-3">
+          {advertiser.sampleThumbs.slice(0, 3).map((t, i) => (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img key={i} src={t} alt="" className="w-full aspect-[4/5] rounded-md object-cover bg-bg-hover" loading="lazy" />
+          ))}
+        </div>
+      )}
+
+      <div className="grid grid-cols-3 gap-2 mb-3">
+        <div className="bg-bg-main rounded-lg px-2 py-1.5 text-center">
+          <div className="flex items-center justify-center gap-1 text-text-muted mb-0.5"><Sparkles size={10} /></div>
+          <p className="text-sm font-bold text-text-primary leading-none">{formatCompact(advertiser.adCount)}</p>
+          <p className="text-[10px] text-text-muted mt-0.5">Reklam</p>
+        </div>
+        <div className="bg-bg-main rounded-lg px-2 py-1.5 text-center">
+          <div className="flex items-center justify-center gap-1 text-text-muted mb-0.5"><Layers size={10} /></div>
+          <p className="text-sm font-bold text-text-primary leading-none">{formatCompact(advertiser.adsetCount)}</p>
+          <p className="text-[10px] text-text-muted mt-0.5">Adset</p>
+        </div>
+        <div className="bg-bg-main rounded-lg px-2 py-1.5 text-center">
+          <div className="flex items-center justify-center gap-1 text-text-muted mb-0.5"><Heart size={10} /></div>
+          <p className="text-sm font-bold text-text-primary leading-none">{formatCompact(advertiser.likeCount)}</p>
+          <p className="text-[10px] text-text-muted mt-0.5">Begeni</p>
+        </div>
+      </div>
+
+      {advertiser.adCountry.length > 0 && (
+        <div className="flex flex-wrap items-center gap-1 mb-3">
+          <span className="text-[10px] text-text-muted mr-1">Ulkeler:</span>
+          {advertiser.adCountry.slice(0, 8).map((c) => (
+            <span key={c} className="text-sm" title={c}>{FLAG[c.toUpperCase()] || c}</span>
+          ))}
+          {advertiser.adCountry.length > 8 && (
+            <span className="text-[10px] text-text-muted">+{advertiser.adCountry.length - 8}</span>
+          )}
+        </div>
+      )}
+
+      <div className="flex-1" />
+
+      <NextLink
+        href={href}
+        className="inline-flex items-center justify-center gap-1.5 w-full px-4 py-2 rounded-lg gradient-accent text-white text-sm font-medium hover:opacity-90"
+      >
+        <Users size={14} /> Reklamlari Gor <ArrowRight size={14} />
+      </NextLink>
     </div>
   );
 }

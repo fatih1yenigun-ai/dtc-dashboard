@@ -7,7 +7,7 @@ import {
   Save,
   User,
   ExternalLink,
-  ShoppingBag,
+  Globe,
   Megaphone,
   Image as ImageIcon,
   ChevronLeft,
@@ -250,7 +250,7 @@ export function AdDetailPopup({ ad, onClose, onSave, onOwnProfile = false }: AdD
                   onClick={onClose}
                   className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-blue-50 text-blue-700 text-sm font-medium hover:bg-blue-100"
                 >
-                  <User size={14} /> Meta Hesap
+                  <User size={14} /> Reklamveren
                 </Link>
               )}
               {ad.advertiserLink && (
@@ -260,17 +260,17 @@ export function AdDetailPopup({ ad, onClose, onSave, onOwnProfile = false }: AdD
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-bg-hover text-text-primary text-sm font-medium hover:bg-bg-hover"
                 >
-                  <ExternalLink size={14} /> Facebook
+                  <ExternalLink size={14} /> Instagram
                 </a>
               )}
-              {ad.storeLink && (
+              {(ad.landingPages?.[0] || ad.storeLink) && (
                 <a
-                  href={ad.storeLink}
+                  href={ad.landingPages?.[0] || ad.storeLink}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-bg-hover text-text-primary text-sm font-medium hover:bg-bg-hover"
                 >
-                  <ShoppingBag size={14} /> Magaza
+                  <Globe size={14} /> Website
                 </a>
               )}
             </div>
