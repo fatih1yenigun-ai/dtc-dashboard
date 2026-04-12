@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import FaycomLoader from "@/components/FaycomLoader";
 import {
   Search,
   Loader2,
@@ -206,7 +207,7 @@ export default function StoreleadsPage() {
     <div>
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-text-primary">Storeleads</h1>
+        <h1 className="text-2xl font-bold text-text-primary">Mağaza Keşif</h1>
         <p className="text-text-secondary mt-1">
           E-ticaret magaza veritabani —{" "}
           {filterOptions
@@ -359,9 +360,8 @@ export default function StoreleadsPage() {
             <tbody>
               {loading && stores.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="text-center py-12">
-                    <Loader2 size={24} className="animate-spin mx-auto text-accent" />
-                    <p className="text-text-muted mt-2">Yukleniyor...</p>
+                  <td colSpan={8}>
+                    <FaycomLoader />
                   </td>
                 </tr>
               ) : stores.length === 0 ? (

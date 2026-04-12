@@ -37,7 +37,7 @@ export default function KombinePage() {
         <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-3 max-w-lg mx-auto">
           <div className="bg-bg-main rounded-lg p-3">
             <p className="text-xs text-text-muted">Website</p>
-            <p className="text-sm font-medium text-text-secondary">Storeleads</p>
+            <p className="text-sm font-medium text-text-secondary">Mağaza Keşif</p>
           </div>
           <div className="bg-bg-main rounded-lg p-3">
             <p className="text-xs text-text-muted">Video</p>

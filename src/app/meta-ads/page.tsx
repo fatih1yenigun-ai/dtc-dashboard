@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import FaycomLoader from "@/components/FaycomLoader";
 import {
   Search,
   Loader2,
@@ -106,7 +107,7 @@ export default function MetaAdsPage() {
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-text-primary">Meta Ad Library</h1>
-        <p className="text-text-secondary mt-1">PiPiAds ile Facebook/Instagram reklamlarini kesfet</p>
+        <p className="text-text-secondary mt-1">Facebook/Instagram reklamlarini kesfet</p>
       </div>
 
       <MetaAdsTabs active="reklamlar" />
@@ -182,12 +183,7 @@ export default function MetaAdsPage() {
       )}
 
       {/* Loading */}
-      {loading && (
-        <div className="py-16 flex flex-col items-center">
-          <Loader2 size={32} className="animate-spin text-accent mb-3" />
-          <p className="text-text-secondary font-medium">PiPiAds&apos;ten reklamlar aliniyor...</p>
-        </div>
-      )}
+      {loading && <FaycomLoader />}
 
       {/* Results */}
       {!loading && ads.length > 0 && (

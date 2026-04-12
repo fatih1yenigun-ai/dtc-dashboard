@@ -2,6 +2,7 @@
 
 import { useState, useEffect, use, useRef } from "react";
 import { useRouter } from "next/navigation";
+import FaycomLoader from "@/components/FaycomLoader";
 import {
   ArrowLeft,
   ExternalLink,
@@ -265,10 +266,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
   // Loading state
   if (productLoading) {
     return (
-      <div className="flex flex-col items-center justify-center py-32">
-        <Loader2 size={32} className="animate-spin text-accent mb-3" />
-        <p className="text-text-secondary text-sm">Urun bilgileri yukleniyor...</p>
-      </div>
+      <FaycomLoader />
     );
   }
 
@@ -293,7 +291,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
             <p className="text-sm text-text-secondary mb-4">@{videoContext.shopHandle}</p>
           )}
           <p className="text-sm text-text-secondary mb-6">
-            Bu urun PiPiAds veritabaninda bulunamadi. TikTok Shop&apos;tan dogrudan gorebilirsiniz.
+            Bu urun veritabaninda bulunamadi. TikTok Shop&apos;tan dogrudan gorebilirsiniz.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             {videoContext.tiktokShopUrl && (
@@ -320,7 +318,7 @@ export default function ProductDetailPage({ params }: { params: Promise<{ id: st
               onClick={() => router.push("/reklam-tara")}
               className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg border border-border-default text-text-secondary text-sm font-medium hover:bg-bg-hover cursor-pointer"
             >
-              <ArrowLeft size={14} /> Reklam Tara&apos;ya Don
+              <ArrowLeft size={14} /> Reklam Merkezi&apos;ne Don
             </button>
           </div>
         </div>

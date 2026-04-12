@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Search, Loader2, Users, ArrowUp, ArrowDown } from "lucide-react";
+import FaycomLoader from "@/components/FaycomLoader";
 import { useMetaAdvertiserSearch } from "@/hooks/useMetaAdvertiserSearch";
 import { MetaAdsTabs } from "@/components/meta-ads/MetaAdsTabs";
 import { AdvertiserCard } from "@/components/meta-ads/AdvertiserCard";
@@ -44,7 +45,7 @@ export default function MetaAdvertisersPage() {
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-text-primary">Meta Reklamcilar</h1>
         <p className="text-text-secondary mt-1">
-          Reklamveren adi ile PiPiAds&apos;ten reklamverenleri kesfet, tiklayinca tum reklamlarini gor.
+          Reklamveren adi ile reklamverenleri kesfet, tiklayinca tum reklamlarini gor.
         </p>
       </div>
 
@@ -120,12 +121,7 @@ export default function MetaAdvertisersPage() {
       )}
 
       {/* Loading (initial) */}
-      {loading && advertisers.length === 0 && (
-        <div className="py-16 flex flex-col items-center">
-          <Loader2 size={32} className="animate-spin text-accent mb-3" />
-          <p className="text-text-secondary font-medium">Reklamverenler yukleniyor...</p>
-        </div>
-      )}
+      {loading && advertisers.length === 0 && <FaycomLoader />}
 
       {/* Empty initial state */}
       {!loading && advertisers.length === 0 && !error && !keyword && (

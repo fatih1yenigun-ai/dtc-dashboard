@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import FaycomLoader from "@/components/FaycomLoader";
 import NextLink from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
@@ -682,14 +683,7 @@ export default function ReklamTaraPage() {
       {error && <div className="bg-red-50 border border-red-200 rounded-[14px] p-4 mb-6 text-red-700 text-sm">{error}</div>}
 
       {/* ═══ LOADING ═══ */}
-      {loading && (
-        <div className="py-16 flex flex-col items-center">
-          <Loader2 size={32} className="animate-spin text-accent mb-3" />
-          <p className="text-text-secondary font-medium">
-            {mode === "tts_videos" ? "500 video yukleniyor..." : mode === "meta_ads" ? "PiPiAds'ten reklamlar aliniyor..." : "PiPiAds'ten urunler aliniyor..."}
-          </p>
-        </div>
-      )}
+      {loading && <FaycomLoader />}
 
       {/* ═══ TTS PRODUCT RESULTS ═══ */}
       {mode === "tts_products" && !productLoading && products.length > 0 && (

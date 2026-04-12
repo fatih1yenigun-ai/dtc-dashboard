@@ -76,7 +76,7 @@ function getScriptedResponse(msg: string, stage: number): ScriptedResponse {
     case 1: {
       if (lower.includes("ürün") || lower.includes("ne satayım") || lower.includes("bilmiyorum") || lower.includes("nasıl") || lower.includes("fikir")) {
         return {
-          text: `Ürün araştırmasına başlayalım! 🔍\n\n**3 adımlı yaklaşım:**\n\n**1.** TikTok Shop'ta GMV yüksek ürünlere bak:\n[TOOL:/tts:TikTok Shop Araştırma:GMV bazlı trend ürünleri keşfet]\n\n**2.** Aktif reklam veren markaları bul:\n[TOOL:/reklam-tara:Reklam Tara:Aktif Meta reklamlarını keşfet]\n\n**3.** Marka trafiğini kontrol et:\n[TOOL:/storeleads:Marka Nabzı:Marka trafiği ve büyüme analizi]\n\nÖnce bir ürün bul, sonra bana söyle!`,
+          text: `Ürün araştırmasına başlayalım! 🔍\n\n**3 adımlı yaklaşım:**\n\n**1.** TikTok Shop'ta GMV yüksek ürünlere bak:\n[TOOL:/tts:TikTok Shop Araştırma:GMV bazlı trend ürünleri keşfet]\n\n**2.** Aktif reklam veren markaları bul:\n[TOOL:/reklam-tara:Reklam Merkezi:Aktif Meta reklamlarını keşfet]\n\n**3.** Marka trafiğini kontrol et:\n[TOOL:/storeleads:Mağaza Keşif:Marka trafiği ve büyüme analizi]\n\nÖnce bir ürün bul, sonra bana söyle!`,
         };
       }
       if (lower.includes("buldum") || lower.includes("karar") || lower.includes("seçtim")) {
@@ -89,10 +89,10 @@ function getScriptedResponse(msg: string, stage: number): ScriptedResponse {
         return { text: `**GMV** = Toplam satış hacmi. Yüksek GMV = gerçek talep.\n\n[TOOL:/tts:TikTok Shop Araştırma:GMV bazlı trend ürünleri keşfet]` };
       }
       if (lower.includes("reklam")) {
-        return { text: `Aktif reklam veren markalar = kârlı pazar sinyali.\n\n[TOOL:/reklam-tara:Reklam Tara:Aktif Meta reklamlarını keşfet]` };
+        return { text: `Aktif reklam veren markalar = kârlı pazar sinyali.\n\n[TOOL:/reklam-tara:Reklam Merkezi:Aktif Meta reklamlarını keşfet]` };
       }
       return {
-        text: `Şu anda **Ürün Araştırması** aşamasındasın.\n\n[TOOL:/tts:TikTok Shop Araştırma:GMV bazlı trend ürünleri keşfet]\n[TOOL:/reklam-tara:Reklam Tara:Aktif reklamları keşfet]\n[TOOL:/storeleads:Marka Nabzı:Marka trafiği analizi]\n\nHangi ürün kategorisiyle ilgileniyorsun?`,
+        text: `Şu anda **Ürün Araştırması** aşamasındasın.\n\n[TOOL:/tts:TikTok Shop Araştırma:GMV bazlı trend ürünleri keşfet]\n[TOOL:/reklam-tara:Reklam Merkezi:Aktif reklamları keşfet]\n[TOOL:/storeleads:Mağaza Keşif:Marka trafiği analizi]\n\nHangi ürün kategorisiyle ilgileniyorsun?`,
       };
     }
     case 2: {
@@ -147,7 +147,7 @@ function getScriptedResponse(msg: string, stage: number): ScriptedResponse {
         };
       }
       return {
-        text: `**Reklam Analizi** aşamasındasın.\n\n[TOOL:/reklam-tara:Reklam Tara:Rakip reklamları analiz et]\n\n**Temel metrikler:**\n- CTR: Tıklama oranı (%1+ iyi)\n- CPM: 1000 gösterim maliyeti\n- ROAS: Reklam getirisi (2x+ hedef)\n- CPC: Tıklama maliyeti\n\nHangi metrik hakkında konuşalım?`,
+        text: `**Reklam Analizi** aşamasındasın.\n\n[TOOL:/reklam-tara:Reklam Merkezi:Rakip reklamları analiz et]\n\n**Temel metrikler:**\n- CTR: Tıklama oranı (%1+ iyi)\n- CPM: 1000 gösterim maliyeti\n- ROAS: Reklam getirisi (2x+ hedef)\n- CPC: Tıklama maliyeti\n\nHangi metrik hakkında konuşalım?`,
       };
     }
     default:
@@ -387,7 +387,7 @@ export default function FloatingChat() {
               }}
             >
               <GraduationCap size={14} />
-              Mentör
+              AI Mentör
               {mentorStage > 1 && (
                 <span className="text-[10px] px-1.5 py-0.5 rounded-full" style={{ background: "rgba(139,92,246,0.2)", color: "#a78bfa" }}>
                   {mentorStage}/5
@@ -567,7 +567,7 @@ export default function FloatingChat() {
                     else sendMentorMessage(mentorInput);
                   }
                 }}
-                placeholder={activeTab === "mentor" ? "Mentöre sor..." : "Bir şey sor..."}
+                placeholder={activeTab === "mentor" ? "AI Mentöre sor..." : "Bir şey sor..."}
                 className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-text-secondary focus:outline-none transition-colors"
                 style={{ borderColor: "rgba(255,255,255,0.1)" }}
               />

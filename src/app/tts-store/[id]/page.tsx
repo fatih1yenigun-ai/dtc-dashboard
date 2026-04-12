@@ -2,6 +2,7 @@
 
 import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
+import FaycomLoader from "@/components/FaycomLoader";
 import {
   ArrowLeft,
   ExternalLink,
@@ -274,10 +275,7 @@ export default function StoreDetailPage({ params }: { params: Promise<{ id: stri
   /* ─── Loading / Error states ─── */
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center py-32">
-        <Loader2 size={32} className="animate-spin text-accent mb-3" />
-        <p className="text-text-secondary text-sm">Magaza bilgileri yukleniyor...</p>
-      </div>
+      <FaycomLoader />
     );
   }
 
@@ -289,12 +287,12 @@ export default function StoreDetailPage({ params }: { params: Promise<{ id: stri
             <ShoppingBag size={28} className="text-accent" />
           </div>
           <h2 className="text-lg font-bold text-text-primary mb-2">Magaza Bulunamadi</h2>
-          <p className="text-sm text-text-secondary mb-6">{error || "Bu magaza PiPiAds veritabaninda bulunamadi."}</p>
+          <p className="text-sm text-text-secondary mb-6">{error || "Bu magaza veritabaninda bulunamadi."}</p>
           <button
             onClick={() => router.push("/reklam-tara")}
             className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg border border-border-default text-text-secondary text-sm font-medium hover:bg-bg-hover cursor-pointer"
           >
-            <ArrowLeft size={14} /> Reklam Tara&apos;ya Don
+            <ArrowLeft size={14} /> Reklam Merkezi&apos;ne Don
           </button>
         </div>
       </div>

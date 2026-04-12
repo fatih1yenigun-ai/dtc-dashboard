@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import FaycomLoader from "@/components/FaycomLoader";
 import {
   Search,
   Loader2,
@@ -204,7 +205,7 @@ export default function TTSPage() {
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-text-primary">TikTok Shop</h1>
-        <p className="text-text-secondary mt-1">PiPiAds ile TikTok Shop&apos;ta trend urunleri kesfet</p>
+        <p className="text-text-secondary mt-1">TikTok Shop&apos;ta trend urunleri kesfet</p>
       </div>
 
       {/* Search Bar */}
@@ -307,14 +308,7 @@ export default function TTSPage() {
       {error && <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-6 text-red-700 text-sm">{error}</div>}
 
       {/* Loading */}
-      {loading && (
-        <div className="py-16 flex flex-col items-center">
-          <Loader2 size={32} className="animate-spin text-accent mb-3" />
-          <p className="text-text-secondary font-medium">
-            {mode === "video" ? "500 video yukleniyor..." : "PiPiAds'ten urunler aliniyor..."}
-          </p>
-        </div>
-      )}
+      {loading && <FaycomLoader />}
 
       {/* ===== PRODUCT RESULTS ===== */}
       {mode === "product" && !productLoading && products.length > 0 && (

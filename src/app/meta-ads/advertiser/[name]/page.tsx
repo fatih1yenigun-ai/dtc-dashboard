@@ -2,6 +2,7 @@
 
 import { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import FaycomLoader from "@/components/FaycomLoader";
 import {
   ArrowLeft,
   Loader2,
@@ -149,14 +150,7 @@ export default function AdvertiserProfilePage({
       </button>
 
       {/* Loading state (initial) */}
-      {loading && !headerAd && (
-        <div className="flex flex-col items-center justify-center py-32">
-          <Loader2 size={32} className="animate-spin text-accent mb-3" />
-          <p className="text-text-secondary text-sm">
-            <span className="font-medium">{advertiserName}</span> reklamlari yukleniyor...
-          </p>
-        </div>
-      )}
+      {loading && !headerAd && <FaycomLoader />}
 
       {/* Empty state — advertiser not found / no ads (only when we never saw any ads). */}
       {!loading && !headerAd && ads.length === 0 && !error && (
@@ -167,7 +161,7 @@ export default function AdvertiserProfilePage({
             </div>
             <h2 className="text-lg font-bold text-text-primary mb-2">Reklamveren Bulunamadi</h2>
             <p className="text-sm text-text-secondary mb-6">
-              &quot;{advertiserName}&quot; icin PiPiAds veritabaninda reklam bulunamadi.
+              &quot;{advertiserName}&quot; icin veritabaninda reklam bulunamadi.
             </p>
             <button
               onClick={() => router.push("/meta-ads")}

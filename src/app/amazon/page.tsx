@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import FaycomLoader from "@/components/FaycomLoader";
 import {
   Search,
   Loader2,
@@ -581,12 +582,7 @@ export default function HacimlerPage() {
         </div>
       </div>
 
-      {loading && (
-        <div className="bg-bg-card rounded-[14px] border border-border-default p-12 shadow-sm text-center">
-          <Loader2 size={32} className="animate-spin text-accent mx-auto mb-3" />
-          <p className="text-sm text-text-secondary">Veriler analiz ediliyor... (15-30 saniye)</p>
-        </div>
-      )}
+      {loading && <FaycomLoader />}
 
       {error && (
         <div className="bg-red-50 border border-red-200 rounded-xl p-4">

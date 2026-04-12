@@ -26,15 +26,15 @@ type NavItem = { href: string; label: string; iconKey: string; accentDark: strin
 const topNavItems: NavItem[] = [];
 
 const workspaceItems: NavItem[] = [
-  { href: "/storeleads", label: "Marka Nabzı", iconKey: "marka-pusulasi", accentDark: "#3890f8", accentLight: "#185fa5" },
-  { href: "/reklam-tara", label: "Reklam Tara", iconKey: "reklam-tara", accentDark: "#c09af0", accentLight: "#534ab7" },
+  { href: "/storeleads", label: "Mağaza Keşif", iconKey: "marka-pusulasi", accentDark: "#3890f8", accentLight: "#185fa5" },
+  { href: "/reklam-tara", label: "Reklam Merkezi", iconKey: "reklam-tara", accentDark: "#c09af0", accentLight: "#534ab7" },
   { href: "/kombine", label: "Bütünsel Analiz", iconKey: "coklu-analiz", accentDark: "#e0b020", accentLight: "#854f0b" },
   { href: "/amazon", label: "Pazar Talebi", iconKey: "hacimler", accentDark: "#f0b040", accentLight: "#854f0b" },
   { href: "/expert-browse", label: "Uzman Arşivi", iconKey: "uzman-arsivi", accentDark: "#e84040", accentLight: "#a32d2d" },
   { href: "/saved", label: "Koleksiyonum", iconKey: "arsivim", accentDark: "#30c8a0", accentLight: "#0f6e56" },
   { href: "/research", label: "Akıllı Tarama", iconKey: "ai-ile-arastir", accentDark: "#20d0f8", accentLight: "#185fa5" },
   { href: "/brands", label: "Marka X-Ray (Beta)", iconKey: "marka-xray", accentDark: "#f07030", accentLight: "#993c1d" },
-  { href: "/tools", label: "Atölye", iconKey: "araclar", accentDark: "#40c860", accentLight: "#3b6d11" },
+  { href: "/tools", label: "Operasyon Merkezi", iconKey: "araclar", accentDark: "#40c860", accentLight: "#3b6d11" },
 ];
 
 const bottomNavItems = [
@@ -225,13 +225,13 @@ export default function Sidebar() {
             >
               <Image
                 src={isMentorActive ? "/icons/active/ai-mentor.svg" : "/icons/default/ai-mentor.svg"}
-                alt="Mentör"
+                alt="AI Mentör"
                 width={36}
                 height={36}
                 className="flex-shrink-0 rounded-lg"
               />
               <span className={isMentorActive ? "" : "text-text-secondary"}>
-                Mentör
+                AI Mentör
               </span>
             </Link>
           );
@@ -270,13 +270,13 @@ export default function Sidebar() {
             >
               <Image
                 src={isMentor2Active ? "/icons/active/ai-mentor.svg" : "/icons/default/ai-mentor.svg"}
-                alt="Mentör2"
+                alt="Basit Mentör"
                 width={36}
                 height={36}
                 className="flex-shrink-0 rounded-lg"
               />
               <span className={isMentor2Active ? "" : "text-text-secondary"}>
-                Mentör2
+                Basit Mentör
               </span>
             </Link>
           );

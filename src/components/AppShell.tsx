@@ -4,6 +4,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useTheme } from "@/context/ThemeContext";
 import { usePathname } from "next/navigation";
 import { Loader2 } from "lucide-react";
+import FaycomLoader from "@/components/FaycomLoader";
 import LoginPage from "@/app/login/page";
 import Sidebar from "@/components/Sidebar";
 import FloatingChat from "@/components/FloatingChat";
@@ -26,10 +27,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   if (loading) {
     return (
       <div className="min-h-screen bg-bg-main flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 size={40} className="animate-spin text-accent mx-auto mb-4" />
-          <p className="text-text-muted text-sm">Yükleniyor...</p>
-        </div>
+        <FaycomLoader />
       </div>
     );
   }

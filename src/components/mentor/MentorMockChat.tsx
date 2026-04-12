@@ -78,10 +78,10 @@ function getStage1Response(msg: string): ScriptedResponse {
 [TOOL:/tts:TikTok Shop Araştırma:GMV bazlı trend ürünleri keşfet]
 
 **2. Rakip Reklamlarını Ara** — O nişte aktif reklam veren markalar var mı? Birisi reklam veriyorsa, para kazanıyor demektir.
-[TOOL:/reklam-tara:Reklam Tara:Aktif Meta reklamlarını keşfet]
+[TOOL:/reklam-tara:Reklam Merkezi:Aktif Meta reklamlarını keşfet]
 
 **3. Marka Trafiğini Kontrol Et** — Bulduğun markaların trafiğine bak. Trafik artıyorsa = büyüyen bir pazar.
-[TOOL:/storeleads:Marka Nabzı:Marka trafiği ve büyüme analizi]
+[TOOL:/storeleads:Mağaza Keşif:Marka trafiği ve büyüme analizi]
 
 Önce TikTok Shop'a gidip ilgini çeken bir ürün bul, sonra bana söyle!`,
     };
@@ -128,7 +128,7 @@ Bir nişte aktif reklam veren markalar varsa bu **pozitif sinyal**:
 - Birden fazla marka reklam veriyorsa = Pazar büyüyor
 
 Reklam Tara aracıyla rakip reklamları bulabilirsin:
-[TOOL:/reklam-tara:Reklam Tara:Aktif Meta reklamlarını keşfet]
+[TOOL:/reklam-tara:Reklam Merkezi:Aktif Meta reklamlarını keşfet]
 
 Bütünsel Analiz ile daha geniş pazar resmini de görebilirsin:
 [TOOL:/kombine:Bütünsel Analiz:Çoklu kaynaklardan kapsamlı analiz]`,
@@ -142,8 +142,8 @@ Bütünsel Analiz ile daha geniş pazar resmini de görebilirsin:
 Bu aşamada amacın satacağın ürünü bulmak. İşte kullanabileceğin araçlar:
 
 [TOOL:/tts:TikTok Shop Araştırma:GMV bazlı trend ürünleri keşfet]
-[TOOL:/reklam-tara:Reklam Tara:Aktif Meta reklamlarını keşfet]
-[TOOL:/storeleads:Marka Nabzı:Marka trafiği ve büyüme analizi]
+[TOOL:/reklam-tara:Reklam Merkezi:Aktif Meta reklamlarını keşfet]
+[TOOL:/storeleads:Mağaza Keşif:Marka trafiği ve büyüme analizi]
 [TOOL:/amazon:Pazar Talebi:Amazon pazar hacim analizi]
 
 Hangi ürün kategorisiyle ilgileniyorsun? Ya da "ne satayım bilmiyorum" diyorsan, birlikte trend ürünlere bakalım!`,
@@ -336,7 +336,7 @@ function getStage5Response(msg: string): ScriptedResponse {
       text: `Reklam analizi zamanı! 📊
 
 Önce rakip reklamlarını incele:
-[TOOL:/reklam-tara:Reklam Tara:Rakip Meta reklamlarını analiz et]
+[TOOL:/reklam-tara:Reklam Merkezi:Rakip Meta reklamlarını analiz et]
 
 **Öğrenmen gereken temel metrikler:**
 - **CTR (Click-Through Rate):** Reklamı görenlerin kaçı tıklıyor? %1 üstü genelde iyi.
@@ -371,7 +371,7 @@ Kampanya görselini yükle, birlikte bakalım! 📸`,
 
 Bu aşamada reklam metriklerini okumayı ve yorumlamayı öğreneceksin.
 
-[TOOL:/reklam-tara:Reklam Tara:Rakip Meta reklamlarını analiz et]
+[TOOL:/reklam-tara:Reklam Merkezi:Rakip Meta reklamlarını analiz et]
 
 Kampanya görselini yükleyebilirsin — birlikte yapısal olarak inceleriz. Ya da reklam metrikleri hakkında soru sorabilirsin.
 

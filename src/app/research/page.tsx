@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect } from "react";
 import LoadingInsights from "@/components/LoadingInsights";
+import FaycomLoader from "@/components/FaycomLoader";
 import {
   Search,
   Loader2,
@@ -513,13 +514,7 @@ export default function HomePage() {
       {/* Loading with insights */}
       {loading && (
         <div className="py-8">
-          <div className="flex flex-col items-center mb-6">
-            <Loader2 size={32} className="animate-spin text-accent mb-3" />
-            <p className="text-text-secondary font-medium">Markalar araştırılıyor...</p>
-            <p className="text-text-muted text-xs mt-1">
-              {results.length > 0 ? `${results.length} marka bulundu, devam ediyor...` : "Bu işlem 15-30 saniye sürebilir"}
-            </p>
-          </div>
+          <FaycomLoader />
           <LoadingInsights />
         </div>
       )}
